@@ -119,13 +119,7 @@
 			(SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '3' AND b.member_idx != '0') regRejectCnt,
             (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx != '0' ) edu_reg_cnt,
             (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0' ) edu_accept_cnt,
-            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx = '0') edu_bot_cnt,
-            (SELECT SUM(TIMESTAMPDIFF(MINUTE, e.start_time, e.end_time)) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx) AS sum_play_minute,
-            (SELECT COUNT(DISTINCT play_team_idx) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx) AS play_cnt,
-			(SELECT COUNT(DISTINCT member_idx) FROM lms_edu_play g WHERE g.detail_idx = a.detail_idx) AS player_cnt,
-			(SELECT COUNT(DISTINCT module_cd) FROM lms_edu_module_play emp LEFT JOIN lms_edu_play_team e ON emp.play_team_idx = e.play_team_idx WHERE e.detail_idx = a.detail_idx) AS module_cd_cnt,
-			(SELECT COUNT(DISTINCT play_team_idx) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx AND e.success_yn = 'y') AS play_success_cnt,
-			(SELECT COUNT(DISTINCT play_team_idx) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx AND e.success_yn != 'y') AS play_fail_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx = '0') edu_bot_cnt
 			
             <![CDATA[
 	        CASE

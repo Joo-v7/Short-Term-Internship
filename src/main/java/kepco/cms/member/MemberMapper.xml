@@ -145,22 +145,4 @@
 				member_idx = #{memberIdx}
 	</insert>
 	
-	<select id="playMemberList" parameterType="map" resultType="kepco.cms.member.MemberVo">
-		SELECT
-			a.member_idx, a.member_id, a.member_nm,
-			(SELECT MIN(start_time) FROM lms_edu_play p WHERE a.member_id = p.member_id) AS start_time,
-			(SELECT MAX(end_time) FROM lms_edu_play p WHERE a.member_id = p.member_id) AS end_time,
-			(SELECT SUM(TIMESTAMPDIFF(MINUTE, p.start_time, p.end_time)) FROM lms_edu_play p WHERE p.member_idx = a.member_idx) AS sum_play_minute,
-			(SELECT COUNT(*) FROM lms_edu_play p WHERE a.member_id = p.member_id) AS play_count
-		FROM cms_member a
-			<include refid="seachWhere"/>
-		ORDER BY
-		<choose>
-			<otherwise>
-				member_role ASC, member_idx DESC
-			</otherwise>
-		</choose>
-
-	</select>
-	
 </mapper>
