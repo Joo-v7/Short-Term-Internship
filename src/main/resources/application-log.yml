@@ -1,0 +1,26 @@
+logging:
+  level:
+    root: info
+    '[org.springframework]': info
+    '[org.egovframe]': info
+    '[kepco]': debug
+    '[kepco.cms.menu.MenuMapper]': off
+    '[kepco.cms.layout.LayoutMapper]': off
+    '[kepco.cms.page.PageMapper]': off
+    '[kepco.cms.site.SiteMapper]': off
+    '[kepco.cms.log.LogMapper]': off
+    '[kepco.cms.sysinfoLog.SysinfoLogMapper]': off
+    '[kepco.cms.setting.SettingMapper]': off
+    jdbc:
+      connection: off
+      audit: off
+      resultset: off
+      sqltiming: off
+      sqlonly: info
+      resultsettable: info
+    '[org.apache.tomcat]': info
+    '[org.apache.jasper]': info
+    '[org.apache.catalina]': info
+    '[javax.management]': info
+    '[sun.rmi]': info
+    '[com.zaxxer.hikari]': info
