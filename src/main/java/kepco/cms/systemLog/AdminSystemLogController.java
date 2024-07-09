@@ -1,5 +1,4 @@
 package kepco.cms.systemLog;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.egovframe.rte.psl.dataaccess.util.EgovMap;
@@ -13,12 +12,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.github.pagehelper.PageInfo;
 
-import kepco.cms.stat.StatVo;
 import kepco.common.json.JsonResponse;
 import kepco.common.site.SiteLayout;
 import kepco.common.web.RequestEgovMap;
-import kepco.lms.edu.detail.DetailVo;
-import kepco.lms.edu.play.PlayVo;
 
 @Controller
 @RequestMapping(value = "${global.admin-path}/cms/systemLog")

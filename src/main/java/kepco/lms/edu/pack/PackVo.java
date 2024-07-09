@@ -1,11 +1,8 @@
 package kepco.lms.edu.pack;
 
-import java.util.List;
-
 import org.springframework.stereotype.Component;
 
 import kepco.lms.edu.module.ModuleVo;
-import kepco.lms.edu.play.PlayVo;
 
 @Component
 public class PackVo extends ModuleVo {
@@ -23,14 +20,6 @@ public class PackVo extends ModuleVo {
 	private String insertIp;
 	private String insertDate;
 
-	private List<PlayVo> playList;
-	
-	public List<PlayVo> getPlayList() {
-		return playList;
-	}
-	public void setPlayList(List<PlayVo> playList) {
-		this.playList = playList;
-	}
 	public String getTrainState() {
 		return trainState;
 	}

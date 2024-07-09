@@ -33,8 +33,6 @@
 	<select id="select" parameterType="map" resultType="kepco.lms.vod.stat.VodStatVo">
 		SELECT 
 		    a.*,
-		    (SELECT po_subject FROM lms_poll b WHERE a.po_idx = b.po_idx) AS po_subject,
-		    (SELECT ev_subject FROM lms_evaluation b WHERE a.ev_idx = b.ev_idx) AS ev_subject,
 		    (SELECT COUNT(distinct b.apply_idx) FROM lms_vod_apply b WHERE a.vod_idx = b.vod_idx AND b.apply_state = '2' AND b.delete_yn = 'n') AS apply_cnt,
 		    (SELECT COUNT(distinct b.apply_idx) FROM lms_vod_apply b WHERE a.vod_idx = b.vod_idx AND b.apply_state = '2' AND b.learn_state = '2' AND b.delete_yn = 'n') AS graduate_cnt,
 		    (SELECT MIN(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) AS min_learn_minute,

@@ -39,12 +39,8 @@ import kepco.lms.edu.category.CategoryService;
 import kepco.lms.edu.category.CategoryVo;
 import kepco.lms.edu.detail.DetailService;
 import kepco.lms.edu.detail.DetailVo;
-import kepco.lms.edu.event.EventService;
-import kepco.lms.edu.event.EventVo;
 import kepco.lms.edu.pack.PackService;
 import kepco.lms.edu.pack.PackVo;
-import kepco.lms.edu.play.PlayService;
-import kepco.lms.edu.play.PlayVo;
 import kepco.lms.edu.stat.EdustatService;
 import kepco.lms.edu.stat.EdustatVo;
 import kepco.lms.edu.stat.chart.EduStatChartVo;
@@ -74,12 +70,6 @@ public class EduController {
 
     @Autowired
     LocalFileService localFileService;
-
-    @Autowired
-    PlayService playService;
-
-    @Autowired
-    EventService eventService;
 
     @Autowired
     EdustatService edustatService;
@@ -338,7 +328,6 @@ public class EduController {
 
         DetailVo vo = null;
         List<PackVo> packList = null;
-        List<EventVo> accidentList = null;
 
         if (!StrUtil.isEmpty(req.get("detailIdx"))) {
             vo = detailService.select(req);
@@ -347,13 +336,11 @@ public class EduController {
             req.put("eduIdx", vo.getEduIdx());
             packList = packService.selectAll(req);
 
-            accidentList = eventService.accidentList(req);
         }
 
         model.addAttribute("req", req);
         model.addAttribute("vo", vo);
         model.addAttribute("packList", packList);
-        model.addAttribute("accidentList", accidentList);
 
         return viewName;
     }
@@ -504,9 +491,6 @@ public class EduController {
     public String myprint(@RequestEgovMap EgovMap req, Criteria cri, Model model) throws Exception {
 
         String viewName = "lms/edu/my/print";
-
-        PlayVo playVo = playService.select(req);
-        req.put("detailIdx", playVo.getDetailIdx());
 
         int memberIdx = StrUtil.getSessionIdx();
 

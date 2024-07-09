@@ -74,9 +74,7 @@
 	
 	<select id="select" parameterType="map" resultType="kepco.lms.vod.VodVo">
 		SELECT 
-			*,
-			(SELECT po_subject FROM lms_poll b WHERE a.po_idx = b.po_idx) po_subject,
-			(SELECT ev_subject FROM lms_evaluation b WHERE a.ev_idx = b.ev_idx) ev_subject
+			*
 			
 		FROM lms_vod a
 			<include refid="selectWhere"/>
@@ -160,12 +158,6 @@
 			left join lms_vod_learn bb on bb.member_idx = #{memberIdx} and aa.vod_idx = bb.vod_idx and aa.content_idx = bb.content_idx group by vod_idx
 		) c
 		on a.vod_idx = c.vod_idx
-		left join lms_poll_qson_review e
-		on b.po_idx = e.po_idx
-		and b.vod_idx = e.vod_idx
-		left join lms_evaluation_qson_review f
-        on b.ev_idx = f.ev_idx
-        and b.vod_idx = f.vod_idx
 		where a.member_idx = #{memberIdx}
 			and a.apply_state = '2'
 			and a.delete_yn = 'n'

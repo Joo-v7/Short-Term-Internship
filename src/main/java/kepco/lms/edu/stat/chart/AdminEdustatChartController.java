@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import kepco.common.json.JsonResponse;
 import kepco.common.web.RequestEgovMap;
 import kepco.lms.edu.detail.DetailService;
-import kepco.lms.edu.event.EventVo;
 import kepco.lms.edu.stat.EdustatService;
 import kepco.lms.edu.stat.EdustatVo;
 import kepco.util.StrUtil;
@@ -231,31 +230,6 @@ public class AdminEdustatChartController {
 		
 		return new JsonResponse.Builder().model(model).build();
 	}
-	
-	@RequestMapping(value = "accidentByRole")
-	@ResponseBody
-	public JsonResponse accidentByRole(@RequestEgovMap EgovMap req, Model model) {
-		
-		int accidentCntMax = 0;
-		EdustatVo edustatVo = edustatService.accidentCntByRole(req);
-		
-		if(edustatVo.getMainEsCnt() > edustatVo.getMainFallCnt() && edustatVo.getMainEsCnt() > edustatVo.getMainCareCnt() && edustatVo.getMainEsCnt() > edustatVo.getMainLoadCnt()) {
-			accidentCntMax = edustatVo.getMainEsCnt();
-		}else if(edustatVo.getMainFallCnt() > edustatVo.getMainEsCnt() && edustatVo.getMainFallCnt() > edustatVo.getMainCareCnt() && edustatVo.getMainFallCnt() > edustatVo.getMainLoadCnt()) {
-			accidentCntMax = edustatVo.getMainFallCnt();
-		}else if(edustatVo.getMainCareCnt() > edustatVo.getMainEsCnt() && edustatVo.getMainFallCnt() > edustatVo.getMainCareCnt() && edustatVo.getMainCareCnt() > edustatVo.getMainLoadCnt()) {
-			accidentCntMax = edustatVo.getMainCareCnt();
-		}else if(edustatVo.getMainLoadCnt() > edustatVo.getMainEsCnt() && edustatVo.getMainFallCnt() > edustatVo.getMainCareCnt() && edustatVo.getMainLoadCnt() > edustatVo.getMainCareCnt()) {
-			accidentCntMax = edustatVo.getMainLoadCnt();
-		}
-		
-		
-		model.addAttribute("req", req);
-		model.addAttribute("vo", edustatVo);
-		model.addAttribute("accidentMaxCnt", accidentCntMax);
-		return new JsonResponse.Builder().model(model).build();
-	}
-	
 	
 	@RequestMapping(value = "accidentType")
 	@ResponseBody

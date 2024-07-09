@@ -162,8 +162,6 @@
 			a.*, f.edu_title, f.edu_keyword, f.edu_type,
 			(SELECT member_nm FROM cms_member b WHERE b.member_idx = a.teacher_idx ) teacherNm,
 			(SELECT category_nm FROM lms_edu_category b WHERE b.category_idx = f.category_idx) eduCateNm,
-			(SELECT po_subject FROM lms_poll b WHERE a.po_idx = b.po_idx) po_subject,
-			(SELECT ev_subject FROM lms_evaluation b WHERE a.ev_idx = b.ev_idx) ev_subject,
             (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx != '0' ) edu_reg_cnt,
             (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0' ) edu_accept_cnt,
             (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx = '0') edu_bot_cnt,

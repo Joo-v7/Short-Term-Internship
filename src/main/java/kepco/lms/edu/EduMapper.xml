@@ -156,8 +156,6 @@
 	            LEFT JOIN lms_edu_module bb ON aa.module_idx = bb.module_idx
 	            GROUP BY edu_idx
 	        ) d ON b.edu_idx = d.edu_idx
-	        LEFT JOIN lms_poll_qson_review cc ON b.po_idx = cc.po_idx AND b.detail_idx = cc.detail_idx
-	        LEFT JOIN lms_evaluation_qson_review dd ON b.ev_idx = dd.ev_idx AND b.detail_idx = cc.detail_idx
 	    WHERE a.member_idx = #{memberIdx} AND a.delete_yn = 'n'
 	    GROUP BY regist_idx
 	    ORDER BY a.insert_date DESC
@@ -196,10 +194,6 @@
 	            LEFT JOIN lms_edu_module bb ON aa.module_idx = bb.module_idx
 	            GROUP BY edu_idx
 	        ) d ON b.edu_idx = d.edu_idx
-	        LEFT JOIN lms_poll_qson_review cc ON b.po_idx = cc.po_idx AND b.detail_idx = cc.detail_idx
-	        LEFT JOIN lms_evaluation_qson_review dd ON b.ev_idx = dd.ev_idx AND b.detail_idx = cc.detail_idx
-	        LEFT JOIN lms_poll_play pp ON p.detail_idx = pp.detail_idx AND p.member_idx = pp.member_idx
-	        LEFT JOIN lms_evaluation_play ep ON p.detail_idx = ep.detail_idx AND p.member_idx = ep.member_idx
 	        
 	    WHERE p.member_idx = #{memberIdx}
 	    GROUP BY p.play_idx

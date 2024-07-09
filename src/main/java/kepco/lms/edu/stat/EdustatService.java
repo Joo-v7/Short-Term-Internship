@@ -1,9 +1,7 @@
 package kepco.lms.edu.stat;
 
 import java.util.List;
-import java.util.Map;
 
-import kepco.util.CamelMap;
 import org.egovframe.rte.psl.dataaccess.util.EgovMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,9 +10,9 @@ import com.github.pagehelper.PageHelper;
 
 import kepco.lms.edu.EduVo;
 import kepco.lms.edu.detail.DetailVo;
-import kepco.lms.edu.event.EventVo;
 import kepco.lms.edu.stat.chart.EduStatChartVo;
 import kepco.lms.edu.stat.usr.EduStatUsrVo;
+import kepco.util.CamelMap;
 import kepco.util.StrUtil;
 
 @Service
@@ -71,59 +69,6 @@ public class EdustatService {
 
     public List<EdustatVo> shareByAccident(EgovMap req) {
         return eduStatMapper.shareByAccident(req);
-    }
-
-    public EdustatVo accidentCntByRole(EgovMap req) {
-        EdustatVo edustatVo = eduStatMapper.accidentCntByRole(req);
-
-        if (edustatVo.getMainEsCnt() == 0 && edustatVo.getMainFallCnt() == 0 && edustatVo.getMainCareCnt() == 0 && edustatVo.getMainLoadCnt() == 0) {
-            edustatVo.setMostRiskByMain("-");
-        } else if (edustatVo.getMainEsCnt() >= edustatVo.getMainFallCnt() && edustatVo.getMainEsCnt() >= edustatVo.getMainCareCnt() && edustatVo.getMainEsCnt() >= edustatVo.getMainLoadCnt()) {
-            edustatVo.setMostRiskByMain("감전");
-        } else if (edustatVo.getMainFallCnt() > edustatVo.getMainEsCnt() && edustatVo.getMainFallCnt() >= edustatVo.getMainCareCnt() && edustatVo.getMainFallCnt() >= edustatVo.getMainLoadCnt()) {
-            edustatVo.setMostRiskByMain("추락");
-        } else if (edustatVo.getMainCareCnt() > edustatVo.getMainEsCnt() && edustatVo.getMainCareCnt() > edustatVo.getMainFallCnt() && edustatVo.getMainCareCnt() >= edustatVo.getMainLoadCnt()) {
-            edustatVo.setMostRiskByMain("부주의");
-        } else if (edustatVo.getMainLoadCnt() > edustatVo.getMainEsCnt() && edustatVo.getMainLoadCnt() > edustatVo.getMainFallCnt() && edustatVo.getMainLoadCnt() > edustatVo.getMainCareCnt()) {
-            edustatVo.setMostRiskByMain("작업부하");
-        }
-
-        if (edustatVo.getSubEsCnt() == 0 && edustatVo.getSubFallCnt() == 0 && edustatVo.getSubCareCnt() == 0 && edustatVo.getSubLoadCnt() == 0) {
-            edustatVo.setMostRiskBySub("-");
-        } else if (edustatVo.getSubEsCnt() >= edustatVo.getSubFallCnt() && edustatVo.getSubEsCnt() >= edustatVo.getSubCareCnt() && edustatVo.getSubEsCnt() >= edustatVo.getSubLoadCnt()) {
-            edustatVo.setMostRiskBySub("감전");
-        } else if (edustatVo.getSubFallCnt() > edustatVo.getSubEsCnt() && edustatVo.getSubFallCnt() >= edustatVo.getSubCareCnt() && edustatVo.getSubFallCnt() >= edustatVo.getSubLoadCnt()) {
-            edustatVo.setMostRiskBySub("추락");
-        } else if (edustatVo.getSubCareCnt() > edustatVo.getSubEsCnt() && edustatVo.getSubCareCnt() > edustatVo.getSubFallCnt() && edustatVo.getSubCareCnt() >= edustatVo.getSubLoadCnt()) {
-            edustatVo.setMostRiskBySub("부주의");
-        } else if (edustatVo.getSubLoadCnt() > edustatVo.getSubEsCnt() && edustatVo.getSubLoadCnt() > edustatVo.getSubFallCnt() && edustatVo.getSubLoadCnt() > edustatVo.getSubCareCnt()) {
-            edustatVo.setMostRiskBySub("작업부하");
-        }
-
-        if (edustatVo.getGroundEsCnt() == 0 && edustatVo.getGroundFallCnt() == 0 && edustatVo.getGroundCareCnt() == 0 && edustatVo.getGroundLoadCnt() == 0) {
-            edustatVo.setMostRiskByGround("-");
-        } else if (edustatVo.getGroundEsCnt() >= edustatVo.getGroundFallCnt() && edustatVo.getGroundEsCnt() >= edustatVo.getGroundCareCnt() && edustatVo.getGroundEsCnt() >= edustatVo.getGroundLoadCnt()) {
-            edustatVo.setMostRiskByGround("감전");
-        } else if (edustatVo.getGroundFallCnt() > edustatVo.getGroundEsCnt() && edustatVo.getGroundFallCnt() >= edustatVo.getGroundCareCnt() && edustatVo.getGroundFallCnt() >= edustatVo.getGroundLoadCnt()) {
-            edustatVo.setMostRiskByGround("추락");
-        } else if (edustatVo.getGroundCareCnt() > edustatVo.getGroundEsCnt() && edustatVo.getGroundCareCnt() > edustatVo.getGroundFallCnt() && edustatVo.getGroundCareCnt() >= edustatVo.getGroundLoadCnt()) {
-            edustatVo.setMostRiskByGround("부주의");
-        } else if (edustatVo.getGroundLoadCnt() > edustatVo.getGroundEsCnt() && edustatVo.getGroundLoadCnt() > edustatVo.getGroundFallCnt() && edustatVo.getGroundLoadCnt() > edustatVo.getGroundCareCnt()) {
-            edustatVo.setMostRiskByGround("작업부하");
-        }
-
-        if (edustatVo.getSuperEsCnt() == 0 && edustatVo.getSuperFallCnt() == 0 && edustatVo.getSuperCareCnt() == 0 && edustatVo.getSuperLoadCnt() == 0) {
-            edustatVo.setMostRiskBySuper("-");
-        } else if (edustatVo.getSuperEsCnt() >= edustatVo.getSuperFallCnt() && edustatVo.getSuperEsCnt() >= edustatVo.getSuperCareCnt() && edustatVo.getSuperEsCnt() >= edustatVo.getSuperLoadCnt()) {
-            edustatVo.setMostRiskBySuper("감전");
-        } else if (edustatVo.getSuperFallCnt() > edustatVo.getSuperEsCnt() && edustatVo.getSuperFallCnt() >= edustatVo.getSuperCareCnt() && edustatVo.getSuperFallCnt() >= edustatVo.getSuperLoadCnt()) {
-            edustatVo.setMostRiskBySuper("추락");
-        } else if (edustatVo.getSuperCareCnt() > edustatVo.getSuperEsCnt() && edustatVo.getSuperCareCnt() > edustatVo.getSuperFallCnt() && edustatVo.getSuperCareCnt() >= edustatVo.getSuperLoadCnt()) {
-            edustatVo.setMostRiskBySuper("부주의");
-        } else if (edustatVo.getSuperLoadCnt() > edustatVo.getSuperEsCnt() && edustatVo.getSuperLoadCnt() > edustatVo.getSuperFallCnt() && edustatVo.getSuperLoadCnt() > edustatVo.getSuperCareCnt()) {
-            edustatVo.setMostRiskBySuper("작업부하");
-        }
-        return edustatVo;
     }
 
     public List<EdustatVo> accidentLocation(EgovMap req) {
