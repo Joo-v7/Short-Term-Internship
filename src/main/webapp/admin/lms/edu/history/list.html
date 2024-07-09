@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+	
+<th:block layout:fragment="content">
+<script>
+
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		$('#frmList2').submit(function(e) {
+			e.preventDefault();
+			detailList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+	});
+	
+	// 사용자 목록
+	function dataList() {
+		
+		$('#dataTable').DataTable({
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/edu/history/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'memberId', className : 'dt-body-center' },
+				{ data : 'memberNm', className : 'dt-body-center' },
+				{ data : 'playCount', className : 'dt-body-center' },
+				{ data : 'endTime', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+			],
+		});
+	}
+	
+	// 사용자별 훈련 목록
+	function detailList() {
+		
+		$('#dataTable2').DataTable({
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/edu/history/detailList?'+$('#frmList2').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			order : [0,'desc'],
+			initComplete : dataTableInit2,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'trainTitle', className : 'dt-body-center' },
+				{ data : 'teacherNm', className : 'dt-body-center' },
+				{ data : 'startTime', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+				{ data : 'team', className : 'dt-body-center'}, 
+				{ data : 'workRole', className : 'dt-body-center', render: $.fn.dataTable.render.workRoleNm() },
+				{ data : 'playMinute', className : 'dt-body-center'},
+				{ data : 'moduleCdCnt', className : 'dt-body-center'},
+				{ data : 'modulePlayCnt', className : 'dt-body-center'}, 
+				{
+					data: null, searchable: false, orderable: true, className: 'dt-body-center',
+					render: function (data, type, row, meta) {
+						var url = "/api/edu/result/feedback/list?playTeamIdx=" + row.playTeamIdx;
+						var playTeamResult = `<button onclick="window.open('${url}', '_blank');" class="waves-effect waves-light btn teal accent-4" ><i class="material-icons left">filter_none</i>보기</button>`;
+						return playTeamResult;
+					}
+				},
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		
+		// 행클릭시 사용자별 훈련 목록
+		$('#dataTable').on('click', 'tbody tr', function() {
+			$(this).closest('table').DataTable().rows('.selected').nodes().each((row)=> row.classList.remove('selected'));
+			$(this).addClass('selected');
+			var data = $('#dataTable').DataTable().row($(this)).data();
+			$("input[name='memberIdx']", "#frmList2").val(data.memberIdx);
+			detailList();
+		});
+		
+		// 1번째 행 클릭
+		if ($('#dataTable').DataTable().data().count() > 0) {
+			$('#dataTable tbody tr:first').click();
+		}
+	}
+
+	// 데이터테이블 initComplete
+	function dataTableInit2(settings, json) {
+		$('#dataTable2TotCnt').text( $('#dataTable2').DataTable().data().count());
+		
+		if ($('#dataTable2').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+	
+
+</script>
+
+<div class="row">
+	<div class="col s12 m12 l6 xl4 sideline pd_box">
+		<div class="basic">
+			<div class="basic_top_searchbox left">
+				<div class="row">
+					<form id="frmList" method="get">
+						<!-- 검색창 -->
+						<div class="col s12 m12 l12 xl12 search_bar">
+							<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="아이디, 성명">
+							<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left"><i class="material-icons md-18 left">search</i> 검색</button>
+							<div class="title left">
+								전체 : <b id="dataTableTotCnt">0</b>건
+							</div>
+
+						</div>
+					</form>
+				</div>
+			</div>
+			<div class="table_type3">
+				<table id="dataTable" class="striped centered highlight" style="min-width:400px">
+					<colgroup>
+						<col width="70px">
+						<col width="100px">
+						<col width="100px">
+						<col width="100px">
+						<col width="140px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>NO</th>
+							<th>아이디</th>
+							<th>성명</th>
+							<th>훈련횟수</th>
+							<th>최종 훈련일시</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	
+	<div class="col s12 m12 l6 xl8 scroll_defalt pd_box pt40">
+		<div class="basic_top_searchbox left">
+			<div class="row">
+				<form id="frmList2" method="get">
+					<div class="input-field col s2 m2">
+						<label for="scStartDate" class="">훈련 시작일자</label> <input
+							id="scStartDate" name="scStartDate" type="date">
+					</div>
+					<div class="input-field col s2 m2">
+						<label for="scEndDate" class="">훈련 종료일자</label> <input
+							id="scEndDate" name="scEndDate" type="date">
+					</div>
+					
+					<div class="input-field col s2 m2">
+						<label for="scTeacherNm" class="">교수자</label>
+						<input name="scTeacherNm" type="text"th:value="${param?.scTeacherNm}">
+					</div>
+					<!-- 검색창 -->
+					<div class="col s6 m6 search_bar">
+						<input name="memberIdx" type="hidden" th:value="${param?.memberIdx}">
+						<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="훈련명">
+						<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+							<i class="material-icons md-18 left">search</i> 검색
+						</button>
+						<div class="title left">
+							전체 : <b id="dataTable2TotCnt">0</b>건
+						</div>
+
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="table_type3">
+				<table id="dataTable2" class="striped centered highlight">
+					<colgroup>
+						<col width="80px">
+						<col width="auto">
+						<col width="100px">
+						<col width="140px">
+						<col width="80px">
+						<col width="100px">
+						<col width="110px">
+						<col width="120px">
+						<col width="120px">
+						<col width="100px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>NO</th>
+							<th>훈련명</th>
+							<th>교수자</th>
+							<th>훈련일시</th>
+							<th>팀</th>
+							<th>역할</th>
+							<th>수행시간(분)</th>
+							<th>수행모듈(갯수)</th>
+							<th>모듈수행(횟수)</th>
+							<th>비고</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+	</div>
+</div>
+</body>
+</html>

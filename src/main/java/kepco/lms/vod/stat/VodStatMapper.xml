@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.stat.VodStatMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					a.vod_title LIKE CONCAT ('%',#{scWord},'%') 
+				)
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(vodIdx)">
+				AND vod_idx = #{vodIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(startDate)">
+				AND a.vod_edu_bgn_date >= #{startDate}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(endDate)">
+				AND	#{endDate} >= a.vod_edu_end_date
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scInsertNm)">
+				AND (insert_idx in (SELECT member_idx FROM cms_member m WHERE m.member_nm LIKE CONCAT ('%',#{scInsertNm},'%') ))
+			</if>
+		</where>
+	</sql>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.vod.stat.VodStatVo">
+		SELECT 
+		    a.*,
+		    (SELECT po_subject FROM lms_poll b WHERE a.po_idx = b.po_idx) AS po_subject,
+		    (SELECT ev_subject FROM lms_evaluation b WHERE a.ev_idx = b.ev_idx) AS ev_subject,
+		    (SELECT COUNT(distinct b.apply_idx) FROM lms_vod_apply b WHERE a.vod_idx = b.vod_idx AND b.apply_state = '2' AND b.delete_yn = 'n') AS apply_cnt,
+		    (SELECT COUNT(distinct b.apply_idx) FROM lms_vod_apply b WHERE a.vod_idx = b.vod_idx AND b.apply_state = '2' AND b.learn_state = '2' AND b.delete_yn = 'n') AS graduate_cnt,
+		    (SELECT MIN(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) AS min_learn_minute,
+		    (SELECT MAX(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) AS max_learn_minute,
+		    (SELECT AVG(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) AS avg_learn_minute
+		FROM 
+		    lms_vod a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="vodStatList" parameterType="map" resultType="egovMap">
+		SELECT
+	        a.*,
+	        (SELECT COUNT(1) FROM lms_vod_bundle b WHERE b.vod_idx = a.vod_idx) contents_cnt,
+	        (SELECT SUM(b.study_time) FROM lms_vod_content b LEFT JOIN lms_vod_bundle bn ON b.content_idx = bn.content_idx WHERE a.vod_idx = bn.vod_idx) study_sum_time,
+	        (SELECT MIN(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) learn_min_time,
+	        (SELECT MAX(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) learn_max_time,
+	        (SELECT AVG(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) learn_avg_time,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.apply_state = '2') vod_students_cnt,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.apply_state = '2' AND b.learn_state = '2') vod_complete_cnt
+	    FROM lms_vod a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="vodStatExcel" parameterType="map" resultType="kepco.lms.vod.stat.VodStatVo">
+		SELECT
+	        a.*,
+	        (SELECT COUNT(1) FROM lms_vod_bundle b WHERE b.vod_idx = a.vod_idx) contents_cnt,
+	        (SELECT SUM(b.study_time) FROM lms_vod_content b LEFT JOIN lms_vod_bundle bn ON b.content_idx = bn.content_idx WHERE a.vod_idx = bn.vod_idx) study_sum_time,
+	        (SELECT MIN(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) learn_min_time,
+	        (SELECT MAX(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) learn_max_time,
+	        (SELECT AVG(b.learn_time) / 60 FROM lms_vod_learn b WHERE a.vod_idx = b.vod_idx) learn_avg_time,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.apply_state = '2') vod_students_cnt,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.apply_state = '2' AND b.learn_state = '2') vod_complete_cnt
+	    FROM lms_vod a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="vodContentsStatList" parameterType="map" resultType="egovMap">
+		SELECT
+			a.*,
+			(SELECT category_nm FROM lms_vod_category ca WHERE a.vod_category_idx = ca.vod_category_idx) category_nm,
+	        (SELECT MIN(c.learn_time) / 60 FROM lms_vod_learn c WHERE a.content_idx = c.content_idx) learn_min_time,
+	        (SELECT MAX(c.learn_time) / 60 FROM lms_vod_learn c WHERE a.content_idx = c.content_idx) learn_max_time,
+	        (SELECT AVG(c.learn_time) / 60 FROM lms_vod_learn c WHERE a.content_idx = c.content_idx) learn_avg_time,
+			(SELECT COUNT(1) FROM lms_vod_bundle bn WHERE bn.content_idx = a.content_idx) contents_students_cnt,
+			(SELECT COUNT(distinct b.apply_idx) FROM lms_vod_apply b LEFT JOIN lms_vod_bundle bn ON b.vod_idx = bn.vod_idx WHERE b.delete_yn = 'n' AND bn.content_idx = a.content_idx AND b.learn_state = '2') contents_complete_cnt
+		FROM lms_vod_content a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="vodContentsStatExcel" parameterType="map" resultType="kepco.lms.vod.stat.VodStatVo">
+		SELECT
+			a.*,
+			(SELECT category_nm FROM lms_vod_category ca WHERE a.vod_category_idx = ca.vod_category_idx) category_nm,
+	        (SELECT MIN(c.learn_time) / 60 FROM lms_vod_learn c WHERE a.content_idx = c.content_idx) learn_min_time,
+	        (SELECT MAX(c.learn_time) / 60 FROM lms_vod_learn c WHERE a.content_idx = c.content_idx) learn_max_time,
+	        (SELECT AVG(c.learn_time) / 60 FROM lms_vod_learn c WHERE a.content_idx = c.content_idx) learn_avg_time,
+			(SELECT COUNT(1) FROM lms_vod_bundle bn WHERE bn.content_idx = a.content_idx) contents_students_cnt,
+			(SELECT COUNT(distinct b.apply_idx) FROM lms_vod_apply b LEFT JOIN lms_vod_bundle bn ON b.vod_idx = bn.vod_idx WHERE b.delete_yn = 'n' AND bn.content_idx = a.content_idx AND b.learn_state = '2') contents_complete_cnt
+		FROM lms_vod_content a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="shareByCategory" parameterType="map" resultType="egovMap">
+		SELECT 
+		    d.category_nm AS category_nm, 
+		    COUNT(d.category_nm) AS category_cnt
+		FROM lms_vod_apply a
+		LEFT JOIN lms_vod_bundle b ON a.vod_idx = b.vod_idx
+		LEFT JOIN lms_vod_content c ON b.content_idx = c.content_idx 
+		LEFT JOIN lms_vod_category d ON c.vod_category_idx = d.vod_category_idx 
+		<include refid="selectWhere"/>
+	    AND c.delete_yn = 'n'
+	    AND d.delete_yn = 'n'
+	    AND IFNULL(c.vod_category_idx, '') != ''
+		    
+		GROUP BY 
+		d.category_nm
+	</select>
+	
+	<select id="vodKeyword" parameterType="map" resultType="egovMap">
+		WITH RECURSIVE keyword_split AS (
+		    SELECT
+		        b.vod_idx AS vod_idx,
+		        TRIM(SUBSTRING_INDEX(vod_keyword, ',', 1)) AS keyword,
+		        CASE
+		            WHEN INSTR(vod_keyword, ',') > 0 THEN
+		                TRIM(SUBSTRING(vod_keyword, INSTR(vod_keyword, ',') + 1))
+		            ELSE
+		                ''
+		        END AS remaining_keywords
+		    FROM lms_vod_apply a
+		    LEFT JOIN lms_vod b ON a.vod_idx = b.vod_idx
+		    
+		    <include refid="selectWhere"/>
+		    AND IFNULL(vod_keyword, '') != ''
+			AND b.delete_yn = 'n'
+			AND a.apply_state = '2'
+		    UNION ALL
+		
+		    SELECT
+		        vod_idx,
+		        TRIM(SUBSTRING_INDEX(remaining_keywords, ',', 1)) AS keyword,
+		        CASE
+		            WHEN INSTR(remaining_keywords, ',') > 0 THEN
+		                TRIM(SUBSTRING(remaining_keywords, INSTR(remaining_keywords, ',') + 1))
+		            ELSE
+		                ''
+		        END
+		    FROM keyword_split
+		    WHERE IFNULL(remaining_keywords, '') != ''
+		)
+		
+		SELECT
+		    keyword,
+		    COUNT(*) AS keyword_cnt
+		FROM keyword_split
+		WHERE IFNULL(keyword, '') != ''
+		GROUP BY keyword
+		ORDER BY keyword_cnt DESC
+	</select>
+	
+	<select id="studentList" parameterType="map" resultType="kepco.lms.vod.stat.VodStatVo">
+		SELECT a.*,
+		(SELECT member_nm FROM cms_member b WHERE a.member_idx = b.member_idx) member_nm,
+		(SELECT member_id FROM cms_member b WHERE a.member_idx = b.member_idx) member_id,
+		(SELECT SUM(c.learn_time) FROM lms_vod_learn c WHERE a.vod_idx = c.vod_idx AND a.member_idx = c.member_idx) AS sum_learn_time
+		FROM lms_vod_apply a
+		<include refid="selectWhere"/>
+		AND a.apply_state = '2'
+		    
+	</select>
+</mapper>

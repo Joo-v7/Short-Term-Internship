@@ -1,0 +1,94 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/kepco/layout/popup.html"
+	>
+<th:block layout:fragment="content">
+<head>
+
+<link rel="stylesheet" href="/assets/css/board.css"><!-- 게시판css -->
+<script src="/assets/libs/jquery-ui/jquery-ui.js" ></script>
+<script src="/assets/js/jquery-ui.js" ></script>
+<link rel="stylesheet" type="text/css" href="/assets/libs/jquery-ui/jquery-ui.min.css" />
+</head>
+
+
+<form id="bbs_form" method="post" action="/lms/edu/regist/save">
+	<input type="hidden" name="insertIdx" th:value="${memberIdx}" />
+	<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+	<div id="board_write">
+		<table>
+			<tbody>
+				<tr>
+					<th scope="row"><label for="bs_writer_name_label">작성자 <span class="star">*</span></label></th>
+					<td>
+						<div class="input_box text">
+							<input id="bs_writer_name_label" name="postName" th:value="${memberName}" type="text" title="작성자" class="input_type">
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="post_title_label">제목<span class="star">*</span></label></th>
+					<td>
+						<div class="input_box text w-100per">
+							<input id="post_title_label" style="width:100%;" name="postTitle" type="text" title="제목" class="input_type wfull_95" />
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div id="board_btn">
+		<div class="fl">
+
+			<input type="button" value="취소" title="취소" class="button_type4" onclick="window.close();" />
+		</div>
+		<div class="fr">
+			<input type="submit" value="저장" title="저장" class="button_type3 btn_submit" />
+		</div>
+	</div>
+</form>
+
+<script th:inline="javascript">
+$(function(){
+
+	$("#bbs_form").submit(function(e) {
+		e.preventDefault();
+		var $frm = $(this);
+		
+		if($("input[name='postTitle']", $frm).val() == "") {
+			alert("제목는 필수입력 입니다.");
+			$("input[name='postTitle']", $frm).focus();
+			return;
+		}
+		
+		 setTimeout(function (){
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+			}).done(function(data) {
+				console.log(data);
+				if(data.code == 0) {
+					alert("처리되었습니다.");
+					location.href="/lms/edu/regist/view/?site="+site+"&mn="+mn+"&boardId="+boardId+"&postIdx="+data.data.postVo['postIdx'];
+					
+				}
+				else {
+					alert(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					alert(xhr.responseJSON.message);
+				}
+			});
+		 },500);
+	});
+
+});
+
+</script>

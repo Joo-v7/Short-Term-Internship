@@ -1,0 +1,245 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<link rel="stylesheet" href="/assets/libs/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="/assets/libs/codemirror/addon/hint/show-hint.css">
+<link rel="stylesheet" href="/assets/libs/codemirror/theme/material.css">
+<script src="/assets/libs/codemirror/lib/codemirror.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/show-hint.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/xml-hint.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/html-hint.js"></script>
+<script src="/assets/libs/codemirror/mode/xml/xml.js"></script>
+<script src="/assets/libs/codemirror/mode/javascript/javascript.js"></script>
+<script src="/assets/libs/codemirror/mode/css/css.js"></script>
+<script src="/assets/libs/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+<style>
+.co_m1 .CodeMirror { height:140px !important; }
+.co_m2 .CodeMirror { height:270px !important; }
+</style>
+
+<form id="frmForm" class="frm_page" method="post" th:action="@{/{adminPath}/cms/page/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+	<div class="top">
+		<div class="row">			
+			<div class="col s12 m12 l12 xl12 right-align">
+				<button th:if="${!#strings.isEmpty(vo?.pageIdx)}" class="btn waves-effect z-depth-0 red lighten-1 left" th:onclick="|dataDelete(${vo?.pageIdx}, '페이지');return false;|">삭제<i class="material-icons left">delete</i></button>				
+				<button th:if="${!#strings.isEmpty(vo?.pageIdx)}" class="btn waves-effect waves-light  blue-grey accent-4 z-depth-0 " th:onclick="|set_page_log(${vo?.pageIdx});return false;|" data-position="bottom">로그기록 <i class="material-icons left fs1">history</i></button>
+				<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit"value="저장">저장 <i class="material-icons left">check</i></button>
+			</div>
+		</div>
+	</div>
+			
+	<div class="row">
+		<input id="pageIdx" name="pageIdx" type="hidden" th:value="${vo?.pageIdx}" />
+		<input id="site" name="site" type="hidden" th:value="${vo?.site}" />
+		
+		<div class="input-field col s12 m12 l12 xl12">
+			<label for="pageNm" class="req">페이지명</label>
+			<input id="pageNm" name="pageNm" type="text" title="페이지명" th:value="${vo?.pageNm}" />
+		</div>
+	</div>
+	<div class="row">
+		<div class="input-field col s12 m6 l4 xl4">
+			<label for="pagePath">페이지경로</label>
+			<input id="pagePath" name="pagePath" type="text" title="페이지경로" th:value="${vo?.pagePath}" readonly />
+		</div>
+		<div class="input-field col s12 m6 l4 xl4">
+			<label for="pageCd" class="req">페이지코드</label>
+			<input id="pageCd" name="pageCd" type="text" title="페이지코드" th:value="${vo?.pageCd}" th:readonly="${vo?.pageIdx > 0}" />
+			<input id="pageExt" name="pageExt" type="hidden" value=".html" readonly />
+		</div>
+		
+		<div class="input-field col s12 m12 l4 xl4">
+			<label for="pageType">페이지 타입</label>
+			<input name="pageType" type="hidden" th:value="${vo?.pageType}" th:if="${vo?.pageIdx > 0}" />
+			<select id="pageType" name="pageType" title="페이지타입" th:disabled="${vo?.pageIdx > 0}">
+				<option th:selected="${vo?.pageType}=='sub'" value='sub'>서브</option>
+				<option th:selected="${vo?.pageType}=='main'" value='main'>메인</option>
+				<option th:selected="${vo?.pageType}=='css'" value='css'>CSS</option>
+				<option th:selected="${vo?.pageType}=='js'" value='js'>JS</option>
+			</select>
+		</div>
+	</div>
+	<div class="row">
+		<div class="input-field col s12 m6 l3 xl3">
+			<label for="fileUpdateDate">파일 수정일시</label>
+			<input id="fileUpdateDate" th:value="${#dates.format(fileUpdateDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+		</div>
+		<div class="input-field col s12 m6 l3 xl3">
+			<label for="insertDate">등록일시</label>
+			<input id="insertDate" type="text" th:value="${#dates.format(vo?.insertDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+		</div>
+		<div class="input-field col s12 m6 l3 xl3">
+			<label for="updateDate">수정일시</label>
+			<input id="updateDate" type="text" th:value="${#dates.format(vo?.updateDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+		</div>
+		<label for="">사용여부</label>
+		<div class="col s12 m6 l3 xl3 check_list_box">
+			<label for="useYn">
+				<input id="useYn" name="useYn" type="checkbox" class="filled-in" title="사용여부" value="y" th:checked="${vo?.useYn eq 'y'}">
+				<span>사용</span>
+			</label>
+		</div>
+	</div>
+	
+	
+	<div class="row mb0">
+		<div class="input-field col s12 m12 l12 xl12 co_m1">
+			<label for="myTemplate" class="">페이지 기본 템플릿(참고)</label>
+			<textarea id="myTemplate" >&lt;html lang=&quot;ko&quot; 
+				xmlns:th=&quot;http://www.thymeleaf.org&quot;
+				xmlns:layout=&quot;http://www.ultraq.net.nz/thymeleaf/layout&quot;
+				xmlns:sec=&quot;http://www.thymeleaf.org/extras/spring-security&quot;
+				layout:decorate=&quot;~{|${siteLayoutPath}|}&quot;&gt;
+				&lt;th:block layout:fragment=&quot;content&quot;&gt;
+
+				페이지 내용
+
+				&lt;/th:block&gt;
+			</textarea>
+		</div>
+	</div>
+	
+	<div class="row mb0" th:if="${isFileContent}">
+		<div class="input-field col s12">
+		<span class="chk_red">※ 데이터베이스보다 파일의 수정일자가 최신이므로 실제 파일 내용을 가져왔습니다.</span>
+		</div>
+	</div>
+			
+	<div class="row">
+		<div class="input-field col s12 co_m2">
+			<label for="pageContent" class="req">페이지내용</label>
+			<textarea id="pageContent" name="pageContent" class="x-materialize-textarea" th:text="${vo?.pageContent}"  style="height:250px; margin-top:10px; padding: 10px;"></textarea>
+		</div>
+	</div>
+
+</form>
+
+<script>
+//# sourceURL=/admin/cms/page/form.html
+	$(function() {
+		
+		$("#pageType").formSelect();
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='pageNm']", $frm).val() == "") {
+				toast("페이지명은 필수입력 입니다.");
+				$("input[name='pageNm']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='pageCd']", $frm).val() == "") {
+				toast("페이지코드는 필수입력 입니다.");
+				$("input[name='pageCd']", $frm).focus();
+				return;
+			}
+			
+			var pageContent = editor2.getValue();
+			$("#pageContent").val(pageContent);
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm('');
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+		
+		// 페이지타입에 따른 경로, 파일확장자
+		$("#pageType").change(function(e) {
+			var pageType = $(this).val();
+			var site = $("[name='site']", $("#frmForm")).val();
+			var pagePath = "/pages/" + site + "/" + pageType + "/";
+			var pageExt = ".html";
+			switch (pageType) {
+				case "js":
+				case "css":
+					pageExt = "." + pageType;
+					break;
+				default:
+					break;
+			}
+			
+			$("[name='pagePath']", $("#frmForm")).val(pagePath);
+			$("[id='pageExt']", $("#frmForm")).val(pageExt);
+		});
+		
+		$("#pageType").change();
+		
+		 editor1 = CodeMirror.fromTextArea($('#myTemplate')[0], {
+             mode: "text/html",
+             lineNumbers: true,
+             extraKeys: {
+                 "Ctrl-Space": "autocomplete",
+                 "F11": function(cm) {
+                     setFullScreen(cm, !isFullScreen(cm));
+                 },
+                 "Esc": function(cm) {
+                     if (isFullScreen(cm)) setFullScreen(cm, false);
+                 }
+             },
+
+             value: document.documentElement.innerHTML
+         });
+		 
+		 editor2 = CodeMirror.fromTextArea($('#pageContent')[0], {
+             mode: "text/html",
+             lineNumbers: true,
+             extraKeys: {
+                 "Ctrl-Space": "autocomplete",
+                 "F11": function(cm) {
+                     setFullScreen(cm, !isFullScreen(cm));
+                 },
+                 "Esc": function(cm) {
+                     if (isFullScreen(cm)) setFullScreen(cm, false);
+                 }
+             },
+
+             value: document.documentElement.innerHTML
+         });
+		 
+		 
+		 
+		
+// 		M.textareaAutoResize($("#pageContent"));
+	});
+	
+	function set_page_log(page_idx){
+		$.ajax({
+			url: gblAdminPath + '/cms/page/log/list?type=page_log_data&page_idx='+page_idx,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var pop_modal = $("#pop_modal").modal();
+			pop_modal.modal('open');
+			$('#pop_modal').css({'max-width':'1280px', 'height':'80%'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+</script>

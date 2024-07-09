@@ -1,0 +1,528 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<link rel="stylesheet" href="/assets/css/board.css"><!-- 게시판css -->
+
+
+<script src="/assets/libs/jquery-ui/jquery-ui.js" ></script>
+
+<script src="/assets/js/jquery.form.min.js" ></script>
+
+<link rel="stylesheet" type="text/css" href="/assets/libs/jquery-ui/jquery-ui.min.css" />
+
+<script src="/assets/js/dropzone.js"></script>
+<script src="/assets/js/common.js"></script>
+<link rel="stylesheet" href="/assets/css/dropzone.css">
+<link rel="stylesheet" href="/assets/css/dropzone.ext.css">
+<style>
+.bbs_file_del2 { float: left;
+    width: 100%;
+        margin-bottom: 10px;
+} 
+.bbs_file_del2:last-child{margin-bottom:0;}
+.bbs_file_del2 label { }
+.bbs_file_del2 a { }
+.bbs_file {     float: left;
+    width: 100%;
+} 
+.bbs_file_item {
+    height: auto;
+    overflow: hidden;
+    display: inline-block;
+    width: 100%;
+}
+input:disabled {
+    background: #eee;
+    display: none;
+    }
+#fileDropzone {
+	border: 1px dashed #676767;
+	display: flex;
+	align-items: center;
+	text-align: center;
+	transition:ease-in-out .25s;
+}
+#fileDropzone:hover{background:#181818;}
+#fileDropzone .dz-message {margin: 0 auto;}
+#fileDropzone .dz-message span {position:relative; color: #999;
+    font-weight: bold;
+    font-size: 16px; }
+#fileDropzone .dz-message span:before{
+	content: '';
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background: url(/pages/kepco/img/sub/file-ico.png) center no-repeat;
+    top: 3px;
+    position: relative;
+    margin-right: 7px;
+	opacity: 0.9;
+}
+    
+   /* Mimic table appearance */
+div.table {
+  display: table;
+}
+div.table .file-row {
+  display: table-row;
+}
+div.table .file-row > div {
+  display: table-cell;
+  vertical-align: top;
+  border-top: 1px solid #ddd;
+  padding: 8px;
+}
+div.table .file-row:nth-child(odd) {
+  background: #f9f9f9;
+}
+
+
+
+/* The total progress gets shown by event listeners */
+#total-progress {
+  opacity: 0;
+  transition: opacity 0.3s linear;
+}
+
+/* Hide the progress bar when finished */
+#previews .file-row.dz-success .progress {
+  opacity: 0;
+  transition: opacity 0.3s linear;
+}
+
+/* Hide the delete button initially */
+#previews .file-row .delete {
+  display: none;
+}
+
+/* Hide the start and cancel buttons and show the delete button */
+
+#previews .file-row.dz-success .start,
+#previews .file-row.dz-success .cancel {
+  display: none;
+}
+#previews .file-row.dz-success .delete {
+  display: block;
+} 
+
+
+
+div.table .file-row > div {
+    display: table-cell;
+    vertical-align: top;
+    border-top: 1px solid #ddd;
+    padding: 8px;
+}
+
+.progress {
+    height: 20px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+}
+#cke_38 {display:none}
+
+</style>
+
+<form id="bbs_form" method="post" enctype="multipart/form-data" action="/cms/board/post/save">
+	<input type="hidden" name="postIdx" th:value="${postvo?.postIdx}" />
+	<input type="hidden" name="insertIdx" th:value="${memberIdx}" />
+	<input type="hidden" name="postDepth" value="0" />
+	<input type="hidden" name="boardIdx" th:value="${vo.boardIdx}" />
+	<input type="hidden" name="boardId" th:value="${req.boardId}" />
+	<input type="hidden" name="upload_count" id="upload_count" value="">
+	<input type="hidden" name="newPostIdx" id="newPostIdx" th:value="${postvo?.postIdx}" />
+	
+	<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+	<input type="hidden" name="postSecret" value="N" />
+
+
+
+<div class="sub-container">
+	<div id="board_write">
+		<table>
+			<tbody>
+			<!-- 
+				<tr>
+					<th scope="row"><label for="notice_chk2">공지여부</label></th>
+					<td>
+						<input id="notice_chk" name="post_notice" value="Y" type="checkbox" class="check_type" title="공지여부">
+						<label for="notice_chk">공지</label>
+							<p class="f_alert">체크시 공지사항으로 게시물 최상단에 출력됩니다.(정렬기준: 최근게시물)</p>
+					</td>
+					
+					
+				</tr>
+				
+				<tr>
+					<th scope="row"><label for="bs_secret_label">비밀글</label></th>
+					<td>
+						<div class="input_box checkbox">
+						  <input id="bs_secret_label" name="post_secret"  type="checkbox" class="check_type" title="비밀글 여부" value="Y" />
+						  <label for="bs_secret_label">
+							<span class="design"></span>
+							<span class="text">체크시 비밀글로 등록되어 본인과 관리자외에는 조회할 수 없습니다.</span>
+						  </label>
+						</div>
+					</td>
+				</tr>
+				 -->
+				<tr>
+					<th scope="row"><label for="bs_writer_name_label">작성자<span class="star">*</span></label></th>
+					<td>
+						<div class="input_box text">
+							
+							<input id="bs_writer_name_label" name="postName" th:if="${postvo?.postName}" th:value="${postvo?.postName}" type="text" title="작성자" class="input_type" >
+							<input id="bs_writer_name_label" name="postName" th:if="!${postvo?.postName}" th:value="${memberName}" type="text" title="작성자" class="input_type" >
+						</div>
+					</td>
+				</tr>
+				<!--  
+				<tr>
+					<th scope="row"><label for="post_password_label">비밀번호 <span class="star">*</span><label></th>
+					<td>
+						<div class="input_box text">
+							<input id="post_password_label" name="post_password" value="" type="password" size="20" title="비밀번호" class="input_type" autocomplete="off" />
+						</div>
+						<span class="f_alert ">수정,삭제시 확인 목적으로 사용됩니다.</span>
+					</td>
+				</tr>
+				-->
+				<!-- 
+				<tr>
+					<th scope="row"><label for="post_datetime_label">등록일</label></th>
+					<td>
+						<div class="input_box date">
+							<input type='text' id="post_datetime_label" name="post_datetime" class="input_type" value="" title="등록일자" autocomplete="off" />
+						</div>
+						<span class="f_alert ">공란으로 입력시 현재일자로 저장됩니다.</span>
+					</td>
+				</tr>
+				 -->
+				<tr>
+					<th scope="row"><label for="post_title_label">제목<span class="star">*</span></label></th>
+					<td>
+						<div class="input_box text w-100per">
+							<input id="post_title_label" style="width:100%;" name="postTitle" th:value="${postvo?.postTitle}" type="text" title="제목" class="input_type wfull_95" />
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">내용<span class="star">*</span></th>
+					<td>
+						<label for="post_content_type_label"></label>
+						<textarea name="postContent" class="ckEditor" id="postContent" title="내용" >[[${postvo?.postContent}]]</textarea>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row" colspan="2" class="tip bdr-none">
+						<div class="bbs_file_tip">
+							<ul>
+								<li>에디터로 이미지 첨부시 이미지 설명을 적어주시기 바랍니다.</li>
+								<li>jpg나 이미지 파일인 경우 파일설명을 입력해주세요</li>
+								<li>pdf나 hwp 파일이 이미지 기반일 경우 텍스트로 변환후 첨부해주세요!</li>
+							</ul>
+						</div>
+					</th>
+				</tr>
+				<tr>
+					<th scope="row"><label for="">파일첨부</label></th>
+					<td>
+						<div class="bbs_file_info">
+			 				<div class="dropzone" id="fileDropzone">
+							</div>
+							
+							<div class="table table-striped files" id="previews">
+							    <div id="template" class="file-row dz-image-preview">
+							       
+							    </div>
+							</div>
+							<!-- 
+							<span class="f_alert ">
+								최대 5개 파일 업로드 가능. 전체 업로드 용량은 50MB 이하<br />
+								파일설명은 웹표준 및 웹접근성에 의해 입력하는 것을 권장합니다.
+							</span>
+							 -->
+						</div>
+
+						<div id="file_list" class="bbs_file_area" th:if="!${#lists.isEmpty(filevo)}" >
+							<div th:each="filevo : ${filevo}">
+								<div class="bbs_file_item" th:classappend="|bbs_item_${filevo?.fileSort}|">
+									<div class="bbs_file_del2">
+										<label th:for="|file_del_label_${filevo?.fileIdx}|">
+											<input th:id="|file_del_label_${filevo?.fileIdx}|" th:value="${filevo?.fileIdx}" name="fileDel" type="checkbox" class="check_type" title="파일삭제"> 파일삭제
+										</label>
+										<a title="" th:href="|/cms/board/download?boardId=${req?.boardId}&fileIdx=${filevo?.fileIdx}|" target="_blank">[[${filevo?.fileOriginName}]]</a>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div id="board_btn">
+		<div class="fl">
+			<input type="button" value="취소" title="취소" class="button_type4" onclick="history.back(); return false;" />
+		</div>
+		<div class="fr">
+			<input type="submit" value="저장" title="저장" class="button_type3 btn_submit" id="btn-upload-file" />
+		</div>
+	</div>
+</form>
+</div>
+	
+<script th:inline="javascript">
+
+Dropzone.autoDiscover = false;
+$(function(){
+
+	var bbs_max_file_cnt = 5;
+	var bbs_max_file_size = 10000;
+	
+	
+
+	$("#bbs_form input[name='post_datetime']").datepicker();
+
+	//파일항목 추가
+	$("#bbs_file_add").click(function() {
+		if ($(".bbs_file_item").length >= bbs_max_file_cnt) {
+			alert("첨부가능한 파일은 최대 " + bbs_max_file_cnt + "개 입니다.");
+			return false;
+		}
+		var bf_sort = $(".bbs_file_item").length;
+
+
+		var html = '<div class="bbs_file_item bbs_item_' + bf_sort + '">' +
+			' <input id="bs_file_label_' + bf_sort + '" name="fileSaveName" type="file" title="파일첨부" class="input_type wfull_95 file_upload" onchange="fileUpload(' + bf_sort + ')">' +
+			' <label for="bs_file_label_' + bf_sort + '">파일업로드</label>' +
+			' <input id="bf_name_label_' + bf_sort + '" class="fileUploadName" type="text" value="" title="업로드 파일명" disabled="">' +
+			' <div class="input_box text file_info_text"><input id="bf_memo_label_' + bf_sort + '" name="fileMemo" type="text" value="" title="파일설명" placeholder="파일설명" class="input_type wfull_95"></div>' +
+			' <input id="bbs_file_del_' + bf_sort + '" class="bbs_file_del none" type="button" value="" title="파일감소" onclick="bbs_file_del(' + bf_sort + '); return false;" />' +
+			' <label for="bbs_file_del_' + bf_sort + '" class="bbs_file_del_label" ></label></div>';
+			
+			
+		$(".bbs_file_area").append(html);
+
+	});
+	
+	$("#bbs_form").submit(function(e) {
+		var content = CKEDITOR.instances.postContent.getData();
+		$("#postContent").val(content);
+		
+		if($("input[name='postTitle']").val() == "") {
+			alert("제목는 필수입력 입니다.");
+			$("input[name='postTitle']").focus();
+			return false;
+		}
+	});
+
+
+	if(typeof CKEDITOR === "undefined"){
+
+		var headTag = document.getElementsByTagName("head")[0];
+		var newScript = document.createElement('script');
+		newScript.type = 'text/javascript';
+		newScript.src = '/assets/editor/ckeditor/ckeditor.js';
+		headTag.appendChild(newScript);
+		newScript.onload = function(){
+			newScript2 = document.createElement('script');
+			newScript2.type = 'text/javascript';
+			newScript2.onload = function() {
+				for(name in CKEDITOR.instances)
+				{
+					CKEDITOR.instances[name].destroy(true);
+				}
+				CKEDITOR.replaceAll('ckEditor');
+			};
+			newScript2.src = '/assets/editor/ckeditor/config.js';
+			headTag.appendChild(newScript2);
+		}
+	}
+	else{
+		for(name in CKEDITOR.instances)
+		{
+			CKEDITOR.instances[name].destroy(true);
+		}
+		CKEDITOR.replaceAll('ckEditor');
+	}
+	
+	
+	
+	var cf_ext_file = 'zip|rar|doc|hwp|pdf|ppt|xls|pptx|docx|xlsx|txt|psd|pptm';
+	var cf_ext_image = 'gif|jpg|jpeg|png|bmp';
+	var cf_ext_multimedia = 'asx|asf|wmv|wma|mpg|mpeg|mov|avi|swf';
+	var cf_file_cnt = '5';
+	
+	String.prototype.replaceAll = function(org, dest) {
+		return this.split(org).join(dest);
+	}
+	
+	$(".file-dropzone").on('dragover', handleDragEnter);
+	$(".file-dropzone").on('dragleave', handleDragLeave);
+	$(".file-dropzone").on('drop', handleDragLeave);
+	
+	
+	function handleDragEnter(e) {
+		this.classList.add('drag-over');
+	}
+
+	function handleDragLeave(e) {
+		this.classList.remove('drag-over');
+	}
+	
+   
+	var c = 0; 
+	var d = 0; 
+	var e = 0;
+	
+	var previewNode = document.querySelector("#template");
+	previewNode.id = "";
+	var previewTemplate = previewNode.parentNode.innerHTML;
+	previewNode.parentNode.removeChild(previewNode);
+	
+	
+	$('#fileDropzone').dropzone({
+		url : '/cms/board/file_save',
+		uploadMultiple : true,
+		maxFilesize : 3000,
+		thumbnailWidth: 180,
+	    thumbnailHeight: 120,
+		parallelUploads : 5,
+		autoProcessQueue: false,
+		paramName:"fileSaveName",
+		previewsContainer: "#previews", // Define the container to 
+		maxFiles : 5,
+		addRemoveLinks : true,
+		acceptedFiles: '.'+cf_ext_file.replaceAll("|", ",.")+',.'+cf_ext_image.replaceAll("|", ",.")+',.'+cf_ext_multimedia.replaceAll("|", ",."),
+		success: function(data) {
+			myDropzone = this;
+			c++;
+			if (c == $('#upload_count').val()) { //성공 메시지 출력 후 이동
+				c = 0;
+				alert('저장되었습니다.');
+				boardId = /*[[${vo.boardId}]]*/
+				mn = /*[[${req.mn}]]*/
+				site = /*[[${req.site}]]*/
+				location.href="/cms/board/post/view/?site="+site+"&mn="+mn+"&boardId="+boardId+"&postIdx="+$('#newPostIdx').val();
+			}			
+		},
+		accept: function(file, done) {
+		    done();
+			myDropzone = this;
+			var myDropzone = this;
+			var i = 0;
+			//파일 중복검사
+			for(var j = 0; j < myDropzone.files.length; j++){
+				if(file.name == myDropzone.files[j].name){
+					i++;
+					if(i > 1){
+						alert(''+myDropzone.files[j].name+'는 중복파일이름입니다. 이름을 바꿔서 등록해주시기바랍니다.');
+						myDropzone.removeFile(myDropzone.files[j]);
+						myDropzone.files.splice(j, 1);
+					}
+				}
+			}
+			//최대 갯수제한 경고창
+			if(onlyNumber(myDropzone.files.length)-1 >= onlyNumber(cf_file_cnt)){
+				d++;
+				if( d == 1){
+					alert('최대 : ' + cf_file_cnt +'개까지 업로드가 가능합니다.');
+				}
+				myDropzone.removeFile(file);
+
+			}
+		},
+		init : function() {
+			myDropzone = this;
+			_this = this;
+			var submitButton = document.querySelector('#btn-upload-file');
+				submitButton.addEventListener("click", function(){
+				$('#upload_count').val(myDropzone.files.length);
+				
+				$('#bbs_form').ajaxForm({
+			        dataType: 'json',
+			        success: function(response) {
+			            if (response.status == 200) { //성공 메시지 출력 후 이동
+			            	$('#newPostIdx').val(response.data.postVo['postIdx']);
+			            	myDropzone.processQueue(); //업로드
+							myDropzone.removeAllFiles(); //업로드한 파일 목록에서 제거
+							if (0 == $('#upload_count').val()) {
+								alert('저장되었습니다.');
+								boardId = /*[[${vo.boardId}]]*/
+								mn = /*[[${req.mn}]]*/
+								site = /*[[${req.site}]]*/
+								location.href="/cms/board/post/view/?site="+site+"&mn="+mn+"&boardId="+boardId+"&postIdx="+response.data.postVo['postIdx'];
+							}
+
+			            } else if (response.status == 402) {
+			                $.each(response.message, function(k, v) {
+			                    $('#' + k).focus();
+			                    return false;
+			                });
+			            } else {
+			            	 alert('네트워크 및 시스템 에러');   
+			            }
+			        },
+			        error: function(result, status, error) {
+			            alert('네트워크 및 시스템 에러');
+			        },
+			    });
+			});
+			var data = '';
+			//값 넘길때 form값 처리
+			this.on("sending", function(file, xhr, formData) {
+				e++; //값을 한번 처리
+				if(e == 1){
+					$.each( $('#bbs_form').serializeArray(), function(key, val){
+						formData.append(val['name'], val['value']);
+					});
+				}
+              });
+
+		   //최대 갯수제한 파일제거
+		   this.on("maxfilesexceeded", function (file) {
+				myDropzone = this;
+				var myDropzone = this;
+				var count = myDropzone.options.maxFiles;
+				myDropzone.removeFile(file);
+			});
+
+			//삭제할때 처리
+			this.on("removedfile", function (file) {
+				var d = 0;
+			}); 
+			 this.on("complete", function (file) {
+				myDropzone = this;
+				var myDropzone = this;
+				myDropzone.removeFile(file);
+			});
+		  },
+	});
+
+});
+
+function fileUpload(i) {
+	var fileValue = $("#bs_file_label_" + i).val().split("\\");
+	var fileName = fileValue[fileValue.length - 1]; // 파일명
+	$('#bf_name_label_' + i).val(fileName);
+
+}
+
+function bbs_file_del(i) {
+	$('.bbs_item_' + i).remove();
+}
+
+</script>
+</th:block>

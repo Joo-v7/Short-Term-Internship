@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.apply.ApplyMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scVodIdx)">
+				AND a.vod_idx = #{scVodIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scMemberIdx)">
+				AND a.member_idx = #{scMemberIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(applyIdx)">
+				AND a.apply_idx = #{applyIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey1)">
+				AND a.apply_state = ${scKey1}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey2)">
+				AND a.learn_state = ${scKey2}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND b.vod_title LIKE CONCAT ('%',#{scWord},'%') 
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.vod.apply.ApplyVo">
+		SELECT 
+			*,
+			b.vod_title,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm,
+			(SELECT member_id FROM cms_member c WHERE c.member_idx = a.member_idx) memberId,
+            (SELECT COUNT(1) FROM lms_vod_bundle c WHERE c.vod_idx = a.vod_idx) vodContentCnt,
+            (SELECT COUNT(1) FROM lms_vod_learn c WHERE c.vod_idx = a.vod_idx AND c.member_idx = a.member_idx) vodLearnCnt
+		FROM (
+			SELECT
+				a.*
+			FROM lms_vod_apply a
+			) a
+		JOIN lms_vod b
+		ON a.vod_idx = b.vod_idx
+		<include refid="selectWhere"/>
+		ORDER BY
+			<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(site)">
+				a.apply_idx DESC
+			</when>
+			<otherwise>
+	  		  	a.apply_state DESC,
+				a.apply_idx ASC
+			</otherwise>
+			</choose>
+	</select>
+	
+	<select id="selectMyList" parameterType="map" resultType="kepco.lms.vod.apply.ApplyVo">
+		SELECT 
+			a.*,b.*,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm
+		FROM (
+			SELECT
+				@RNUM := @RNUM + 1 AS rn, a.*
+			FROM lms_vod_apply a, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+			<if test="!@kepco.util.StrUtil@isBlank(finish)">
+				AND apply_state = 4
+			</if>
+			) a
+		JOIN 
+        	(SELECT 
+            	b.*
+             FROM lms_vod b 
+             WHERE b.delete_yn = 'n'
+             ) b
+		ON a.vod_idx = b.vod_idx
+		ORDER BY
+        a.insert_date DESC
+	</select>
+	
+<!-- 	<select id="selectMyList" parameterType="map" resultType="kepco.lms.vod.apply.ApplyVo"> -->
+<!-- 		SELECT  -->
+<!-- 			a.*,b.*,d.*, -->
+<!-- 			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm -->
+<!-- 		FROM ( -->
+<!-- 			SELECT -->
+<!-- 				@RNUM := @RNUM + 1 AS rn, a.* -->
+<!-- 			FROM lms_vod_apply a, (select @RNUM := 0) tmp -->
+<!-- 			<include refid="selectWhere"/> -->
+<!-- 			<if test="!@kepco.util.StrUtil@isBlank(finish)"> -->
+<!-- 				AND apply_state = 4 -->
+<!-- 			</if> -->
+<!-- 			) a -->
+<!-- 		JOIN  -->
+<!--         	(SELECT  -->
+<!--             	b.* -->
+<!--              FROM lms_vod b ) b -->
+<!-- 		ON a.vod_idx = b.vod_idx -->
+<!-- 		JOIN  -->
+<!--         	(SELECT  -->
+<!--             	d.*, -->
+<!--             	(SELECT category_nm FROM lms_vod_category c WHERE c.vod_category_idx = d.vod_category_idx) categoryNm -->
+<!--              FROM lms_vod_content d ) d -->
+<!-- 		ON a.vod_idx = d.vod_idx -->
+<!-- 		ORDER BY -->
+<!--         a.insert_date DESC -->
+<!-- 	</select> -->
+	
+	<select id="selectApplyMyList" parameterType="map" resultType="kepco.lms.vod.apply.ApplyVo">
+		SELECT 
+			*,
+			(SELECT vod_title FROM lms_vod c WHERE c.vod_idx = b.vod_idx) vodTitle,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm
+		FROM (
+			SELECT
+				@RNUM := @RNUM + 1 AS rn, a.*
+			FROM lms_vod_apply a, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+			AND apply_state=2
+			) a
+		JOIN 
+        	(SELECT 
+            	b.*
+             FROM lms_vod b ) b
+		ON a.vod_idx = b.vod_idx
+		ORDER BY
+        a.apply_idx DESC
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.vod.apply.ApplyVo">
+		SELECT *
+		FROM lms_vod_apply a
+			<include refid="selectWhere"/>
+	</select>
+
+	<select id="duplicate" parameterType="map" resultType="int">
+		SELECT COUNT(1)
+		FROM lms_vod_apply a
+			<include refid="selectWhere"/>
+			AND a.apply_state != '3'
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.vod.apply.ApplyVo" useGeneratedKeys="true" keyProperty="applyIdx" keyColumn="applyIdx">
+		INSERT INTO lms_vod_apply (
+			vod_idx,member_idx,apply_state,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{vodIdx},#{memberIdx},#{applyState},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.vod.apply.ApplyVo">
+		UPDATE lms_vod_apply
+		<set>
+			apply_state = #{applyState},
+			<if test="applyState != 1">
+			apply_date = CURRENT_TIMESTAMP,
+			</if>
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND apply_idx = #{applyIdx}
+			<if test="@kepco.util.StrUtil@getUserRole() eq 'USER'">
+				<bind name="memberIdx" value="@kepco.util.StrUtil@getSessionIdx()"/>
+				AND member_idx = #{memberIdx}
+			</if>
+	</update>
+	
+<!-- 	<update id="learnUpdate" parameterType="map"> -->
+<!-- 		UPDATE lms_vod_apply -->
+<!-- 		<set> -->
+<!-- 			<if test="applyState == 1"> -->
+<!-- 			learn_state = IF((SELECT COUNT(1) FROM lms_vod_learn c WHERE c.vod_idx = vod_idx AND c.member_idx = member_idx) > 0, 1 , null), -->
+<!-- 			</if> -->
+<!-- 			<if test="applyState == 2"> -->
+<!-- 			learn_state = IF(${learnTimeSum} / ${contentTimeSum} * 100 >= 90,2,1), -->
+<!-- 			</if> -->
+<!-- 			learn_date = CURRENT_TIMESTAMP, -->
+<!-- 		</set> -->
+<!-- 		WHERE -->
+<!-- 			delete_yn = 'n' -->
+<!-- 			AND vod_idx = #{vodIdx} -->
+<!-- 			AND member_idx = #{memberIdx} -->
+<!-- 	</update> -->
+	<update id="learnUpdate" parameterType="map">
+		UPDATE lms_vod_apply
+		<set>
+			learn_state = #{learnState},
+			learn_date = CURRENT_TIMESTAMP,
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND vod_idx = #{vodIdx}
+			AND member_idx = #{memberIdx}
+	</update>
+	<update id="delete" parameterType="kepco.lms.vod.apply.ApplyVo">
+		UPDATE lms_vod_apply
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND apply_idx = #{applyIdx}
+	</update>
+	
+	
+	
+</mapper>

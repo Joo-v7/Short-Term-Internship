@@ -1,0 +1,591 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>무제 문서</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" /><!-- 4페이지 슬라이드 -->
+<link rel="stylesheet" href="/pages/kepco/css/basic.css"><!-- 공통css -->
+<link rel="stylesheet" href="/pages/kepco/css/layout.css"><!-- 공통css -->
+<link th:if="${currMenuNode?.data?.mn}" rel="stylesheet" href="/pages/kepco/css/sub.css"><!-- 공통css -->
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css"><!-- 애니메이션 -->
+<script src="/assets/libs/fontawesome/fontawesome.js" crossorigin="anonymous"></script><!-- 폰트어썸 -->
+<link href="/assets/libs/aos/aos.css" rel="stylesheet"><!-- aos 애니메이션 -->
+<script src="/assets/libs/aos/aos.js"></script><!-- aos 애니메이션 -->
+
+<script src="/assets/js/jquery-3.5.1.min.js"></script><!-- fullpage 제이쿼리 링크 -->
+<script src="/pages/kepco/js/fullpage.js"></script><!-- fullpage 제이쿼리 링크 -->
+<link rel="stylesheet" href="/pages/kepco/css/fullpage.min.css"><!-- fullpage js css 링크 -->
+
+<script src="/assets/libs/swiperjs/swiper-bundle.min.js" ></script><!-- 비주얼 -->
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<link rel="stylesheet" href="/assets/libs/swiperjs/swiper-bundle.min.css" /><!-- 슬라이드 -->
+
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<script src="/pages/kepco/js/script.js" ></script><!-- 컨텐츠 스크립트 -->
+<script src="/pages/kepco/js/mouse_interaction.js" ></script><!-- 마우스 인터랙션 스크립트 -->
+
+</head>
+
+
+
+<body>
+<script> 
+	AOS.init(); // 자바스크립트로 init()을 해야 동작한다.
+</script>
+
+<!--
+<div class="main_bg_line">
+	<div class="lines">
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>
+		<div class="line"></div>		
+		<div class="line"></div>	
+		<div class="line"></div>	
+	</div>
+	<div class="lines">
+		<div class="h_line"></div>
+		<div class="h_line"></div>
+		<div class="h_line"></div>
+		<div class="h_line"></div>
+		<div class="h_line"></div>
+		<div class="h_line"></div>
+		<div class="h_line"></div>
+	</div>
+</div>
+-->
+<header>
+	<nav>
+		<div id="gnb">
+			<div class="gnbw">
+				<div class="logo"><a href=""></a></div>
+				<ul>
+					<li><a href="">교육과정</a></li>
+					<li><a href="">교육원</a></li>
+					<li><a href="">커뮤니티</a></li>
+					<li><a href="">나의강의실</a></li>
+				</ul>
+				<div class="snsbox">
+					<a href="" class="fb"><i class="fa-brands fa-facebook-f"></i></a>
+					<a href="" class="yt"><i class="fa-brands fa-youtube"></i></a>
+					<!-- <a href="" class="ts"><span class="hidden">티스토리</span></a> -->
+				</div>
+				<div class='toggle modalLink'>
+				  <span></span>
+				  <span></span>
+				  <span></span>
+				</div>
+				<script>
+				//사이트맵 아이콘
+				$('.toggle').click(function(){
+				   $(this).toggleClass('active');
+				});	
+				</script>
+			</div>
+		</div>
+	</nav>  
+</header>
+    
+<!----------------- 상단메뉴
+<div class="top-menu">
+	<div class="top-menuw">
+		<ul class="row">
+			<li class="cell"><a href="#">교육과정</a></li>
+			<li class="cell"><a href="#">교육원</a></li>
+			<li class="cell"><a href="#">커뮤니티</a></li>
+			<li class="cell"><a href="#">나의강의실</a></li>
+		</ul>
+		<ul class="snsbox">
+			<li class="fb"><a href=""><span class="hidden">유튜브</span></a></li>
+			<li class="yt"><a href=""><span class="hidden">페이스북</span></a></li>
+			<li class="ts"><a href=""><span class="hidden">티스토리</span></a></li>
+		</ul>
+	</div>
+</div>
+----------------->
+<script>
+function ss(){
+	console.log('cc');
+}
+</script>
+
+<div class="fullpage custom">
+  <div class="section section1"><!------------------- 1페이지 ------------------->
+	<div class="vsbox">
+		<div class="vsimg">
+			<iframe id="inlineFrameExample"
+			title="Inline Frame Example"
+			width="100%"
+			height="100%"
+			src="http://kepco-lms.uokdc.net:12080/">
+			</iframe>
+		</div>
+		<div class="vstxt">
+			<h6 data-aos="fade-up" data-aos-duration="3000">
+				VR 기술을<br />
+				활용한 가상훈련시스템<br />
+				<span class="vstxt11">배전 분야 초실감 안전교육</span>
+			</h6>
+			<div class="vsbtn"><a href="">교육과정 바로가기</a></div>
+			<p>
+			전력설비 작업의 배전설비 및 유지 보수에 필요한 기능기술을<br />
+			반복적으로 훈련하여 철저한 품질관리를 기하면서 양질의 전력을 공급할 수 있도록<br />
+			교육하는 초실감 안전 교육 프로그램
+			</p>
+		</div>
+		<span class="scroll-btn">
+			<a href="#">
+				<span class="mouse">
+					<span>
+					</span>
+				</span>
+			</a>
+			<p>scroll down</p>
+		</span>
+	</div>
+  </div><!------------------- 1페이지 ------------------->
+
+
+  <div class="section section2"><!------------------- 2페이지 ------------------->
+		<div class="mcbox hg1">	
+			<div class="mctit3">
+				<p class="info">PORTFOLIO</p>
+				<h6>분야별 교육과정</h6>
+				<p class="txt">모션 캡쳐 및 VR 시스템을 활용한 분야별 초실감 안전훈련과정을 소개합니다</p>
+				<a class="link" href="" target="_blank">
+					<div class="pink"></div>
+					<span>view more</span>
+					<i class="fa-solid fa-arrow-right"></i>
+				</a>
+			</div>
+			<div class="edu-w">
+				<div class="edu-box">
+						<div class="edu-video">
+							<video class="lazy" preload="auto" muted autoplay loop data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"></video>
+						</div>
+						<span class="bd_line01"></span>
+						<span class="bd_line02"></span>
+						<span class="bd_line03"></span>
+						<span class="bd_line04"></span>
+						<div class="edu-txt">
+							<b>01</b>
+							<h6>배전 안전교육</h6>
+							<p>배전에 관한 폭넓은 이해와 직무 수행능력 향상을 위한<br />배전 분야 초실감 안전교육과정 안내</p>
+							<a href="">view more<i class="fa-solid fa-arrow-right"></i></a>
+						</div>
+				</div>
+				<div class="edu-box">
+						<div class="edu-video">
+							<video class="lazy" preload="auto" muted autoplay loop data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"></video>
+						</div>
+						<span class="bd_line01"></span>
+						<span class="bd_line02"></span>
+						<span class="bd_line03"></span>
+						<span class="bd_line04"></span>
+						<div class="edu-txt">
+							<b>02</b>
+							<h6>ICT 안전교육</h6>
+							<p>ICT에 관한 체계적인 교육과 직무 수행능력 향상을 위한<br />ICT 분야 초실감 안전교육과정 안내</p>
+							<a href="">view more<i class="fa-solid fa-arrow-right"></i></a>
+						</div>
+				</div>
+				<div class="edu-box">
+						<div class="edu-video">
+							<video class="lazy" preload="auto" muted autoplay loop data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"></video>
+						</div>
+						<span class="bd_line01"></span>
+						<span class="bd_line02"></span>
+						<span class="bd_line03"></span>
+						<span class="bd_line04"></span>
+						<div class="edu-txt">
+							<b>03</b>
+							<h6>토건 안전교육</h6>
+							<p>토건에 관한 폭넓은 이해와 직무 수행능력 향상을 위한<br />토건 분야 초실감 안전교육과정 안내</p>
+							<a href="">view more<i class="fa-solid fa-arrow-right"></i></a>
+						</div>
+				</div>
+				<div class="edu-box">
+						<div class="edu-video">
+							<video class="lazy" preload="auto" muted autoplay loop data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"></video>
+						</div>
+						<span class="bd_line01"></span>
+						<span class="bd_line02"></span>
+						<span class="bd_line03"></span>
+						<span class="bd_line04"></span>
+						<div class="edu-txt">
+							<b>배전 안전교육배전 안전교육</b>
+							<h6>배전 안전교육</h6>
+							<p>배전에 관한 폭넓은 이해와 직무 수행능력 향상을 위한<br />배전 분야 초실감 안전교육과정 안내</p>
+							<a href="">view more<i class="fa-solid fa-arrow-right"></i></a>
+						</div>
+				</div>
+		</div>
+		</div>
+  </div><!------------------- 2페이지 ------------------->
+
+
+  <div class="section section3"><!------------------- 3페이지 ------------------->
+	<div class="mcbox">
+		<div class="mctit3">
+			<p class="info purple bd-purple">RESERVATION</p>
+			<h6>안전교육 예약안내</h6>
+			<p class="txt">초실감 안전교육 훈련장 예약 정보에 대해 자세히 안내해 드립니다</p>
+			<a class="link" href="" target="_blank">
+				<div class="pink bg-purple"></div>
+				<span>view more</span>
+				<i class="fa-solid fa-arrow-right"></i>
+			</a>
+		</div>
+
+		<div class="mcdw">
+			<div class="mcd">
+			  <div class="calendar">
+				<div class="calendar_header">
+				  <h2>2023. 03</h2>
+				  <a class="btn-prev fontawesome-angle-left" href="#"><i class="fa-solid fa-angle-left"></i></a>
+				  <a class="btn-next fontawesome-angle-right" href="#"><i class="fa-solid fa-angle-right"></i></a>
+				</div>
+				<table>
+				  <thead>
+					<tr>
+					  <td class="sun">일</td>
+					  <td>월</td>
+					  <td>화</td>
+					  <td>수</td>
+					  <td>목</td>
+					  <td>금</td>
+					  <td class="sat">토</td>
+					</tr>
+				  </thead>
+				  <tbody>
+					<tr>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td>1</td>
+					</tr>
+					<tr>
+					  <td>2</td>
+					  <td>3</td>
+					  <td>4</td>
+					  <td>5</td>
+					  <td>6</td>
+					  <td>7</td>
+					  <td>8</td>
+					</tr>
+					<tr>
+					  <td>9</td>
+					  <td class="event">10</td>
+					  <td>11</td>
+					  <td>12</td>
+					  <td>13</td>
+					  <td>14</td>
+					  <td>15</td>
+					</tr>
+					<tr>
+					  <td>16</td>
+					  <td>17</td>
+					  <td>18</td>
+					  <td>19</td>
+					  <td>20</td>
+					  <td class="event">21</td>
+					  <td>22</td>
+					</tr>
+					<tr>
+					  <td class="event">23</td>
+					  <td>24</td>
+					  <td>25</td>
+					  <td>26</td>
+					  <td>27</td>
+					  <td>28</td>
+					  <td>29</td>
+					</tr>
+					<tr>
+					  <td>30</td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					</tr>
+				  </tbody>
+				</table>
+			  </div> <!-- end calendar -->
+			</div>
+			<div class="mcd_txtw">
+				<div class="mcd_txt">
+					<a href="">
+						<div class="mcd_date">
+							<p>23</p>	
+							<span>2023.03</span>
+						</div>
+						<div class="mcd_info">
+							<span class="permission">승인중</span>
+							<p>경북지역본부 박○현 등 10명</p>
+							<dl>
+								<dt>예약장소</dt>
+								<dd>인재개발원</dd>
+								<dt>예약인원</dt>
+								<dd>10명</dd>
+								<dt>예약날짜</dt>
+								<dd>2023.03.23 13:00 ~ 18:00</dd>
+							</dl>
+						</div>
+						<button><i class="fas fa-angle-right"></i></button>
+					</a>
+				</div>
+
+				<div class="mcd_txt">
+					<a href="">
+						<div class="mcd_date">
+							<p>22</p>	
+							<span>2023.03</span>
+						</div>
+						<div class="mcd_info">
+							<span class="complete">예약완료</span>
+							<p>경북지역본부 김○민 등 20명</p>
+							<dl>
+								<dt>예약장소</dt>
+								<dd>인재개발원</dd>
+								<dt>예약인원</dt>
+								<dd>20명</dd>
+								<dt>예약날짜</dt>
+								<dd>2023.03.22 09:00 ~ 12:00</dd>
+							</dl>
+						</div>
+						<button><i class="fas fa-angle-right"></i></button>
+					</a>
+				</div>
+
+				<div class="mcd_txt">
+					<a href="">
+						<div class="mcd_date">
+							<p>21</p>	
+							<span>2023.03</span>
+						</div>
+						<div class="mcd_info">
+							<span class="complete">예약완료</span>
+							<p>전남지역본부 강○라 등 15명</p>
+							<dl>
+								<dt>예약장소</dt>
+								<dd>인재개발원</dd>
+								<dt>예약인원</dt>
+								<dd>15명</dd>
+								<dt>예약날짜</dt>
+								<dd>2023.03.21 13:00 ~ 18:00</dd>
+							</dl>
+						</div>
+						<button><i class="fas fa-angle-right"></i></button>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+  </div><!------------------- 3페이지 ------------------->
+
+
+  <div class="section section4"><!------------------- 4페이지 ------------------->
+  	<div class="mcbox flexbox">
+		<div class="notice-l">
+			<div class="mctit">
+				<p class="info">NOTICE</p>
+				<h6>공지사항</h6>
+				<p class="txt">우측 게시글을 클릭하여 새로운 소식들을<br />지금 바로 확인해 보세요</p>
+				<a class="link" href="" target="_blank">
+					<div class="pink bg-blue"></div>
+					<span>view more</span>
+					<i class="fa-solid fa-arrow-right"></i>
+				</a>
+			</div>
+		</div>
+
+
+
+		<div class="notice-w">
+			<div class="notice-box">
+				<a href="">
+					<div class="category">공지사항</div>
+					<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+					<div class="content">
+						정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+						개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+						스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+					</div>
+					<div class="date">2023.03.28</div>
+				</a>
+			</div>
+			<div class="notice-box">
+				<a href="">
+					
+					<div class="category">공지사항</div>
+					<div class="subject">협력회사 대상 청렴교육 수강안내사항입니다.</div>
+					<div class="content">
+					2022년 협력회사 대상 청렴교육 e-러닝 과정이 아래와 같
+					이 개설 예정입니다.  -  과 정 명 : 사례로 배우는 청탁금지법
+					협력회사용, 알기 쉬운 이해충돌방지법..
+					</div>
+					<div class="date">2023.03.14</div>
+				</a>
+			</div>
+			<div class="notice-box">
+				<a href="">
+					
+					<div class="category">공지사항</div>
+					<div class="subject">개인정보처리방침 개정 사전 안내 입니다.</div>
+					<div class="content">
+						정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의 
+						개인정보처리방침을 12월 13일부터 적용할 예정이오니 서비
+						스 이용에 참고하시기 바랍니다. 세부내용은..
+					</div>
+					<div class="date">2023.03.06</div>
+				</a>
+			</div>
+			<div class="notice-box">
+				<a href="">
+					
+					<div class="category">공지사항</div>
+					<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+					<div class="content">
+						정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+						개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+						스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+					</div>
+					<div class="date">2023.03.05</div>
+				</a>
+			</div>
+			<div class="notice-box">
+				<a href="">
+					
+					<div class="category">공지사항</div>
+					<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+					<div class="content">
+						정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+						개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+						스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+					</div>
+					<div class="date">2023.03.28</div>
+				</a>
+			</div>
+			<div class="notice-box">
+				<a href="">
+					<div class="category">공지사항</div>
+					<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+					<div class="content">
+						정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+						개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+						스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+					</div>
+					<div class="date">2023.03.28</div>
+				</a>
+			</div>
+			<div class="notice-box">
+				<a href="">
+					
+					<div class="category">공지사항</div>
+					<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+					<div class="content">
+						정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+						개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+						스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+					</div>
+					<div class="date">2023.03.28</div>
+				</a>
+			</div>
+		</div>
+  	</div> 
+  </div><!------------------- 4페이지 ------------------->
+
+
+
+  <div class="section section5 fp-auto-height"><!------------------- 5페이지 ------------------->
+    <div id="footer">
+        <div id="footer_wrap">
+            <div class="address_box">Copyright © KEPCO. ALL RIGHTS RESERVED.</div>
+			<ul class="f-sns-box">
+				<li><a href=""><i class="fa-brands fa-facebook-f"></i></a></li>
+				<li><a href=""><i class="fa-brands fa-youtube"></i></a></li>
+			</ul>
+        </div>
+    </div>
+  </div><!------------------- 5페이지 ------------------->
+</div>
+
+<script>
+$(document).ready(function() {
+  console.clear();
+	$(".fullpage").fullpage({ //id로 불러오든 class로 불러도은 상관없다
+    navigation : true, // 섹션 네비게이션
+    navigationPosition: 'right', //섹션 네비게이션 위치 설정 (right, left)
+    
+    navigationTooltips :[ //섹션 네비게이션에 마우스를 올리면 설명 나옴
+      "섹션 1",
+      "섹션 2",
+      "섹션 3",
+      "섹션 4",
+      "섹션 5",
+    ],
+    
+    controlArrows : false,
+    slidesNavigation : true,
+    slidesNavPosition : 'top', //top or bottom
+		onLeave: function(origin, destination, direction){
+			if(destination.index == 0){
+				$('#gnb .gnbw .logo a').css('background-color','#DF002A');
+				$('#gnb .gnbw .logo a').css('background-image','url(/pages/kepco/img/logo.svg)');
+				$('#gnb .gnbw .logo a').css('width','165px');
+				$('#gnb .gnbw .logo a').css('height','200px');
+
+
+
+			}else{
+				$('#gnb .gnbw .logo a').css('background-color','transparent');
+				$('#gnb .gnbw .logo a').css('background-image','url(/pages/kepco/img/logo-on.svg)');
+				$('#gnb .gnbw .logo a').css('width','85px');
+				$('#gnb .gnbw .logo a').css('height','150px');
+
+			}
+		}
+    
+	});
+
+});	
+
+
+				let link = document.querySelector(".link");
+				let pink = document.querySelector(".pink");
+
+				let hoverTL = gsap.timeline();
+				hoverTL.pause();
+
+				// from, to, fromTo Tweens
+				hoverTL.to(pink, {width: "calc(100% + 1.3em)", ease: "Elastic.easeOut(0.25)", duration: 0.4})
+				hoverTL.to(pink, {width: "2em", left: "calc(100% - 1.45em)", ease: "Elastic.easeOut(0.4)", duration: 0.6})
+
+				link.addEventListener("mouseenter", ()=>{
+				  hoverTL.play();
+				})
+
+				link.addEventListener("mouseleave", ()=>{
+				  hoverTL.reverse();
+				})				
+
+</script>	
+
+
+
+</body>
+</html>

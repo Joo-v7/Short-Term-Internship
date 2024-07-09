@@ -1,0 +1,406 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+	<!-- AM 차트 4 -->
+	<script src="/assets/libs/amchart4/core.js"></script>
+	<script src="/assets/libs/amchart4/charts.js"></script>
+	<script src="/assets/libs/amchart4/themes/animated.js"></script>
+	<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+	<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+	<script>
+
+		am4core.addLicense("CH247864937");
+		am4core.ready(function () {
+
+			// Themes begin
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+
+			// Create chart instance
+			var chart = am4core.create("user_accident_rate", am4charts.PieChart);
+			chart.padding = 10;
+
+			// Let's cut a hole in our Pie chart the size of 30% the radius
+			chart.innerRadius = am4core.percent(120);
+			chart.data = [{
+				"title": "사고",
+				"value": 65,
+				"color": am4core.color("#2B64F9")
+			}, {
+				"title": "",
+				"value": 35,
+				"color": am4core.color("#f9f9f9")
+			}];
+			// Add and configure Series
+			var pieSeries = chart.series.push(new am4charts.PieSeries());
+			pieSeries.dataFields.value = "value";
+			pieSeries.dataFields.category = "title";
+			pieSeries.labels.template.disabled = true;
+			pieSeries.labels.template.fill = am4core.color("#fff");
+			// Set color field for each slice
+			pieSeries.slices.template.propertyFields.fill = "color";
+
+			// Put a thick white border around each Slice
+			pieSeries.slices.template.stroke = am4core.color("#fff");
+			pieSeries.slices.template.strokeWidth = 1;
+			pieSeries.slices.template.strokeOpacity = 0.5;
+
+			pieSeries.alignLabels = false;
+			pieSeries.labels.template.bent = true;
+			pieSeries.labels.template.radius = 3;
+			pieSeries.labels.template.padding(0, 0, 0, 0);
+
+			pieSeries.ticks.template.disabled = true;
+			pieSeries.tooltip.disabled = true;
+			// Create a base filter effect (as if it's not there) for the hover to return to
+			var shadow = pieSeries.slices.template.filters.push(new am4core.DropShadowFilter);
+			shadow.opacity = 0;
+
+			var label = chart.seriesContainer.createChild(am4core.Label);
+			label.text = chart.data[0].value + "%";
+			label.horizontalCenter = "middle";
+			label.verticalCenter = "middle";
+			label.fontSize = 16;
+			label.fill = am4core.color("#fff");
+			label.textAlign = "middle"; // 텍스트 가운데 정렬
+
+		}); // end am4core.ready()
+
+		am4core.ready(function () {
+
+			// Themes begin
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+
+			// Create chart instance
+			var chart = am4core.create("user_transition", am4charts.XYChart);
+
+			// Add data
+			chart.data = [{
+				"category": "2024-01-24",
+				"accident": 14,
+				"risk_event": 120,
+				"rate_accident": 140,
+				"rate_event": 160
+			}, {
+				"category": "2024-02-16",
+				"accident": 150,
+				"risk_event": 170,
+				"rate_accident": 190,
+				"rate_event": 210
+			}, {
+				"category": "2024-03-21",
+				"accident": 200,
+				"risk_event": 220,
+				"rate_accident": 240,
+				"rate_event": 260
+			}, {
+				"category": "2024-04-11",
+				"accident": 200,
+				"risk_event": 220,
+				"rate_accident": 240,
+				"rate_event": 260
+			}, {
+				"category": "2024-05-01",
+				"accident": 200,
+				"risk_event": 220,
+				"rate_accident": 240,
+				"rate_event": 260
+			}];
+			// 그라디언트를 생성합니다.
+			var gradient = new am4core.LinearGradient();
+			gradient.addColor(am4core.color("#7c4ce6"));
+			gradient.addColor(am4core.color("#207bed"));
+			gradient.rotation = 90;
+			var gradient2 = new am4core.LinearGradient();
+			gradient2.addColor(am4core.color("#e92c8a"));
+			gradient2.addColor(am4core.color("#7c4ce6"));
+			gradient2.addColor(am4core.color("#207bed"));
+			gradient2.rotation = 90;
+
+
+
+			// Create axes
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.dataFields.category = "category";
+			categoryAxis.renderer.labels.template.fill = am4core.color("#aaa");
+
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+
+			var series1 = chart.series.push(new am4charts.ColumnSeries());
+			series1.dataFields.valueY = "accident";
+			series1.dataFields.categoryX = "category";
+			series1.name = "사고";
+			series1.fill = gradient;
+			series1.stroke = gradient;
+			series1.columns.template.width = am4core.percent(50);
+
+			var series2 = chart.series.push(new am4charts.ColumnSeries());
+			series2.dataFields.valueY = "risk_event";
+			series2.dataFields.categoryX = "category";
+			series2.name = "위험요인";
+			series2.fill = gradient2;
+			series2.stroke = gradient2;
+			series2.columns.template.width = am4core.percent(50);
+
+			var series3 = chart.series.push(new am4charts.LineSeries());
+			series3.dataFields.valueY = "rate_accident";
+			series3.dataFields.categoryX = "category";
+			series3.name = "사고율";
+			series3.stroke = am4core.color("#ff1c1c");
+
+			var series4 = chart.series.push(new am4charts.LineSeries());
+			series4.dataFields.valueY = "rate_event";
+			series4.dataFields.categoryX = "category";
+			series4.name = "위험율";
+			series4.stroke = am4core.color("#f8c52c");
+
+
+
+			// Add legend
+			chart.legend = new am4charts.Legend();
+			chart.legend.labels.template.fill = am4core.color("#f2f2f2");
+			chart.legend.labels.template.fontSize = 14;
+			chart.legend.labels.template.fontWeight = 400;
+			chart.legend.markers.template.width = 16;
+			chart.legend.markers.template.height = 16;
+			chart.legend.position = 'top';
+			chart.legend.contentAlign = 'left';
+		});
+		am4core.ready(function () {
+
+			// Themes begin
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+
+			// Create chart instance
+			var chart = am4core.create("user_stat_role", am4charts.PieChart);
+
+			// Add data
+			chart.data = [{
+				"role": "주 작업자",
+				"value": 501,
+				"color": "#324675"
+			}, {
+				"role": "보조 작업자",
+				"value": 301,
+				"color": "#1a7ded"
+			}, {
+				"role": "지상 작업자",
+				"value": 201,
+				"color": "#00a7f4"
+			}, {
+				"role": "작업 책임자",
+				"value": 165,
+				"color": "#4df3fd"
+			}];
+			chart.legend = new am4charts.Legend();
+			chart.legend.width = 100;
+			chart.legend.labels.template.text = "{role}";
+			chart.legend.position = 'right';
+			chart.legend.labels.template.fill = am4core.color("#fff");
+			chart.legend.markers.template.width = 16;
+			chart.legend.markers.template.height = 16;
+			chart.legend.labels.template.fontSize = 12;
+			chart.legend.labels.template.fontWeight = 400;
+
+			// Add and configure Series
+			var pieSeries = chart.series.push(new am4charts.PieSeries());
+			pieSeries.dataFields.value = "value";
+			pieSeries.dataFields.category = "role";
+			pieSeries.slices.template.propertyFields.fill = "color";
+			pieSeries.slices.template.stroke = am4core.color("#fff");
+			pieSeries.slices.template.strokeOpacity = 0.3;
+			pieSeries.labels.template.fill = am4core.color("#fff");
+			pieSeries.labels.template.disabled = true;
+			// This creates initial animation
+			pieSeries.hiddenState.properties.opacity = 1;
+			pieSeries.hiddenState.properties.endAngle = -90;
+			pieSeries.hiddenState.properties.startAngle = -90;
+
+			chart.hiddenState.properties.radius = am4core.percent(0);
+
+
+		}); // end am4core.ready()
+
+		am4core.ready(function () {
+
+			// Themes begin
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+			var chart = am4core.create('user_stat_position', am4charts.XYChart);
+			chart.colors.step = 2;
+
+			chart.data = [{
+				"position": "버켓",
+				"value": 501,
+			}, {
+				"position": "지상",
+				"value": 321,
+			}];
+
+
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.dataFields.category = "position";
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.renderer.minGridDistance = 30;
+			categoryAxis.renderer.labels.template.rotation = 0;
+			categoryAxis.tooltip.disabled = true;
+			categoryAxis.renderer.labels.template.rotation = 0;
+			categoryAxis.renderer.labels.template.verticalCenter = "middle";
+			categoryAxis.renderer.labels.template.fontSize = 12;
+			categoryAxis.renderer.labels.template.fontWeight = "bold";
+			categoryAxis.renderer.labels.template.fill = am4core.color("#f9f9f9");
+
+			var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			yAxis.min = 0;
+
+			// Create series
+			var series1 = chart.series.push(new am4charts.ColumnSeries());
+			series1.dataFields.valueY = "value";
+			series1.dataFields.categoryX = "position";
+			series1.columns.template.fill = am4core.color("#008ff0");
+			series1.columns.template.stroke = am4core.color("#008ff0");
+			series1.name = "position";
+
+		}); // end am4core.ready()
+
+		am4core.ready(function () {
+			// Themes begin
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+
+			// Create chart instance
+			var chart = am4core.create("user_stat_obj_top3", am4charts.XYChart);
+
+			// Add data
+			var data = [{
+				"category": "소나기",
+				"value": 414,
+			}, {
+				"category": "절연테이프 단말처리 미조치",
+				"value": 334,
+			}, {
+				"category": "정리 안된 공사물품",
+				"value": 310,
+			}];
+
+			data.reverse(); // 데이터 배열을 반전
+
+			chart.data = data;
+
+			// Create axes
+			var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.dataFields.category = "category";
+			categoryAxis.renderer.grid.template.location = 0;
+			// categoryAxis.renderer.inversed = true; // y축 반전
+			categoryAxis.renderer.minGridDistance = 50;
+			categoryAxis.renderer.labels.template.fontSize = 12;
+			categoryAxis.renderer.labels.template.fontWeight = "400";
+			categoryAxis.renderer.labels.template.fill = am4core.color("#fff");
+
+			var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+			valueAxis.renderer.opposite = true; // x축을 위로 이동하여 가로 막대 형태로 변환
+
+			var gradient = new am4core.LinearGradient();
+			gradient.addColor(am4core.color("#7c4ce6"));
+			gradient.addColor(am4core.color("#207bed"));
+			// Create series
+			var series1 = chart.series.push(new am4charts.ColumnSeries());
+			series1.dataFields.valueX = "value";
+			series1.dataFields.categoryY = "category";
+			series1.name = "Series 1";
+			series1.columns.template.fill = gradient;
+			series1.columns.template.stroke = gradient;
+
+			// Remove legend
+			chart.legend = null;
+		}); // end am4core.ready()
+
+
+
+
+	</script>
+
+
+	<div class="sub-container" style="">
+
+		<div class="scon-tit">
+			나의 훈련정보
+			<span>전체적인 훈련정보의 통계적 중요 수치를 나타냅니다.</span>
+		</div>
+
+		<div class="user_stat_info mb_40">
+			<div class="user_stat_info_wrap">
+				<div class="user_stat_wrap">
+					<div class="stat_user_transition_wrap col">
+						<h3>종합 정보</h3>
+						<div class="user_stat_info_table">
+							<table>
+								<colgroup>
+									<col width="auto">
+									<col width="auto">
+									<col width="auto">
+									<col width="auto">
+									<col width="180px">
+									<col width="140px">
+								</colgroup>
+								<thead>
+									<tr>
+										<th>총 훈련 수</th>
+										<th>취약 위험요인</th>
+										<th>최다 사고 원인</th>
+										<th>최다 사고 행동</th>
+										<th>최다 사고 위치</th>
+										<th>사고 발생률</th>
+									</tr>
+								</thead>
+								<tr>
+									<td>23회</td>
+									<td>감전</td>
+									<td>소나기</td>
+									<td>주변 케이블에 접촉</td>
+									<td>버켓</td>
+									<td>
+										<div class="user_stat_chart_per">
+											<div id="user_accident_rate"></div>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+
+					<div class="stat_user_transition_wrap col">
+						<h3>최근 훈련 추이</h3>
+						<div id="_legendDiv"></div>
+						<div id="user_transition"></div>
+					</div>
+
+					<div class="stat_user_transition_wrap">
+						<div class="stat_user_transition_box">
+							<h3>최근 훈련 역할별 점유율</h3>
+							<div id="user_stat_role"></div>
+						</div>
+						<div class="stat_user_transition_box">
+							<h3>최근 훈련 작업 위치 점유율</h3>
+							<div id="user_stat_position"></div>
+						</div>
+						<div class="stat_user_transition_box">
+							<h3>최근 훈련 사고 오브젝트 Top3</h3>
+							<div id="user_stat_obj_top3"></div>
+						</div>
+					</div>
+
+				</div>
+
+			</div>
+		</div>
+
+
+	</div>
+
+
+</th:block>

@@ -1,0 +1,322 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<link href="/assets/css/board.css" type="text/css" rel="stylesheet">
+
+<link href="/assets/css/jquery-confirm.min.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/jquery-confirm.min.js"></script>
+
+<link href="/assets/libs/jquery-ui/jquery-ui.min.css" type="text/css" rel="stylesheet">
+<script src="/assets/libs/jquery-ui/jquery-ui.js" ></script>
+
+<script src="/assets/js/jquery.form.min.js" ></script>
+
+<style>
+.board_btn {display: flex; justify-content: space-between;}
+.board_btn > .left {display: flex; justify-content: flex-start;}
+.board_btn > .right {display: flex; justify-content: flex-end;}
+</style>
+
+<div class="sub-container">
+<div class="board_view">
+	<div class="board-tit">
+		<div class="title" th:text="${postVo?.postTitle}"></div>
+		<div class="info"><span th:text="${postVo?.postName}"></span><span th:text="${postVo?.postDate}"></span><span th:text="${postVo?.postHit}"></span></div>
+	</div>
+	
+	<div class="board_view_contents">
+		<div th:if="${postVo?.postHtml == 0}" th:utext="${#strings.replace(#strings.escapeXml(postVo?.postContent),'&#10;','&lt;br&gt;&#10;')}"></div>
+		<div th:if="${postVo?.postHtml == 1}" th:utext="${postVo?.postContent}"></div>
+		<div id="file_list_content" th:if="!${#lists.isEmpty(fileVoList)}">
+			<div th:each="fileVoList : ${fileVo}" th:if="${fileVo.fileIsImage == 1}">
+				<img id="imgId" th:src="@{'/datas/board/' + ${fileVo.boardId} + '/' + ${fileVo.fileSaveName}}" th:alt="${fileVo.fileOriginName}" />
+			</div>
+		</div>
+	
+	</div>
+	
+	<div id="file_list" class="file" th:if="!${#lists.isEmpty(fileVoList)}">
+		<div class="file_list_tit">첨부파일</div>
+		<div class="file_list_txt">
+			<div th:each="fileVo : ${fileVoList}">
+				<a class="file_title" style="color: #fff;" href="javascript:void(0)" th:onclick="downloadFile([[${fileVo.postIdx}]], [[${fileVo?.fileIdx}]])">[[${fileVo?.fileOriginName}]] ([[${T(kepco.util.StrUtil).formatFileSize(fileVo?.fileFilesize)}]])</a>
+			</div>	
+		</div>
+	</div>
+	
+	
+	<div class="con_wrap" >
+		<div class="board_btn mt20">
+			<div class="left">
+				<a class="go_list" style="color: #fff;" th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${req.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}">목록</a>	
+			</div>
+			<div class="right" >
+				<th:block th:if="${boardPermission.delete}">
+					<a class="button_type4" href="#" id="delete_btn" th:onclick="dataDelete([[${req.postIdx}]],'게시물');">삭제</a>
+					&nbsp;
+					<a class="button_type1" th:href="@{/cms/board/post/form(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, postIdx=${postVo.postIdx}, pageNum=${req.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}">수정</a>
+				</th:block>
+				<th:block th:if="${boardPermission.reply}">
+					&nbsp;
+					<a class="button_type1" th:href="@{/cms/board/post/reply(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, postIdx=${postVo.postIdx}, pageNum=${req.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}">답변</a>
+				</th:block>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+
+
+<script th:inline="javascript">
+
+
+function downloadFile(postIdx, fileIdx) {
+	var permission = /*[[${boardPermission.download}]]*/ true;
+	if(!permission) {
+		alert("다운로드 권한이 없습니다.");
+		return;
+	}
+	const url = `/cms/board/post/download?postIdx=${postIdx}&fileIdx=${fileIdx}`;
+	window.open(url, '_blank');
+}
+
+// 삭제
+function dataDelete(postIdx, title) {
+	if (!postIdx) {
+		return false;
+	}
+	
+	$.confirm({
+		theme : 'supervan',
+		title : title + ' 삭제',
+		content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+		buttons : {
+			확인 : function() {
+				$.ajax({
+					url  : '/cms/board/post/delete',
+					type : 'get',
+					data : {
+						'postIdx' : postIdx
+					},
+					dataType : 'json',
+				}).done(function(data) {
+					if(data.code == 0) {
+						alert("삭제되었습니다.");
+						let boardId = /*[[${req.boardId}]]*/ 0;
+						let mn = /*[[${req.mn}]]*/ 0;
+						let site = /*[[${req.site}]]*/ "";
+						let pageNum = /*[[${req.pageNum}]]*/ 1;
+						let scKey = /*[[${req.scKey}]]*/ "";
+						let scWord = /*[[${req.scWord}]]*/ "";
+						
+						location.href="/cms/board/post/list/?site="+site+"&mn="+mn+"&boardId="+boardId+"&pageNum="+pageNum+"&scKey="+scKey+"&scWord="+scWord;
+					}
+					else {
+						alert(data.message);
+					}
+				}).fail(function(xhr, status, error) {
+					if(xhr.responseJSON.data.message !== undefined) {
+						alert(xhr.responseJSON.data.message);
+					}
+					else {
+						alert(`요청을 처리할 수 없습니다.`);
+						console.log(result);
+					}
+				});
+			},
+			취소 : function() {
+			}
+		}
+	});
+}
+</script>
+
+<!--/* 시작: 댓글 기능 사용 여부 */-->
+<th:block th:if="${#strings.equals(boardVo.boardUseComment, 'y')}">
+<style>
+.comment_form{
+	width: 1500px;
+    margin: 0 auto;
+    margin-top: 110px;
+    padding: 20px;
+    box-sizing: border-box;
+    background: #121212;
+}
+
+.comment_form2{
+	width: 1500px;
+    margin: 0 auto;
+    margin-top: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    background: #121212;
+}
+.cm-writer{
+	height: 50px !important;
+	margin-bottom: 12px !important;
+	padding: 0 20px !important;
+	width: 220px !important;
+	box-sizing: border-box !important;
+}
+.comment_wrap {
+	position: relative;
+	width: 100%;
+	border: 1px solid #333;
+	display: flex;
+	color: #fff;
+	opacity: 1 !important;
+}
+.comment_wrap textarea.cm-comm::placeholder {color:#666 !important; font-weight:500;}
+
+ 
+
+
+.comment_wrap .comment-l{
+	width: 92%;
+	padding:20px;
+	box-sizing: border-box;
+}
+.comment_wrap .commentbox {width:1100px; margin:0 auto}
+.comment_wrap .commentbox p {color:#777; line-height:25px}
+.comment_wrap .commentbox dl {margin-bottom:15px}
+.comment_wrap .commentbox dl dt {font-size:16px; font-weight:800; color:#000; line-height:20px; margin-bottom:10px}
+.comment_wrap .commentbox dl dt span {font-weight:400; color: #999; font-size:14px;padding:0 5px}
+.comment_wrap .commentbox dl dt img {margin-right:10px}
+.comment_wrap .commentbox dl dd {line-height:22px; border-bottom:1px solid #ddd; padding:0 0 30px}
+
+
+.comment_wrap textarea{
+	height: 76px;
+    width: 100%;
+    resize: none;
+    background: #f5f5f5;
+    color: #0c0b0b;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 8px;
+}
+.comment_write_wrap{ width:8%;}
+.comment_write_wrap button{
+	background: #26272c;
+    width: 100%;
+    height: 100%;
+    font-weight: 400;
+    color: #fff;
+    font-size: 16px;
+    margin-right: -1px;
+    float: right;
+}
+
+   #comment_list {
+    margin-top: 25px;
+}
+   .comment_box{    width: 100%;
+    overflow: hidden;
+    position: relative;
+    max-width: 1500px;
+    margin: 0 auto;}
+   .comment_box li{float:left;width:100%;border-bottom: 1px dotted #333; margin:17px 0;position:relative}
+   .comment_box .cmt_cnt{padding: 7px 0 0;font-size: 17px;font-weight: 400; margin-bottom:20px;}
+   .comment_box .cmt_name{font-size: 16px;font-weight:600;color:#9b9b9b;display: flex;align-items: center;}
+   .comment_box .cmt_name span{
+	font-size: 14px;
+	margin-left: 11px;
+	font-weight: 600;
+	color: #636363;
+	position: relative;
+	letter-spacing: -1px;
+	}
+   .comment_box .cmt_btn{position:absolute;right:20px;top: 19px;}
+   .cmt_write_member p{float:left;margin-right:20px;color:#888}
+   .cmt_write_member input{font-size:14px}
+   .btn_cmtsmt input{float:left;width:10%;height:100px;line-height:100px;text-align:center;margin-left:-1px;font-size:16px;font-weight:500;color:#333}
+
+   .star_rating {width:95px}
+   .star_rating,.star_rating span{display:inline-block; height:18px; overflow:hidden;background:url(/_modules/board/assets/img/star_rating.png)no-repeat}
+   .star_rating span{background-position:left bottom; line-height:0; vertical-align:top}
+
+.btn_more_plus{display:block;border:1px solid #ddd;text-align:center;font-size:15px;color:#666;overflow:hidden;width:500px;margin:30px auto;height:50px;line-height:50px}
+.btn_more_plus:hover{background:#222;color:#fff;border:none}
+
+
+.button_type5 {
+	color: #bfbfbf;
+    font-size: 14px;
+    box-sizing: border-box;
+    display: inline-block;
+    cursor: pointer;
+    transition: 500ms cubic-bezier(0, 0, 0.2, 1);
+    border-radius: 100px;
+    letter-spacing: -0.5px;
+	margin-left: 5px;
+	padding:0 10px;
+	border: solid 1px #bfbfbf
+}
+</style>
+
+<form th:if="${boardPermission.comment}" id="comment_form" class="comment_form" method="post" action="/cms/board/post/comment/save">
+	<input type="text" name="commentName" id="commentName" class="cm-writer" placeholder="작성자" th:value="${memberDetailVo.memberName}"/>
+	<div class="comment_wrap">
+		<div class="comment-l">
+			<input type="hidden" name="postIdx" th:value="${postVo?.postIdx}">
+			<input type="hidden" name="commentIdx" >
+			<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+			<textarea name="commentContent" id="comment_content" rows="10" placeholder="댓글 내용"></textarea>
+		</div>
+		<div class="comment_write_wrap">
+			<button type="submit">등록</button>
+		</div>
+	</div>
+</form>
+
+<div id="comment_list">
+
+</div>
+<script th:inline="javascript">
+$(function(){ 
+	$('#comment_form').ajaxForm({
+		dataType: 'json',
+		success: function(response) {
+			alert('저장되었습니다.');
+			$('#comment_content').val('');
+			commentList();
+		},
+		error: function(result, status, error) {
+			if(result.responseJSON.data.message !== undefined) {
+				alert(result.responseJSON.data.message);
+			}
+			else {
+				alert(`요청을 처리할 수 없습니다.`);
+				console.log(result);
+			}
+		},
+	});
+	
+	commentList();
+});
+
+function commentList() {
+	var postIdx = /*[[${postVo.postIdx}]]*/ 0;
+	$.ajax({
+		url: '/cms/board/post/comment/list/?postIdx='+postIdx,
+		type: 'GET',
+		dataType: 'html',
+	}).done(function (data) {
+		$('#comment_list').html(data);
+	}).fail(function () {
+		alert('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+}
+
+</script>
+
+</th:block>
+<!--/* 종료: 댓글 기능 사용 여부 */-->
+
+
+
+</th:block>

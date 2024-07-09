@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+<script>
+	$(function () {
+	
+	});
+	
+	function registList2() {
+		location.href = gblAdminPath + '/lms/edu/detail/teamList';
+	}
+	
+	function teamList(detailIdx,team) {
+		location.href = gblAdminPath + "/lms/edu/regist/teamList?detailIdx=" + detailIdx + "&scTeam=" + team;
+	}
+</script>
+
+	<div>
+		<div class="row">
+			<!-- // 그룹 -->
+			<div class="col s12 pd_box">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<div class="row">
+							<span class="page_title">
+								[[${list[0].eduTitle}]] [[${list[0].eduNumeral}]]
+								<span>
+								(신청자 : [[${#aggregates.sum(list.![member])}]], 봇 : [[${#aggregates.sum(list.![bot])}]])
+								</span>
+							</span>
+						</div>
+						<div class="row">
+							
+							
+								
+							<form id="frmMemberList" method="get">
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+								
+								<!-- 검색창 -->
+								<div class="col search_bar">
+									<input name="scKey2" type="hidden" th:value="${param?.scKey2}">
+									<input name="scTeam" type="hidden" th:value="${param?.scTeam}">
+									<input name="type" type="hidden" value="memberList">
+									<input id="detailIdx" name="detailIdx" type="hidden" th:value="${param?.detailIdx}">
+									
+									<input id="file" name="file" type="file"  style="display:none;" />
+								</div>
+								
+								<!-- <div th:if="${#strings.equals(param?.scTeam,'all')}" class="right">
+									<div class="input-field col  select_m0">
+										<button type="button" onclick="registList2()" class="waves-effect waves-light btn cyan" style="width: 100%;">목록</button>
+									</div>
+								</div>	 -->
+								<div th:unless="${#strings.equals(param?.scTeam,'all')}" class="right">
+									<div class="input-field col  select_m0">								
+										<button onclick="registList();" class="waves-effect waves-light btn" style="width: 100%;">신청자 관리</button>
+									</div>
+									<div class="input-field col s3 select_m0">
+										<label for="registAllRole">체크박스 역할수정</label>
+										<select id="registAllRole" name="registAllRole" onchange="roleAllUpdate(this.value);return false;">
+											<option value="0" selected disabled>-</option>
+											<option value="1">주작업자</option>
+											<option value="2">보조작업자</option>
+											<option value="3">지상작업자</option>
+											<option value="4">작업책임자</option>
+										</select>
+									</div>
+									<div class="input-field col  select_m0">
+										<label for="registRole">아바타 추가</label>
+										<button id="registRole1" onclick="select2(1);" class="waves-effect waves-light btn cyan">주작업자</button>
+									</div>
+									<div class="input-field col  select_m0">
+										<button id="registRole2" onclick="select2(2);" class="waves-effect waves-light btn cyan">보조작업자</button>
+									</div>
+									<div class="input-field col  select_m0">
+										<button id="registRole3" onclick="select2(3);" class="waves-effect waves-light btn cyan">지상작업자</button>
+									</div>
+									<div class="input-field col  select_m0">
+										<button id="registRole4" onclick="select2(4);" class="waves-effect waves-light btn cyan">작업책임자</button>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="table_type3">
+						<table id="memberTable" class="striped centered highlight dataTable no-footer small_table" role="grid">
+							<thead>
+								<tr>
+									<th width="30px">팀</th>
+									<th width="30px">정원/신청자/아바타</th>
+									<th width="30px">비고</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr role="row" class="odd" th:if="${!#lists.isEmpty(list)}" th:each="teamIdx,idx : ${#numbers.sequence(1,list[0]?.eduTeamCnt)}">
+									<td class="dt-body-center">[[${teamIdx}]]</td>
+									<td class="dt-body-center">
+									    	
+									    <th:block th:if="${#lists.contains(list.![teamIndex], #strings.toString(teamIdx))}" th:each="idx : ${#numbers.sequence(0,#lists.size(list)-1)}">
+									    	
+										    <th:block th:if="${#strings.equals(list[idx]?.teamIndex,teamIdx)}">
+										    [[${list[idx]?.eduLimitCnt/list[idx]?.eduTeamCnt}]] / [[${list[idx]?.member}]] / [[${list[idx]?.bot}]]
+										    </th:block>
+									    </th:block>
+									    <th:block th:unless="${#lists.contains(list.![teamIndex], #strings.toString(teamIdx))}">
+									    	[[${list[0]?.eduLimitCnt/list[0]?.eduTeamCnt}]] / 0 / 0
+									    </th:block>
+									    
+									</td>
+									<td class="dt-body-center"><button th:onclick="teamList('26','[[${teamIdx}]]');" class="waves-effect waves-light btn" style="width: 100%;">역할 배정</button></td>
+								</tr>
+								
+								<tr role="row" class="odd" th:unless="${!#lists.isEmpty(list)}">
+									<td valign="top" colspan="4" class="dataTables_empty">데이터가 없습니다.</td>
+								</tr>
+								
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			
+			<div id="areaForm" class="col s5">
+			</div>
+		</div>
+	</div>	
+</body>
+</html>

@@ -1,0 +1,25 @@
+server.port: 8080
+server.error.whitelabel.enabled: false
+server.error.include-exception: true
+server.error.include-message: always
+server.error.include-stacktrace: always
+server.error.include-binding-errors: always
+server.error.path: /error
+
+#기본값 2MB
+server.tomcat.max-http-form-post-size: 1GB
+
+#actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+#
+global:
+  error:
+    view: global/error
+    user-view: global/errorUser
+  admin-path: admin
+  user:
+    login-url: /cms/page?site=kepco&mn=1001

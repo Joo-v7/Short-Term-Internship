@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/lms/edu/module/save(adminPath=${@environment.getProperty('global.admin-path')})}" enctype="multipart/form-data">
+		<div class="top">
+			<div class="row">
+				<div class="col s12 right-align">
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장 <i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col s12">
+				<input type="hidden" name="moduleIdx" id="moduleIdx" th:value="${vo?.moduleIdx}" />
+				<div class="row">
+					<div class="input-field col s12">
+						<input type="text" name="moduleTitle" id="moduleTitle" th:value="${vo?.moduleTitle}" />
+						<label for="moduleTitle" class="req">모듈명</label>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</body>
+
+<script>
+	$(function() {
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='moduleTitle']", $frm).val() == "") {
+				toast("제목는 필수입력 입니다.");
+				$("input[name='moduleTitle']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "get",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					M.toast({
+						html: xhr.responseJSON.message,
+						classes: 'red darken-2',
+						displayLength: 2000
+					});
+				}
+			});
+		});
+	});
+</script>
+</html>
+
+

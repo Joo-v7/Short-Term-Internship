@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+
+<th:block layout:fragment="content">
+<script>
+	
+	$(function() {
+		
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+		// 추가,수정 폼
+		dataForm('');
+	});
+	
+	// 목록
+	function dataList() {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#dataTable').DataTable({
+						
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/cms/code/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ data : 'code', className : 'dt-body-center' },
+				{ data : 'codeNm', className : 'dt-body-center' },
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `<button onclick="dataForm(${row.code});" class="waves-effect waves-light btn cyan"><i class="material-icons left">edit</i>수정</button>`;
+					}
+				},
+			],
+		});
+		
+		// 구조가 마음에 안든다. 확인해서 교체
+		$('#dataTable tbody').on('click', 'td', function() {
+		});
+
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+
+	// 추가,수정 폼
+	function dataForm(code) {
+		if(code == ''){code = "ROOT"}
+		$("#areaForm").load(gblAdminPath + "/cms/code/form?code=" + code);
+	}
+</script>
+<div>
+	<div class="row">
+
+		<!-- // 그룹 -->
+		<div class="col s6 sideline pd_box">
+			<div class="basic">
+				<div class="basic_top_searchbox left">
+					<div class="row">
+						<form id="frmList" name="frmList" method="get" enctype="multipart/form-data">
+							<!-- 검색창 -->
+							<div class="col search_bar">
+								<input id="scWord" name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+								<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+ 									<i class="material-icons md-18 left">search</i> 검색
+								</button>
+							</div>
+							<div class="title left">
+								전체 : <b id="dataTableTotCnt">0</b>
+							</div>
+							<div class="right">
+								<button onclick="dataForm('')" class="waves-effect waves-light btn cyan left">
+									<i class="material-icons left">create</i>등록
+								</button>
+							</div>
+<!-- 							<div class="btn_infolist right"> -->
+<!-- 								<button onclick="dataForm('')" class="waves-effect waves-light btn cyan left"> -->
+<!-- 									<i class="material-icons left">create</i>등록 -->
+<!-- 								</button> -->
+<!-- 							</div> -->
+						</form>
+						
+					</div>
+				</div>
+				<div class="table_type3">
+					<table id="dataTable" class="striped centered highlight">
+						<thead>
+							<tr>
+								<th width="200px">코드</th>
+								<th width="200px">페이지명</th>
+								<th width="80px">수정</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		
+		<div id="areaForm" class="col s6 scroll_default pd_box">
+		</div>
+	</div>
+</div>
+
+</html>

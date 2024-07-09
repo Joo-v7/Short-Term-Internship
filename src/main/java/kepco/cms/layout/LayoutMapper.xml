@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.layout.LayoutMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test = "!@kepco.util.StrUtil@isBlank(scWord)">AND layout_nm LIKE CONCAT ('%',#{scWord},'%')</if>
+			<!-- <if test = "!@kepco.util.StrUtil@isBlank(scKeyword)">AND site_idx LIKE CONCAT ('%'#{sc  },'%')</if> -->
+			<if test = "!@kepco.util.StrUtil@isBlank(layoutCd)">AND layout_cd=#{layoutCd}</if>
+			<if test = "!@kepco.util.StrUtil@isBlank(layoutContent)">AND layout_content=#{layoutContent}</if>
+			<if test = "!@kepco.util.StrUtil@isBlank(site)">AND site=#{site}</if>
+			
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="egovMap" resultType="kepco.cms.layout.LayoutVo">
+		SELECT *
+		FROM cms_layout a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="egovMap" resultType="kepco.cms.layout.LayoutVo">
+		SELECT
+			*
+		FROM cms_layout
+		WHERE
+			layout_idx = #{layoutIdx}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.layout.LayoutVo" useGeneratedKeys="true" keyProperty="layoutIdx" keyColumn="layoutIdx">
+		INSERT INTO cms_layout
+		( site,layout_nm,layout_cd,layout_content,insert_date,update_date)
+		VALUES
+		( #{site},#{layoutNm},#{layoutCd}, #{layoutContent}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.layout.LayoutVo">
+		UPDATE cms_layout
+		<set>
+			site=#{site},
+			layout_nm = #{layoutNm},
+			layout_cd = #{layoutCd},
+			layout_path = #{layoutPath},
+			layout_content = #{layoutContent},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			layout_idx = #{layoutIdx}
+	</update>
+	
+	<delete id="delete" parameterType="EgovMap">
+		DELETE FROM cms_layout
+		WHERE layout_idx = #{layoutIdx}
+	</delete>
+</mapper>

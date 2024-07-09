@@ -1,0 +1,195 @@
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+<style>
+    .nested-list-content input {
+        width: 95% !important;
+        border: 0 none !important;
+    }
+
+    #poll_qson_ul {
+        padding-bottom: 20px;
+    }
+
+    .poq_order2 {
+        display: inline-block;
+        background: red;
+        color: #fff;
+        padding: 0 10px;
+        position: relative;
+        left: -10px;
+    }
+</style>
+<div class="row  " style="    margin-bottom: 0;">
+    <!--
+    <div class="layout_group2 col s6">
+        <p><a href="#" th:onclick="poll_qson_view([[${req.poIdx}]]); return false;" ><i style="margin-top: -6px;"  class="material-icons left">check</i>미리보기</a></p>
+    </div>
+     -->
+    <div class=" layout_group2 btn_infolist  right" style="float: right;     margin-right: 10px;">
+        <!-- <p><a style="background: #00b8d4 !important; " href="#"  ><i style="margin-top: -6px;" class="material-icons left">create</i>문항등록</a></p> -->
+        <button th:onclick="poll_qson_save([[${req.poIdx}]]); return false;"
+                class="waves-effect waves-light btn cyan accent-4 z-depth-0 left"><i class="material-icons left"
+                                                                                     style="margin-bottom: 10px">create</i>문항등록
+        </button>
+    </div>
+</div>
+<form id="qson_form">
+    <input type="hidden" id="qson_poidx" th:value="${req.poIdx}">
+    <input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+</form>
+
+<div id="poll_qson_ul" class="dd " style="height: 723px; overflow-y: auto;     padding: 10px;">
+
+</div>
+
+
+<script>
+    $(function () {
+        qson_poidx = $('#qson_poidx').val();
+        poll_qson_ul(qson_poidx);
+
+        $('#poll_qson_ul').nestable({
+            maxDepth: 1, //1개까지만
+            dropCallback: function (details) {
+                var order = new Array();
+
+                $('li[data-id=\'' + details.destId + '\']').find('ol:first').children().each(function (index, elem) {
+                    order[index] = $(elem).attr('data-id');
+                });
+
+
+                if (order.length === 0) {
+                    var order = new Array();
+                    $('#poll_qson_ul > ol > li').each(function (index, elem) {
+                        order[index] = $(elem).attr('data-id');
+                    });
+                }
+
+                // don't post if nothing changed
+                var data_id = window.location.hostname + '.nestable';
+                var drag_data = JSON.stringify($('#poll_qson_ul').nestable('serialize'));
+                var storage_data = localStorage.getItem(data_id);
+
+                if (drag_data === storage_data) {
+                    return false;
+                }
+                localStorage.setItem(data_id, drag_data);
+
+                csrf = $('#csrf').val();
+
+                $.post(gblAdminPath + '/lms/poll/qson/pollQsonChange',
+                    {
+                        sourceId: details.sourceId,
+                        destinationId: details.destId,
+                        order: order,
+                        _csrf: csrf,
+                    },
+                    function (result) {
+                        poll_qson_ul(qson_poidx);
+                        toast(result.message, 3000);
+                    },
+                    'json'
+                ).fail(function (result) {
+                    toast(result.message, 3000);
+                });
+            },
+        });
+
+    });
+
+    function set_poll_detail_del(poqIdx, poIdx) {
+        csrf = $('#csrf').val();
+        $.confirm({
+            theme: 'supervan', // 'material', 'bootstrap'
+            title: '문항삭제',
+            content: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+            buttons: {
+                확인: function () {
+                    $.ajax({
+                        url: gblAdminPath + '/lms/poll/qson/pollDetailDelete',
+                        type: 'POST',
+                        data: {'poqIdx': poqIdx, 'poIdx': poIdx, '_csrf': csrf},
+                        dataType: 'json',
+                    }).done(function (d) {
+                        $('#poll_qson_detail').html('');
+                        $('li[data-id="' + poqIdx + '"]').remove();
+                        var order = new Array();
+                        if (order.length === 0) {
+                            var order = new Array();
+                            i = 0;
+                            $('#poll_qson_ul > ol > li').each(function (index, elem) {
+                                if ($(elem).attr('data-id') != poqIdx) {
+                                    order[i] = $(elem).attr('data-id');
+                                    i++;
+                                }
+                            });
+                        }
+                        $.post(gblAdminPath + '/lms/poll/qson/pollQsonChange',
+                            {
+                                order: order,
+                                _csrf: csrf,
+                            },
+                            function (result) {
+                                poll_qson_ul(poIdx);
+                                toast("삭제완료", 3000);
+                            },
+                            'json'
+                        ).fail(function (result) {
+                            toast(result.message, 3000);
+                        });
+
+                    }).fail(function () {
+                        toast('네트워크 또는 시스템 장애입니다.', 4000);
+                    });
+                },
+                취소: function () {
+                }
+            }
+        });
+
+    }
+
+    function poll_qson_ul(po_idx) {
+        if (!po_idx) {
+            po_idx = '';
+        }
+
+        $.ajax({
+            url: gblAdminPath + '/lms/poll/qson/pollQsonList?po_idx=' + po_idx,
+            type: 'GET',
+            dataType: 'html',
+        }).done(function (data) {
+            $('#poll_qson_ul').html(data);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+
+    function poll_qson_save(po_idx, poqIdx) {
+        csrf = $('#csrf').val();
+
+        var order = new Array();
+        if (order.length === 0) {
+            var order = new Array();
+            i = 0;
+            $('#poll_qson_ul > ol > li').each(function (index, elem) {
+                order[index] = $(elem).attr('data-id');
+            });
+        }
+        maxOrder = order.length + 1;
+
+        $.ajax({
+            url: gblAdminPath + '/lms/poll/qson/pollQsonSave',
+            type: 'POST',
+            data: {'po_idx': po_idx, '_csrf': csrf, 'poqIdx': poqIdx, 'poqOrder': maxOrder,},
+            dataType: 'json',
+        }).done(function (d) {
+            poll_qson_ul(po_idx);
+            $('#poll_qson_ul').animate({scrollTop: $("#poll_qson_ul")[0].scrollHeight}, 300);
+            toast('저장완료');
+            // set_poll_detail_edit(poqIdx, po_idx);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+</script>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.module.ModuleMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND module_title LIKE CONCAT ('%',#{scWord},'%') 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(moduleIdx)">
+				AND module_idx = #{moduleIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(moduleCd)">
+				AND module_cd = #{moduleCd}
+			</if>
+			<if test="@kepco.util.StrUtil@getContextPath() eq 'ADMIN' and @kepco.util.StrUtil@getUserRole() eq 'USER'">
+				<bind name="memberIdx" value="@kepco.util.StrUtil@getSessionIdx()"/>
+				AND insert_idx = #{memberIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scModuleCd)">
+				AND module_cd LIKE CONCAT(#{scModuleCd}, '%') 
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.module.ModuleVo">
+		SELECT
+			a.*,
+            (SELECT COUNT(1) FROM lms_edu_pack b WHERE b.module_idx = a.module_idx) edu_count
+		FROM lms_edu_module a
+		<include refid="selectWhere"/>
+			<if test="!@kepco.util.StrUtil@isBlank(eduModule)">
+				AND module_idx in (${eduModule})
+			</if>
+		ORDER BY
+		<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(eduModule)">
+				FIELD(module_idx,${eduModule})
+			</when>
+			<otherwise>
+				module_idx ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="selectPack" parameterType="map" resultType="kepco.lms.edu.module.ModuleVo">
+		SELECT
+			a.*,
+            (SELECT COUNT(1) FROM lms_edu_pack b WHERE b.module_idx = a.module_idx) edu_count
+		FROM lms_edu_module a
+		JOIN lms_edu_pack c
+		ON a.module_idx = c.module_idx
+		<include refid="selectWhere"/>
+			<if test="!@kepco.util.StrUtil@isBlank(eduModule)">
+				AND module_idx in (${eduModule})
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eduIdx)">
+				AND c.edu_idx = #{eduIdx}
+			</if>
+		ORDER BY
+		<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(eduModule)">
+				FIELD(module_idx,${eduModule})
+			</when>
+			<otherwise>
+				module_idx ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.module.ModuleVo">
+		SELECT *
+		FROM lms_edu_module
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.module.ModuleVo" useGeneratedKeys="true" keyProperty="moduleIdx" keyColumn="moduleIdx">
+		INSERT INTO lms_edu_module (
+			module_cd, module_title,module_desc,module_time,module_file_name,module_file_origin,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{moduleCd}, #{moduleTitle},#{moduleDesc},#{moduleTime},#{moduleFileName},#{moduleFileOrigin},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.module.ModuleVo">
+		UPDATE lms_edu_module
+		<set>
+			module_cd = #{moduleCd},
+			module_title = #{moduleTitle},
+			module_desc = #{moduleDesc},
+			module_time = #{moduleTime},
+<!-- 			module_file_name = #{moduleFileName}, -->
+<!-- 			module_file_origin = #{moduleFileOrigin}, -->
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND module_idx = #{moduleIdx}
+	</update>
+
+	<update id="fileUpdate" parameterType="kepco.lms.edu.module.ModuleVo">
+		UPDATE lms_edu_module
+		<set>
+			module_file_name = #{moduleFileName},
+			module_file_origin = #{moduleFileOrigin},
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND module_idx = #{moduleIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.edu.module.ModuleVo">
+		UPDATE lms_edu_module
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND module_idx = #{moduleIdx}
+	</update>
+	
+	
+	
+</mapper>

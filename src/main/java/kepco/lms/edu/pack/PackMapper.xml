@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.pack.PackMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(packIdx)">
+				pack_idx = #{packIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.pack.PackVo">
+		SELECT 
+			*,
+        	(SELECT train_state FROM lms_edu_train a WHERE a.module_idx = b.module_idx) train_state
+		FROM (
+			SELECT
+				*
+			FROM lms_edu_pack a
+			WHERE
+				edu_idx = #{eduIdx}
+		) a
+		JOIN lms_edu_module b
+		ON a.module_idx = b.module_idx
+		WHERE b.delete_yn = 'n'
+		ORDER BY
+		<choose>
+			<otherwise>
+				a.module_order ASC, a.insert_date ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.pack.PackVo">
+		SELECT *
+		FROM lms_edu_pack
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.pack.PackVo" useGeneratedKeys="true" keyProperty="packIdx" keyColumn="packIdx">
+		<selectKey resultType="int" keyProperty="moduleOrder" keyColumn="moduleOrder" order="BEFORE">
+			SELECT IFNULL(MAX(module_order)+1,1) FROM lms_edu_pack WHERE edu_idx = #{eduIdx}
+		</selectKey>
+		INSERT INTO lms_edu_pack (
+			edu_idx,module_idx,module_order,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{eduIdx},#{moduleIdx},#{moduleOrder},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.pack.PackVo">
+		UPDATE lms_edu_pack
+		<set>
+			module_order = #{moduleOrder},
+			insert_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			pack_idx = #{packIdx}
+	</update>
+	
+	<delete id="delete" parameterType="String">
+		DELETE FROM lms_edu_pack
+		WHERE
+			pack_idx = #{packIdx}
+	</delete>
+	
+	
+	
+</mapper>

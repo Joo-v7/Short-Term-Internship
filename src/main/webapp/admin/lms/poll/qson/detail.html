@@ -1,0 +1,367 @@
+<style>
+    .qson_detail_btn {
+        display: inline-block;
+        width: 100%;
+        background: #5e5e5e;
+        border: 1px dotted #dfdfdf;
+        padding: 14px 10px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: bold;
+        text-align: left;
+        color: #fff;
+    }
+
+    .select-dropdown li img {
+        width: 20px;
+        height: 20px;
+        margin-top: 16px;
+    }
+</style>
+
+<div class="row pd_box">
+    <form name="frm_poll_qson_detail_form_save" id="frm_poll_qson_detail_form_save" method="post"
+          enctype="multipart/form-data"
+          th:action="@{/{adminPath}/lms/poll/qson/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+        <fieldset class="row mt5 pd_box">
+            <legend>문항설정</legend>
+            <a class="btn waves-effect z-depth-0 red lighten-1 left"
+               th:onclick="set_poll_detail_del('[[${vo.poqIdx}]]','[[${vo.poIdx}]]'); return false;">
+                <i class="material-icons left">delete</i>삭제
+            </a>
+            <button class="btn waves-effect waves-light right  blue-grey darken-4 z-depth-0" type="submit">저장 <i
+                        class="material-icons left">check</i></button>
+            <div class="row">
+                <div class="input-field col s12 mt20">
+                    <input type="hidden" name="poqIdx" th:value="${vo?.poqIdx}"/>
+                    <input type="text" name="poqSubject" th:value="${vo?.poqSubject}"/>
+                    <label for="poq_subject" class="active req">문항제목</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s6 ">
+                    <select name="poqType" id="poqType" tabindex="-1"
+                            th:onchange="poq_type_change('[[${vo.poqIdx}]]','[[${vo.poIdx}]]'); return false;">
+
+                        <optgroup label="객관식">
+                            <option value="A" title="객관식 질문" data-icon="/assets/img/poll_chk_A.png" class="left"
+                                    th:selected="${vo?.poqType eq 'A'}">객관식 질문
+                            </option>
+
+                        </optgroup>
+                        <optgroup label="주관식">
+                            <option value="D" title="서술형" data-icon="/assets/img/poll_chk_D.png" class="left"
+                                    th:selected="${vo?.poqType eq 'D'}">서술형
+                            </option>
+                        </optgroup>
+                    </select>
+                    <label for="poqType" class="active req">문항타입
+                        <a href="#" class="tooltipped" data-position="right" data-tooltip="주관식 선택식 답변설정이 다 삭제됩니다."
+                           style="         margin-left: 5px; float: right;">
+                            <i class="material-icons left" style="    font-size: 25px;">info</i>
+                        </a></label>
+                </div>
+                <label for="">답변여부</label>
+                <div class=" col s6 check_list_box">
+                    <label for="poqNecessary">
+                        <input type="checkbox" id="poqNecessary" name="poqNecessary" class="filled-in" value="Y"
+                               title="필수답변" th:checked="${vo?.poqNecessary eq 'Y'}">
+                        <span>필수답변</span></label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12">
+                    <input type="text" name="poqContent" th:value="${vo?.poqContent}"/>
+                    <label for="poqContent" class="active">설문조사 설명</label>
+                </div>
+
+            </div>
+
+            <div id="mix" style="display:none;">
+                <div class="input-field col s6">
+                    <input type="text" name="poqMinTxt" th:value="${vo?.poqMinTxt}"/>
+                    <label for="poqMinTxt" class="active">최소글자수</label>
+                </div>
+                <div class="input-field col s6">
+                    <input type="text" name="poqMaxTxt" th:value="${vo?.poqMaxTxt}"/>
+                    <label for="poqMaxTxt" class="active">최대글자수</label>
+                </div>
+            </div>
+            <div id="select_chk" style="display:none;">
+                <div class="input-field col s6">
+                    <input type="text" name="poqMinSelect" th:value="${vo?.poqMinSelect}"/>
+                    <label for="poqMinSelect" class="active">최소선택 갯수</label>
+                </div>
+                <div class="input-field col s6">
+                    <input type="text" name="poqMaxSelect" th:value="${vo?.poqMaxSelect}"/>
+                    <label for="poqMaxSelect" class="active">최대선택 갯수</label>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+
+    <fieldset class="row mt5">
+        <legend>답변설정</legend>
+        <div class="input-field col s12" id="select_btn" style="display:none;">
+            <a href="#" th:onclick="poll_qson_detail_insert('[[${vo.poqIdx}]]','[[${vo.poIdx}]]'); return false;"
+               class="qson_detail_btn"><i style="margin-top: -6px;" class="material-icons left">create</i>답변등록</a>
+
+            <input type="hidden" id="csrf2" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </div>
+
+
+        <div id="select_list" class="dd col s12" style="height:100%; max-height: 407px; overflow-y: auto;">
+
+        </div>
+
+        <div class="input-field col s6" id="select_btn2" style="display:none;">
+            <a href="#" th:onclick="poll_qson_detail_insert('[[${vo.poqIdx}]]','[[${vo.poIdx}]]'); return false;"
+               class="qson_detail_btn">행등록</a>
+        </div>
+
+
+        <div class="input-field col s6" id="select_btn3" style="display:none;">
+            <a href="#" th:onclick="poll_qson_detail_heat_insert('[[${vo.poqIdx}]]','[[${vo.poIdx}]]'); return false;"
+               class="qson_detail_btn">열등록</a>
+        </div>
+
+
+        <div id="grid_select_list1" class="dd col s6" style="height:100%; max-height: 407px; overflow-y: auto;">
+
+        </div>
+
+        <div id="grid_select_list2" class="dd col s6" style="height:100%; max-height: 407px; overflow-y: auto;">
+
+        </div>
+    </fieldset>
+</div>
+
+<script th:inline="javascript">
+
+    $(function () {
+        $('select').formSelect();
+        $('.tooltipped').tooltip();
+
+        poq_idx = /*[[${vo.poqIdx}]]*/;
+        po_idx = /*[[${vo.poIdx}]]*/;
+
+        poq_type_change(poq_idx, po_idx);
+
+        $('#frm_poll_qson_detail_form_save').ajaxForm({
+            dataType: 'json',
+            success: function (response) {
+                if (response.status == 200) { //성공 메시지 출력 후 이동
+                    toast('저장완료', 3000);
+                    poll_qson_ul(po_idx);
+                    poll_qson_detail_ul(poq_idx);
+
+                } else {
+                    $.each(response.message, function (k, v) {
+                        $('#' + k).focus();
+                        toast(v, 3000);
+                        return false;
+                    });
+                }
+            },
+            error: function (result, status, error) {
+                toast(result.responseJSON.message, 3000);
+            },
+        });
+
+        $('#select_list').nestable({
+            maxDepth: 1, //1개까지만
+            dropCallback: function (details) {
+                var order = new Array();
+
+                $('li[data-id=\'' + details.destId + '\']').find('ol:first').children().each(function (index, elem) {
+                    order[index] = $(elem).attr('data-id');
+                });
+
+                if (order.length === 0) {
+                    var order = new Array();
+                    $('#select_list > ol > li').each(function (index, elem) {
+                        order[index] = $(elem).attr('data-id');
+                    });
+                }
+
+
+                // don't post if nothing changed
+                var data_id = window.location.hostname + '.nestable';
+                var drag_data = JSON.stringify($('#select_list').nestable('serialize'));
+                var storage_data = localStorage.getItem(data_id);
+
+                if (drag_data === storage_data) {
+                    return false;
+                }
+                localStorage.setItem(data_id, drag_data);
+
+                csrf = $('#csrf').val();
+
+
+                // post data by ajax
+                $.post(gblAdminPath + '/lms/poll/qson/pollQsonDetailChange',
+                    {
+                        sourceId: details.sourceId,
+                        destinationId: details.destId,
+                        order: order,
+                        _csrf: csrf,
+                    },
+                    function (result) {
+                        poll_qson_detail_ul(poqIdx);
+                        toast(result.message, 3000);
+                    },
+                    'json'
+                ).fail(function (result) {
+                    toast(result.message, 3000);
+                });
+            },
+        });
+
+    });
+
+    function poq_type_change(poqIdx, poIdx) {
+        poqType = $('#poqType').val();
+        csrf2 = $('#csrf2').val();
+
+        //객관식이나 체크박스의 경우 자동으로 하나 생성
+        if (poqType == 'A') {
+            $('#mix').hide();
+            $('#select_chk').hide();
+            $('#select_btn').show();
+            $('#select_btn2').hide();
+            $('#select_btn3').hide();
+
+            $.ajax({
+                url: gblAdminPath + '/lms/poll/qson/pollQsonDetailSave',
+                type: 'POST',
+                data: {'poqIdx': poqIdx, 'poqType': poqType, 'poIdx': poIdx, '_csrf': csrf2},
+                dataType: 'json',
+            }).done(function (d) {
+                poll_qson_detail_ul(poqIdx);
+            }).fail(function () {
+                poll_qson_detail_ul(poqIdx);
+            });
+
+        } else if (poqType == 'B') {
+            $('#mix').hide();
+            $('#select_chk').show();
+            $('#select_btn').show();
+            $('#select_btn2').hide();
+            $('#select_btn3').hide();
+
+            $.ajax({
+                url: gblAdminPath + '/lms/poll/qson/pollQsonDetailSave',
+                type: 'POST',
+                data: {'poqIdx': poqIdx, 'poqType': poqType, 'poIdx': poIdx, '_csrf': csrf2},
+                dataType: 'json',
+            }).done(function (d) {
+                poll_qson_detail_ul(poqIdx);
+            }).fail(function () {
+                poll_qson_detail_ul(poqIdx);
+            });
+        } else if (poqType == 'E') {
+            $('#mix').hide();
+            $('#select_chk').show();
+            $('#select_btn').hide();
+            $('#select_btn2').show();
+            $('#select_btn3').show();
+            $.ajax({
+                url: gblAdminPath + '/lms/poll/qson/pollQsonDetailSave',
+                type: 'POST',
+                data: {'poqIdx': poqIdx, 'poqType': poqType, 'poIdx': poIdx, '_csrf': csrf2},
+                dataType: 'json',
+            }).done(function (d) {
+                poll_qson_detail_ul(poqIdx);
+            }).fail(function () {
+                poll_qson_detail_ul(poqIdx);
+            });
+
+            $.ajax({
+                url: gblAdminPath + '/lms/poll/qson/pollQsonHeatDetailSave',
+                type: 'POST',
+                data: {'poqIdx': poqIdx, 'poqType': poqType, 'poIdx': poIdx},
+                dataType: 'json',
+            }).done(function (d) {
+                poll_qson_detail_ul(poqIdx);
+            }).fail(function () {
+                poll_qson_detail_ul(poqIdx);
+            });
+        } else if (poqType == 'F') {
+            $('#mix').hide();
+            $('#select_chk').show();
+            $('#select_btn').hide();
+            $('#select_btn2').show();
+            $('#select_btn3').show();
+            $.ajax({
+                url: gblAdminPath + '/lms/poll/qson/pollQsonDetailSave',
+                type: 'POST',
+                data: {'poqIdx': poqIdx, 'poqType': poqType, 'poIdx': poIdx, '_csrf': csrf2},
+                dataType: 'json',
+            }).done(function (d) {
+                poll_qson_detail_ul(poqIdx);
+            }).fail(function () {
+                poll_qson_detail_ul(poqIdx);
+            });
+
+            $.ajax({
+                url: gblAdminPath + '/lms/poll/qson/pollQsonHeatDetailSave',
+                type: 'POST',
+                data: {'poqIdx': poqIdx, 'poqType': poqType, 'poIdx': poIdx},
+                dataType: 'json',
+            }).done(function (d) {
+                poll_qson_detail_ul(poqIdx);
+            }).fail(function () {
+                poll_qson_detail_ul(poqIdx);
+            });
+
+        } else if (poqType == 'C') {
+            $('#mix').show();
+            $('#select_chk').hide();
+            $('#select_btn').hide();
+        } else if (poqType == 'D') {
+            $('#mix').show();
+            $('#select_chk').hide();
+            $('#select_btn').hide();
+        }
+
+    }
+
+    function poll_qson_detail_ul(poq_idx) {
+        poqType = $('#poqType').val();
+
+        if (!poq_idx) {
+            poq_idx = '';
+        }
+        $.ajax({
+            url: gblAdminPath + '/lms/poll/qson/pollQsonDetailUl?poqIdx=' + poq_idx,
+            type: 'GET',
+            dataType: 'html',
+        }).done(function (data) {
+            $('#select_list').html(data);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+
+    function poll_qson_detail_insert(poq_idx, po_idx) {
+        poqType = $('#poqType').val();
+
+        csrf2 = $('#csrf2').val();
+
+        $.ajax({
+            url: gblAdminPath + '/lms/poll/qson/pollQsonDetailSaveIn',
+            type: 'POST',
+            data: {'poqIdx': poq_idx, 'poqdType': poqType, 'poIdx': po_idx, '_csrf': csrf2},
+            dataType: 'json',
+        }).done(function (d) {
+            poll_qson_detail_ul(poq_idx);
+            //toast(d.message);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+
+</script>
+
+

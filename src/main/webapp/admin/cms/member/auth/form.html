@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/login_layout">
+<head>
+	<title>CMS 로그인</title>
+</head>
+
+<th:block layout:fragment="content">
+<style>
+	
+	.login_btn_box {display: flex; width: 100%; height: auto; align-items: center; gap: 10px; flex-wrap: wrap;}
+	.login_btn_box .btn {flex: 1 1 120px; margin: 0;}
+	.login_btn_box .btn.full {flex: 1 1 100%;}
+</style>
+<div id="login_wrap">
+	<div id="login_box">
+		<div class="login_form">
+			<div class="title">
+				<i class="material-icons md-48">&#xE899;</i><br />
+				<p class="login_txt">LOGIN</p>
+				<p class="login_top_title">초실감훈련센터</p>
+				<span>초실감훈련센터<br />페이지에 오신것을 환영합니다.</span>
+			</div>
+			<div class="form_box">
+<!--/*
+${@environment.getProperty('global.admin-path')}
+이건 너무 불편한데? 당장이라도 AdminController는 어드바이스를 추가하든 수퍼 클래스를 만들던지 해야할듯... 
+*/-->				
+				<form id="frm" name="frm" method="post" th:action="@{/{adminPath}/cms/member/auth/login(adminPath=${@environment.getProperty('global.admin-path')})}">
+					<div class="input-field row">
+						<label>ID</label>
+						<input name="memberId" type="text" value="s_admin">
+					</div>
+					<div class="input-field row">
+						<label>Password</label>
+						<input name="memberPw" type="password" value="dbdhzpdl^^**">
+					</div>
+					<div class="login_sinfo left-align">
+						<label for="isSaveId">
+							<input name="isSaveId" id="isSaveId" type="checkbox"  value="true" class="filled-in"/>
+							<span>아이디저장</span>
+						</label>
+						
+					</div>
+					<div class="login_btn_box">
+						<button type="submit" class="waves-effect waves-light btn  grey darken-4 accent-4 z-depth-0 full">로그인</button>
+						<a href="/admin/cms/member/auth/join" class="waves-effect waves-light btn  grey darken-1 accent-4 z-depth-0">회원가입</a>
+						<a href="/admin/cms/member/auth/find" class="waves-effect waves-light btn  grey darken-1 accent-4 z-depth-0">계정정보 찾기</a>
+					</div>
+				</form>
+			</div> 
+			
+			<!-- <div class="login_sinfo2" style="display: block">
+				<p>계정이 없으십니까?
+					<button class="mui-btn  mui-btn--primary mui-btn--flat" style="border:0;text-decoration:underline"> <b>계정 만들기</b></button>
+				</p>
+			</div> -->
+			
+		</div>
+	</div>
+</div>
+<script>
+	$(function() {
+		var adminPath = "[[${@environment.getProperty('global.admin-path')}]]";
+		
+		/** 로그인 */
+		$("#frm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='memberId']", $frm).val() == "") {
+				toast("아이디는 필수입력 입니다.");
+				$("input[name='memberId']", $frm).focus();
+				return;
+			}
+			
+			// CSRF 토큰을 좀 쉽게 넘기고 싶은데?
+			// TODO: beforeSend, complete(또는 always()?) 등을 묶어서 관리자/사용자용 커스텀 AJAX 만들기.
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				//contentType: "application/json",
+				contentType: "application/x-www-form-urlencoded", // 왜 이렇게 해야하지? spring-security 설정에 뭐가 있나?
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				console.log(data);
+				if(data.code == "0000") {
+					// toast("로그인되었습니다.");
+					location = "/"+adminPath+"/cms/member/auth";
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				// 정확히 어떤 경우에 들어오는거지?
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+				console.log(xhr.responseJSON);
+			});
+		});
+		
+	});
+</script>
+
+</th:block>
+
+</html>

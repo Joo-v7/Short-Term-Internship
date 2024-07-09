@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+
+<body>
+<th:block layout:fragment="content">
+
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<script src="/assets/libs/amchart4/themes/animated.js"></script>
+<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+<script src="/assets/libs/amchart4/plugins/forceDirected.js"></script>
+<script src="/assets/libs/amchart4/plugins/wordCloud.js"></script>
+<script>
+am4core.ready(function() {
+	am4core.useTheme(am4themes_animated);
+	am4core.options.autoDispose = true;
+});
+</script>
+
+<script>
+$(function () {
+	// 목록
+	$('#frmList').submit(function (e) {
+		e.preventDefault();
+		dataList();
+		dataList2();
+		shareByCategory();
+		vodKeyword();
+	});
+
+	// 검색
+	$('#frmList').submit();
+});
+// 목록
+function dataList() {
+	
+	$('#dataTable').DataTable({
+		pageLength: 5,
+		ajax: {
+			type: "get",
+			url: gblAdminPath + "/lms/vod/stat/listJson?" + $('#frmList').serialize(),
+			dataType: "json",
+			dataSrc: "data.list",
+		},
+		order: [0, "desc"],
+		initComplete: dataTableInit,
+		columns: [
+			{ data: null, className: 'dt-body-center', render: function (data, type, row, meta) { return meta.settings._iDisplayStart + meta.row + 1; } },
+			{ data: "vodTitle", className: "dt-body-center" },
+			{ data: "vodEduBgnDate", className: "dt-body-center" },
+			{ data: "vodEduEndDate", className: "dt-body-center" },
+			{ data: "contentsCnt", className: "dt-body-center" },
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var studySumTime = "-";
+					if(row.studySumTime){
+						studySumTime = row.studySumTime +"분";
+					}
+					return studySumTime;
+				}
+			},
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var learnMinTime = "-";
+					if(row.learnMinTime){
+						learnMinTime = row.learnMinTime +"분";
+					}
+					return learnMinTime;
+				}
+			},
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var learnMaxTime = "-";
+					if(row.learnMaxTime){
+						learnMaxTime = row.learnMaxTime +"분";
+					}
+					return learnMaxTime;
+				}
+			},
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var learnAvgTime = "-";
+					if(row.learnAvgTime){
+						learnAvgTime = row.learnAvgTime +"분";
+					}
+					return learnAvgTime;
+				}
+			},
+			{ data: "vodStudentsCnt", className: "dt-body-center" },
+			{ data: "vodCompleteCnt", className: "dt-body-center" },
+		],
+		createdRow: function (row, data, dataIndex) {
+			$(row).on("click", function () {
+			});
+		},
+		
+	});
+}
+
+
+// 모듈 현황
+function dataList2() {
+	
+	$('#dataTable2').DataTable({
+		pageLength: 5,
+		ajax : {
+			type : "get",
+			url : gblAdminPath + "/lms/vod/stat/contents/listJson?" + $('#frmList').serialize(),
+			dataType: "json",
+			dataSrc : "data.list",
+		},
+		order : [1,'asc'],
+		initComplete : dataTableInit2,
+		columns : [
+			{ data: null, className: 'dt-body-center', render: function (data, type, row, meta) { return meta.settings._iDisplayStart + meta.row + 1; } },
+			{ data : 'contentTitle', className : 'dt-body-center',}, 
+			{ data : 'categoryNm', className : 'dt-body-center',}, 
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var studyTime = "-";
+					if(row.studyTime){
+						studyTime = row.studyTime +"분";
+					}
+					return studyTime;
+				}
+			},
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var learnMinTime = "-";
+					if(row.learnMinTime){
+						learnMinTime = row.learnMinTime +"분";
+					}
+					return learnMinTime;
+				}
+			},
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var learnMaxTime = "-";
+					if(row.learnMaxTime){
+						learnMaxTime = row.learnMaxTime +"분";
+					}
+					return learnMaxTime;
+				}
+			},
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var learnAvgTime = "-";
+					if(row.learnAvgTime){
+						learnAvgTime = row.learnAvgTime +"분";
+					}
+					return learnAvgTime;
+				}
+			},
+			{ data: "contentsStudentsCnt", className: "dt-body-center" },
+			{ data: "contentsCompleteCnt", className: "dt-body-center" },
+		],
+		createdRow: function (row, data, dataIndex) {
+			$(row).on("click", function () {
+			});
+		},
+
+	});
+}
+
+// 데이터테이블 initComplete
+function dataTableInit(settings, json) {
+	if ($("#dataTable").DataTable().data().count() == 10000) {
+		toast("데이터 조회를 10,000건으로 제한합니다.");
+	}
+	$("#dataTableTotCnt").text($("#dataTable").DataTable().data().count());
+	
+	if ($('#dataTable').DataTable().data().count() > 0) {
+		$('#dataTable').DataTable().row(':first').nodes().to$().trigger('click');
+	}else{
+		dataList2();
+	}
+	
+}
+
+//데이터테이블 initComplete
+function dataTableInit2(settings, json) {
+	if ($('#dataTable2').DataTable().data().count() == 10000) {
+		toast('데이터 조회를 10,000건으로 제한합니다.');
+	}
+	if ($('#dataTable2').DataTable().data().count() > 0) {
+		$('#dataTable2').DataTable().row(':first').nodes().to$().trigger('click');
+	}else{
+	}
+}
+function excelDownload() {
+    var url = gblAdminPath + "/lms/vod/stat/download?" + $('#frmList').serialize();
+
+    window.location.href = url;
+}
+
+function shareByCategory() { // chartdiv1
+	
+	 $.ajax({
+        url: gblAdminPath + "/lms/vod/stat/chart/shareByCategory?" + $('#frmList').serialize(),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+    	
+    	if(data.data.list.length < 1){
+			$("#chartdiv1").addClass("no_data");
+			return;
+		}
+    	$("#chartdiv1").removeClass("no_data");
+    	
+		var chart = am4core.create("chartdiv1", am4charts.PieChart);
+		
+		chart.data = [];
+		 for (var i = 0; i < data.data.list.length; i++) {
+           var chartDataItem = {
+           	"title": data.data.list[i].categoryNm,
+       		"litery": data.data.list[i].categoryCnt
+           };
+
+           chart.data.push(chartDataItem);
+       }
+		
+		chart.legend = new am4charts.Legend();
+		chart.legend.position = "right";
+
+		// Add and configure Series
+		var pieSeries = chart.series.push(new am4charts.PieSeries());
+		pieSeries.dataFields.value = "litery";
+		pieSeries.dataFields.category = "title";
+		pieSeries.slices.template.stroke = am4core.color("#fff");
+		pieSeries.slices.template.strokeWidth = 1;
+		pieSeries.slices.template.strokeOpacity = 1;
+
+		// This creates initial animation
+		pieSeries.hiddenState.properties.opacity = 1;
+		pieSeries.hiddenState.properties.endAngle = -90;
+		pieSeries.hiddenState.properties.startAngle = -90;
+
+
+		// Disable ticks and labels
+		pieSeries.labels.template.disabled = true;
+		pieSeries.ticks.template.disabled = true;
+
+		pieSeries.colors.list = [
+		    am4core.color("#344678"),
+		    am4core.color("#2e7df4"),
+		    am4core.color("#1da7fa"),
+		    am4core.color("#6af4ff"),
+		    am4core.color("#7760f9"),
+		    am4core.color("#a0522d"),
+		    am4core.color("#d2691e"),
+		    am4core.color("#ff7f50"),
+		    am4core.color("#ff6347"),
+		    am4core.color("#ff4500"),
+		    am4core.color("#ff8c00"),
+		    am4core.color("#ffd700"),
+		    am4core.color("#9acd32"),
+		    am4core.color("#32cd32"),
+		    am4core.color("#00fa9a"),
+		    am4core.color("#00ced1"),
+		    am4core.color("#1e90ff"),
+		    am4core.color("#ba55d3"),
+		    am4core.color("#9370db"),
+		    am4core.color("#ff69b4")
+		];
+				
+    }).fail(function () {
+		console.log("영상분야 점유율을 불러오지 못했습니다.");
+    });
+}
+
+function vodKeyword() { //chartdiv3
+	
+	$.ajax({
+		url: gblAdminPath + "/lms/vod/stat/chart/vodKeyword?" + $('#frmList').serialize(),
+		type: 'GET',
+		dataType: 'json',
+	}).done(function (data) {
+		if(data.data.list.length < 1){
+			$("#chartdiv3").addClass("no_data");
+			return;
+		}
+		$("#chartdiv3").removeClass("no_data");
+		
+		var chart = am4core.create("chartdiv3", am4plugins_wordCloud.WordCloud);
+		var series = chart.series.push(new am4plugins_wordCloud.WordCloudSeries());
+		
+		series.data = [];
+		
+		series.angles = [0, 0, 0];
+		series.dataFields.word = "tag";
+		series.dataFields.value = "weight";
+		series.labelsContainer.rotation = 0;
+		series.labelsContainer.rotationThreshold = 0;
+		series.labelsContainer.scale = 1.5;
+		series.labels.template.text = "{word}";
+		
+		series.colors = new am4core.ColorSet();
+		series.colors.passOptions = {};
+		series.labels.template.propertyFields.fill = "color";
+		
+		series.labels.template.tooltipText = "{word} : {value}";
+		
+		for (var i = 0; i < data.data.list.length; i++) {
+			var chartDataItem = {
+				"tag": data.data.list[i].keyword,
+				"weight": data.data.list[i].keywordCnt
+			};
+			series.data.push(chartDataItem);
+		}
+		
+	}).fail(function () {
+		console.log("영상교육 키워드를 못했습니다.");
+	});
+}
+</script>
+<div class="row">
+	<div class="col s12 pd_box bg_lightblue h100">
+		<div class="basic_top_searchbox">
+			<form id="frmList" name="frmList" method="get" enctype="multipart/form-data">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+				<div class="row">
+					<!-- 검색창 -->
+					<div class="input-field col s1 m1">
+						<label for="startDate" class="">교육 시작일자</label> <input
+							id="startDate" name="startDate" type="date">
+					</div>
+					<div class="input-field col s1 m1">
+						<label for="endDate" class="">교육 종료일자</label> <input
+							id="endDate" name="endDate" type="date">
+					</div>
+					<div class="col s8 m8 search_bar">
+						<input name="scWord" type="text" class="browser-default" placeholder="교육명"
+							th:value="${param?.scWord}"> 
+	
+						<button type="submit"
+							class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+							<i class="material-icons md-18 left">search</i> 검색
+						</button>
+						<div class="title left">
+							전체 : <b id="dataTableTotCnt">0</b>
+						</div>
+					</div>
+					<div class="col s2 m2 right">
+						<a class="waves-effect waves-light green btn" onclick="excelDownload()">통계 다운로드</a>
+					</div>
+				</div>
+			</form>
+		</div>
+		
+		<!--
+		<h2 class="h2_butt mt20 mb10">훈련 현황</h2>
+		-->
+		<div class="table_type3">
+			<table id="dataTable" class="striped centered highlight">
+				<colgroup>
+					<col width="80px" />
+					<col width="auto" />
+					<col width="120px" />
+					<col width="120px" />
+					<col width="150px" />
+					<col width="140px" />
+					<col width="140px" />
+					<col width="140px" />
+					<col width="140px" />
+					<col width="140px" />
+					<col width="140px" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th>NO</th>
+						<th>교육명</th>
+						<th>교육시작일자</th>
+						<th>교육종료일자</th>
+						<th>콘텐츠 수</th>
+						<th>영상시간(분)</th>
+						<th>학습시간(최소)</th>
+						<th>학습시간(최대)</th>
+						<th>학습시간(평균)</th>
+						<th>학습자(명)</th>
+						<th>수료자(명)</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+
+		<h2 class="h2_butt mt20 mb10">콘텐츠별 현황</h2>
+<!-- 		<span class="h2_butt_desc"></span></h2> -->
+		
+		<div class="table_type3">
+			<table id="dataTable2" class="dataTable striped centered highlight">
+				<colgroup>
+					<col width="80px" />
+					<col width="auto">
+					<col width="100px">
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+				</colgroup>
+				<thead>
+					<tr>
+						<th>NO</th>
+						<th>콘텐츠명</th>
+						<th>교육분야</th>
+						<th>영상시간(분)</th>
+						<th>학습시간(최소)</th>
+						<th>학습시간(최대))</th>
+						<th>학습시간(평균)</th>
+						<th>학습자(명)</th>
+						<th>수료자(명)</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+		<div class="row">
+			<div class="col s3">
+				<h3 class="h2_butt mb10">영상 분야별 비율</h3>
+				<div id="chartdiv1" style="width: 100%; height:240px"></div>
+			</div>
+<!-- 			<div class="col s3"> -->
+<!-- 				<h3 class="h2_butt mb10">교육 분야별 비율</h3> -->
+<!-- 				<div id="chartdiv2" style="width: 100%; height:240px"></div> -->
+<!-- 			</div> -->
+			<div class="col s9">
+				<h3 class="h2_butt mb10">교육 키워드</h3>
+				<div id="chartdiv3" style="width: 100%; height:240px"></div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+
+</html>

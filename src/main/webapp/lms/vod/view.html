@@ -1,0 +1,136 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<script th:inline="javascript">
+
+	function apply(vodIdx) {
+		
+		var memberIdx = /*[[${session.memberIdx}]]*/;
+		var applyState = 2;
+		var site = /*[[${req.site}]]*/;
+		
+		
+		if(confirm("해당 과정을 신청하시겠습니까?")){
+				
+			if (!vodIdx) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url  : '/lms/vod/apply/save',
+				type : 'get',
+				data : {
+					'vodIdx' : vodIdx,
+					'memberIdx' : memberIdx,
+					'applyState' : applyState,
+				},
+				dataType : 'json',
+			}).done(function(data) {
+	
+				if(data.data.duplicateCnt > 0){
+					alert("중복신청입니다.");
+					location.href="/lms/vod/apply/myList?site="+site+"&mn=0401";
+					return false;
+				}
+				if(data.code == 0) {
+					alert("과정신청이 완료되었습니다.\n나의강의실에서 확인할 수 있습니다.");
+					location.href="/lms/vod/apply/myList?site="+site+"&mn=0401";
+				}
+				else {
+					alert(data.message);
+				}
+			}).fail(function(xhr) {
+				if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+					alert(xhr.responseJSON.message);
+				} else if(xhr.status != 200) {
+					alert('시스템 오류로 처리할 수 없습니다.');
+				}
+				
+			});
+		}
+	}
+
+	function save(){
+		//window.open("/lms/vod/apply/form","form","width = 500, height = 500");
+		//alert("신청되었습니다.");
+	}
+	
+</script>
+<div class="sub-container">
+
+<div class="con-info">		
+	<div class="edu_detail">
+		<div class="edu_detail1">
+			<div class="edu_detail_img">
+				<a>
+					<img th:src="|/lms/vod/file?vodIdx=${vo?.vodIdx}|" onerror="this.src='/pages/kepco/img/sub/vod_none.jpg'"/>
+					<!-- <div class="hover">
+						<div class="inbox">
+							<img src="/pages/kepco/img/sub/v-play.png" alt="재생아이콘">
+							<div class="hover__bg"></div>
+						</div>
+					</div> -->
+				</a>
+			</div>
+			<div class="edu_detail_p">
+				<ul class="edu-list">
+					<li th:each="vodKeyword,idx : ${#strings.setSplit(vo?.vodKeyword,',')}" th:class="|ca${idx.count}|" th:text="${vodKeyword}" />
+				</ul>
+
+				<h3>[[${vo?.vodTitle}]]</h3>
+				
+				<div class="edu_detail_right">
+					<dl>
+						<dt>교육 개요</dt><dd>[[${vo?.vodSummary}]]</dd>
+					</dl>
+					<dl>
+						<dt>과정 재생시간</dt><dd>[[${#aggregates.sum(bundleList.![contentTime])}]]분</dd>
+					</dl>
+				</div>
+				<ul class="edu_detail_right_btn">
+					<li th:style="${#strings.isEmpty(vo?.vodFile)? 'display: none;' : ''}"><a th:href="|/lms/vod/download?vodIdx=${vo?.vodIdx}&file=vodFile|" target="_blank">학습자료</a></li>
+					<li><a href="#" th:onclick="apply([[${vo?.vodIdx}]]);return false;">과정신청</a></li>
+				</ul>
+			</div>
+		</div>
+		
+		<div class="edu_detail_content"><!-- 탭 컨텐츠 -->
+			<ul class="con-tabs ">
+				<li class="tab-link tabs-2 current" data-tab="tab-1">과정소개</li>
+				<li class="tab-link tabs-2" data-tab="tab-2">과정목차</li>
+			</ul>
+			<div id="tab-1" class="tab-content current">
+				<h2>과정소개</h2>
+				<div class="edu_detail_content2">
+					[[${vo?.vodDesc}]]
+				</div>	
+			</div>
+			<div id="tab-2" class="tab-content">
+				<h2>세부과정</h2>
+				<div class="con-infobox ">	
+					<div class="con-infotxt">
+						<div class="listbox" th:each="bundleVo : ${bundleList}" data-aos="fade-up" th:data-aos-duration="${(bundleVoStat.index / 2) * 100 + 100}">
+							<a>
+								<div class="flexbox">
+									<p class="listtxt1" th:text="${bundleVoStat.count}"></p>
+									<p class="listtxt2" th:text="${bundleVo?.contentTitle}"></p>
+									<p class="listtxt3" th:text="|${bundleVo?.contentTime}분|"></p>
+								</div>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div><!--// 탭 컨텐츠 -->
+
+		<a href="/lms/vod/list/?site=kepco&mn=0102" class="edu-list-btn">목록</a>
+	</div>
+</div>
+
+</div>
+
+</th:block>

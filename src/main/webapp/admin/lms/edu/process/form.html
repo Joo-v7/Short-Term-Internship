@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+
+<script>
+	var depth = $("input[name='depth']").val();
+	var frmForm = "#frmForm" + depth;
+	var $frm = $(frmForm); 
+// 	var main_tabs = "#main_tabs" + depth;
+	
+	$(function () {
+	
+		$("select", frmForm).formSelect();
+// 		$(main_tabs).tabs();
+		
+	});
+
+	// 삭제
+	function dataDelete() {
+		var processIdx = $("[name='processIdx']", frmForm).val();
+
+		if (!processIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '콘텐츠 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/lms/edu/process/delete',
+						type: 'get',
+						data: {
+							'processIdx': processIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$("#pop_modal6").modal('close');
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function (xhr) {
+						if(typeof xhr.responseJSON.message != "undefined") {
+							toast(xhr.responseJSON.message);
+						}else{
+							toast('시스템 오류로 처리할 수 없습니다.');
+						}
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+	function save() {
+		
+		if ($("input[name='taskId']", $frm).val() == "") {
+			toast("작업ID는 필수입력 입니다.");
+			$("input[name='taskId']", $frm).focus();
+			return;
+		}
+		if ($("input[name='processContents']", $frm).val() == "") {
+			toast("절차내용은 필수입력 입니다.");
+			$("input[name='processContents']", $frm).focus();
+			return;
+		}
+
+		$.ajax({
+			type: "post",
+			url: $frm.attr("action"),
+			data: $frm.serialize(),
+			contentType: "application/x-www-form-urlencoded",
+			dataType: "json",
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				$("#pop_modal6").modal('close');
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				toast("정상적으로 처리되었습니다.");
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			}
+		});	
+	}
+</script>
+<form th:id="frmForm+${depth}" method="post"
+	th:action="@{/{adminPath}/lms/edu/process/save(adminPath=${@environment.getProperty('global.admin-path')})}"
+	enctype="multipart/form-data" onsubmit="return false">
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal6');" class="btn grey lighten-1 waves-effect waves-light">
+					<i class="material-icons">clear</i></a>
+				<div class="float_r">
+					<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button"
+						th:if="${!#strings.isEmpty(vo?.processIdx)}" th:onclick="dataDelete();">삭제<i
+							class="material-icons left">delete</i></button>
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" onclick="save()">저장
+						<i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+	<input type="hidden" name="processIdx" id="processIdx" th:value="${vo?.processIdx}" />
+	<input type="hidden" name="depth" id="depth" th:value="${depth}" />
+	<div class="row mt20 pd_box">
+	
+		<div class="input-field col s5">
+			<input type="text" name="taskId" th:value="${vo?.taskId}" />
+			<label for="taskId" class="req">작업 ID</label>
+		</div>
+		<div class="input-field col s5">
+			<input type="text" name="aiId" th:value="${vo?.aiId}" />
+			<label for="aiId" class="">AI ID</label>
+		</div>
+		<div class="input-field col s2">
+			<input type="text" name="taskTool" th:value="${vo?.taskTool}" />
+			<label for="taskTool" class="">도구</label>
+		</div>
+		
+		<div class="input-field col s12">
+			<input type="text" name="processContents" th:value="${vo?.processContents}" />
+			<label for="processContents" class="req">절차 내용</label>
+		</div>
+	</div>
+</form>
+</html>

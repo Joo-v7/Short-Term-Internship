@@ -1,0 +1,241 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<script th:inline="javascript">
+
+	function regist(detailIdx) {
+		
+		var memberIdx = /*[[${session.memberIdx}]]*/;
+		var registState = 2;
+		var site = /*[[${req.site}]]*/;
+		
+		if(memberIdx == null){
+			alert("로그인정보가 없습니다.");
+			location.href = "/cms/page?site=kepco&mn=1001";
+			return false;
+		}
+		
+		if(confirm("해당 과정을 신청하시겠습니까?")){
+				
+			if (!detailIdx) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url  : '/lms/edu/regist/save',
+				type : 'get',
+				data : {
+					'detailIdx' : detailIdx,
+					'memberIdx' : memberIdx,
+					'registState' : registState,
+				},
+				dataType : 'json',
+			}).done(function(data) {
+	
+				if(data.data.detailState != 2){
+					alert("승인된 훈련이 아닙니다.");
+					return false;
+				}
+				if(data.data.check == "n"){
+					alert("훈련 신청시간이 아닙니다.");
+					return false;
+				}
+				if(data.data.check == "o"){
+					alert("정원을 초과했습니다.");
+					return false;
+				}
+				if(data.data.duplicateCnt > 0){
+					alert("중복신청입니다.");
+					location.href="/lms/edu/regist/myList?site="+site+"&mn=0401";
+					return false;
+				}
+				if(data.code == 0) {
+					alert("과정신청이 완료되었습니다.\n나의강의실에서 확인할 수 있습니다.");
+					location.href="/lms/edu/regist/myList?site="+site+"&mn=0401";
+				}
+				else {
+					alert(data.message);
+				}
+			}).fail(function(xhr) {
+				if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+					alert(xhr.responseJSON.message);
+				} else if(xhr.status != 200) {
+					alert('시스템 오류로 처리할 수 없습니다.');
+				}
+				
+			});
+		}
+	}
+
+	function save(){
+		//window.open("/lms/edu/regist/form","form","width = 500, height = 500");
+		//alert("신청되었습니다.");
+	}
+	
+</script>
+<div class="sub-container">
+
+<div class="edu_content_info_wrap">		
+	<div class="edu_info_wrap">
+		<div class="edu_img">
+			<img th:src="|/lms/edu/file?detailIdx=${vo?.detailIdx}&file=eduImage1|" onerror="this.src='/pages/kepco/img/sub/edu_none.jpg'"/>
+			<div class="edu_sub_cnt_box">
+				<!-- <p class="logo"></p> -->
+				
+				<p class="txt" th:text="${list?.eduDesc}"></p>
+				<!-- <a th:href="@{/lms/edu/view/(site = ${req?.site}, mn = ${req?.mn}, detailIdx=${list?.detailIdx})}"><span>자세히보기</span></a> -->
+			</div>
+		</div>
+		<div class="edu_content_box">
+			<ul class="edu_cate_list">
+				<li th:each="eduKeyword,idx : ${#strings.setSplit(vo?.eduKeyword,',')}" th:class="|ca${idx.count}|" th:text="${eduKeyword}" />
+			</ul>
+			<h4 class="edu_list_tit" th:text="|${vo?.trainTitle} ${vo?.eduNumeral}|"></h4>
+			<!-- <h6 th:text="|${vo?.trainTitle} ${vo?.eduNumeral}|" class="edu-list-tit"></h6> -->
+			<div class="edu_list_info_box">
+				<dl>
+					<dt>모집인원 : </dt>
+					<dd>[[${vo?.eduLimitCnt}]]명</dd>
+				</dl>
+				<dl>
+					<dt>과정대상 : </dt>
+					<dd>[[${vo?.eduTarget}]]</dd>
+				</dl>
+				<dl>
+					<dt>승인방법 : </dt>
+					<dd th:text="${vo?.eduAcceptAuto} == 'y'? '자동승인' : '수동승인'"></dd>
+				</dl>
+				<dl>
+					<dt>교수자 : </dt>
+					<!-- <dd>[[${vo?.teacherNm}]]</dd> -->
+					<dd>배전교육부, 안전교육부</dd>
+				</dl>
+				<dl>
+					<dt>신청기간 : </dt>
+					<dd>[[${vo?.eduAcceptBgnDate}]] ~ [[${vo?.eduAcceptEndDate}]]</dd>
+				</dl>	
+				<dl>
+					<dt>교육기간 : </dt>
+					<dd>[[${vo?.eduTrainBgnDate}]] ~ [[${vo?.eduTrainEndDate}]]</dd>
+				</dl>
+			</div>
+
+			<ul class="edu_detail_btn_box">
+				<li>	
+					<th:block th:switch="${vo?.eduAcceptState}">
+						<span class="detail_btn text" th:case="1">접수대기</span>
+						<a class="detail_btn apply" th:case="2" href="#" th:onclick="regist([[${vo?.detailIdx}]]);return false;">과정신청</a>
+						<span class="detail_btn text" th:case="3">접수마감</span>
+					</th:block>
+				</li>
+			</ul>
+		</div>
+
+	</div>
+
+			
+	<div class="edu_detail_content_wrap">
+		<!-- 탭 컨텐츠 -->
+		<!-- <div class="tab_x_wrap">
+			<ul class="con-tabs edu_cont_tab">
+				<li class="tab-link current" data-tab="tab-1">과정소개</li>
+				<li class="tab-link" data-tab="tab-2">과정목표</li>
+				<li class="tab-link" data-tab="tab-3">세부과정</li>
+				<li class="tab-link" data-tab="tab-4">평가방법 및 수료기준</li>
+			</ul>
+		</div>
+		<div id="tab-1" class="tab-content current">
+			<h2 class="ecu_tab_tit_box">과정소개</h2>
+			<div class="edu_detail_content2" style="white-space: break-spaces; word-break: keep-all;" th:text="${vo.eduDesc}">
+			</div>	
+		</div>
+		<div id="tab-2" class="tab-content">
+			<h2 class="ecu_tab_tit_box">과정목표</h2>
+			<div class="edu_detail_content2" style="white-space: break-spaces; word-break: keep-all;" th:text="${vo.eduGoal}">
+			</div>
+		</div>
+		<div id="tab-3" class="tab-content">
+			<h2 class="ecu_tab_tit_box">세부과정</h2>
+			<div class="con-infobox ">	
+				<ul class="con-infotxt edu_detail_list_box">
+					<li class="listbox" th:each="packVo : ${packList}" data-aos="fade-up" th:data-aos-duration="${(packVoStat.index / 2) * 100 + 100}">
+						<div class="edu_detial_list_info_box">
+							<strong th:text="${packVo?.moduleTitle}"></strong>
+							<p th:text="${packVo?.moduleDesc}"></p>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div id="tab-4" class="tab-content">
+			<h2 class="ecu_tab_tit_box">평가방법 및 수료기준</h2>
+			<div class="edu_detail_content2" style="white-space: break-spaces; word-break: keep-all;" th:text="${vo?.eduCriteria}">
+			</div>
+		</div> -->
+
+		<!-- <div class="tab_x_wrap">
+			<ul class="con-tabs edu_cont_tab">
+				<li class="tab-link current"><a href="#tab-1">과정소개</a></li>
+				<li class="tab-link"><a href="#tab-2">과정목표</a></li>
+				<li class="tab-link"><a href="#tab-3">세부과정</a></li>
+				<li class="tab-link"><a href="#tab-4">평가방법 및 수료기준</a></li>
+			</ul>
+		</div> -->
+		
+
+		
+		<div id="tab-1" class="tab-content current" data-aos="fade-up" th:data-aos-duration="1000">
+			<h2 class="ecu_tab_tit_box">과정소개</h2>
+			<div class="edu_detail_content2" style="white-space: break-spaces; word-break: keep-all;" th:utext="${vo.eduDesc}">
+			</div>	
+		</div>
+		<th:block th:if="${!#strings.isEmpty(accidentList)}">
+			<span class="content_event_list_tit">발생가능한 사고 목록</span>
+			<div class="content_event_list_wrap">
+				<dl th:each="accident : ${accidentList}">
+					<dt th:if="${#strings.equals(accident.accidentType, '감전')}"><img src="/pages/kepco/img/cont_event_icons_1.png" alt="감전"></dt>
+					<dt th:if="${#strings.equals(accident.accidentType, '추락')}"><img src="/pages/kepco/img/cont_event_icons_2.png" alt="추락"></dt>
+					<dt th:if="${#strings.equals(accident.accidentType, '충돌')}"><img src="/pages/kepco/img/cont_event_icons_3.png" alt="충돌"></dt>
+					<dt th:if="${#strings.equals(accident.accidentType, '벌쏘임')}"><img src="/pages/kepco/img/cont_event_icons_4.png" alt="벌쏘임"></dt>
+					<dt th:if="${#strings.equals(accident.accidentType, '타격')}"><img src="/pages/kepco/img/cont_event_icons_5.png" alt="타격"></dt>
+					<dt th:if="${#strings.equals(accident.accidentType, '넘어짐')}"><img src="/pages/kepco/img/cont_event_icons_6.png" alt="넘어짐"></dt>
+					<dt th:if="${#strings.equals(accident.accidentType, '미끄러짐')}"><img src="/pages/kepco/img/cont_event_icons_7.png" alt="미끄러짐"></dt>
+					<dt th:if="${#strings.equals(accident.accidentType, '폭염')}"><img src="/pages/kepco/img/cont_event_icons_8.png" alt="폭염"></dt>
+					<dd>[[${accident.accidentBehavior}]]</dd>
+					<dd>[[${accident.accidentType}]]</dd>
+				</dl>
+			</div>
+		</th:block>
+		<div id="tab-2" class="tab-content current" data-aos="fade-up" th:data-aos-duration="1000">
+			<h2 class="ecu_tab_tit_box">과정목표</h2>
+			<div class="edu_detail_content2" style="white-space: break-spaces; word-break: keep-all;" th:text="${vo.eduGoal}">
+			</div>
+		</div>
+		<div id="tab-3" class="tab-content current" data-aos="fade-up" th:data-aos-duration="1000">
+			<h2 class="ecu_tab_tit_box">세부과정</h2>
+			<div class="con-infobox ">	
+				<ul class="con-infotxt edu_detail_list_box">
+					<li class="listbox" th:each="packVo : ${packList}" data-aos="fade-up" th:data-aos-duration="${(packVoStat.index / 2) * 100 + 100}">
+						<div class="edu_detial_list_info_box">
+							<strong th:text="${packVo?.moduleTitle}"></strong>
+							<p th:text="${packVo?.moduleDesc}"></p>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div id="tab-4" class="tab-content current" data-aos="fade-up" th:data-aos-duration="1000">
+			<h2 class="ecu_tab_tit_box">평가방법 및 수료기준</h2>
+			<div class="edu_detail_content2" style="white-space: break-spaces; word-break: keep-all;" th:text="${vo?.eduCriteria}">
+			</div>
+		</div>
+	</div><!--// 탭 컨텐츠 -->
+</div>
+
+</div>
+
+</th:block>

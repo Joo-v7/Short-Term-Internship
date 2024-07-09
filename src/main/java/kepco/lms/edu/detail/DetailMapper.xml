@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.detail.DetailMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND a.delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(eduIdx)">
+				AND a.edu_idx = #{eduIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND a.detail_idx = #{detailIdx}
+			</if>
+			<if test="@kepco.util.StrUtil@getContextPath() eq 'ADMIN' and @kepco.util.StrUtil@getUserRole() eq 'ADMIN' and @kepco.util.StrUtil@getUserRole2() != 'ADMIN_RAS' and @kepco.util.StrUtil@isBlank(stat)">
+				<bind name="memberIdx" value="@kepco.util.StrUtil@getSessionIdx()"/>
+				AND (a.insert_idx = #{memberIdx} OR teacher_idx in (SELECT teacher_idx FROM lms_edu_detail b WHERE b.delete_yn = 'n' AND b.teacher_idx = #{memberIdx}))
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scCategory)">
+				<choose>
+			        <when test="@kepco.util.StrUtil@isArray(scCategory)">
+			            AND (SELECT category_idx FROM lms_edu b WHERE b.delete_yn = 'n' and a.edu_idx = b.edu_idx) IN
+			            <foreach item="item" index="index" collection="scCategory" open="(" separator="," close=")">
+			                #{item}
+			            </foreach>
+			        </when>
+			        <otherwise>
+			            AND (SELECT category_idx FROM lms_edu b WHERE b.delete_yn = 'n' and a.edu_idx = b.edu_idx) = #{scCategory}
+			        </otherwise>
+			    </choose>
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scEduType)">
+				<choose>
+			        <when test="@kepco.util.StrUtil@isArray(scEduType)">
+			            AND (SELECT edu_type FROM lms_edu b WHERE b.delete_yn = 'n' and a.edu_idx = b.edu_idx) IN
+			            <foreach item="item" index="index" collection="scEduType" open="(" separator="," close=")">
+			                #{item}
+			            </foreach>
+			        </when>
+			        <otherwise>
+			            AND (SELECT edu_type FROM lms_edu b WHERE b.delete_yn = 'n' and a.edu_idx = b.edu_idx) = #{scEduType}
+			        </otherwise>
+			    </choose>
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey1)">AND detail_state = #{scKey1}</if>
+			<choose>
+				<when test="scKey2 == 1">AND (DATEDIFF(a.edu_accept_bgn_date, CURRENT_TIMESTAMP )) <![CDATA[ > ]]> 0</when>
+				<when test="scKey2 == 2">AND (CURRENT_TIMESTAMP BETWEEN a.edu_accept_bgn_date AND a.edu_accept_end_date) = 1</when>
+				<when test="scKey2 == 3">AND (DATEDIFF(a.edu_accept_end_date, CURRENT_TIMESTAMP )) <![CDATA[ < ]]> 0</when>
+			</choose>
+			<choose>
+				<when test="scKey3 == 1">AND (DATEDIFF(a.edu_train_bgn_date, CURRENT_TIMESTAMP )) <![CDATA[ > ]]> 0</when>
+				<when test="scKey3 == 2">AND (CURRENT_TIMESTAMP BETWEEN a.edu_train_bgn_date AND a.edu_train_end_date) = 1</when>
+				<when test="scKey3 == 3">AND (DATEDIFF(a.edu_train_end_date, CURRENT_TIMESTAMP )) <![CDATA[ < ]]> 0</when>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+<!-- 				AND ( -->
+<!-- 					(SELECT edu_title FROM lms_edu b WHERE b.delete_yn = 'n' AND a.edu_idx = b.edu_idx) LIKE CONCAT ('%',#{scWord},'%') -->
+<!-- 					OR train_title LIKE CONCAT ('%',#{scWord},'%')  -->
+<!-- 					OR edu_desc LIKE CONCAT ('%',#{scWord},'%')  -->
+<!-- 					OR edu_goal LIKE CONCAT ('%',#{scWord},'%') -->
+<!-- 				)  -->
+				AND train_title LIKE CONCAT ('%',#{scWord},'%') 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(mainCal)">
+				AND (
+				DATE_FORMAT(edu_train_end_date,'%Y-%m') >= DATE_FORMAT(#{scMon1},'%Y-%m')
+				)
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(main)">
+				AND  edu_train_bgn_date >= CURRENT_TIMESTAMP
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scEduNumeral)">
+				AND edu_numeral LIKE CONCAT ('%',#{scEduNumeral},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scEduTarget)">
+				AND edu_target LIKE CONCAT ('%',#{scEduTarget},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scTeacherNm)">
+				AND (SELECT member_nm FROM cms_member b WHERE b.delete_yn = 'n' AND a.teacher_idx = b.member_idx) LIKE CONCAT ('%',#{scTeacherNm},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eduAcceptBgnDate)">
+				AND edu_accept_bgn_date >= #{eduAcceptBgnDate}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eduAcceptEndDate)">
+				AND #{eduAcceptEndDate} >= edu_accept_end_date
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eduTrainBgnDate)">
+				AND edu_train_bgn_date >= #{eduTrainBgnDate}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eduTrainEndDate)">
+				AND	#{eduTrainEndDate} >= edu_train_end_date
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(startDate)">
+				AND edu_train_bgn_date >= #{startDate}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(endDate)">
+				AND	#{endDate} >= edu_train_end_date
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(lms)">
+				AND detail_state = 2
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey1)">AND detail_state = #{scKey1}</if>
+			
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.detail.DetailVo">
+		SELECT
+			a.*, f.edu_title, f.edu_keyword, f.edu_type,
+			(SELECT member_nm FROM cms_member b WHERE b.member_idx = a.teacher_idx ) teacherNm,
+            (SELECT category_nm FROM lms_edu_category b WHERE b.category_idx = f.category_idx) eduCateNm,
+			(SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '1' AND b.member_idx != '0') regWaitCnt,
+			(SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0') regAcceptCnt,
+			(SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '3' AND b.member_idx != '0') regRejectCnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx != '0' ) edu_reg_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0' ) edu_accept_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx = '0') edu_bot_cnt,
+            (SELECT SUM(TIMESTAMPDIFF(MINUTE, e.start_time, e.end_time)) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx) AS sum_play_minute,
+            (SELECT COUNT(DISTINCT play_team_idx) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx) AS play_cnt,
+			(SELECT COUNT(DISTINCT member_idx) FROM lms_edu_play g WHERE g.detail_idx = a.detail_idx) AS player_cnt,
+			(SELECT COUNT(DISTINCT module_cd) FROM lms_edu_module_play emp LEFT JOIN lms_edu_play_team e ON emp.play_team_idx = e.play_team_idx WHERE e.detail_idx = a.detail_idx) AS module_cd_cnt,
+			(SELECT COUNT(DISTINCT play_team_idx) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx AND e.success_yn = 'y') AS play_success_cnt,
+			(SELECT COUNT(DISTINCT play_team_idx) FROM lms_edu_play_team e WHERE e.detail_idx = a.detail_idx AND e.success_yn != 'y') AS play_fail_cnt,
+			
+            <![CDATA[
+	        CASE
+	        	WHEN (DATEDIFF(a.edu_accept_bgn_date, CURRENT_TIMESTAMP )) > 0 THEN '1'
+		        WHEN (CURRENT_TIMESTAMP BETWEEN a.edu_accept_bgn_date AND a.edu_accept_end_date) = 1 THEN '2'
+				WHEN (DATEDIFF(a.edu_accept_end_date, CURRENT_TIMESTAMP )) < 0 THEN '3'
+				ELSE '4' END AS edu_accept_state,
+			]]>
+            <![CDATA[
+	        CASE
+	        	WHEN (DATEDIFF(a.edu_train_bgn_date, CURRENT_TIMESTAMP )) > 0 THEN '1'
+		        WHEN (CURRENT_TIMESTAMP BETWEEN a.edu_train_bgn_date AND a.edu_train_end_date) = 1 THEN '2'
+				WHEN (DATEDIFF(a.edu_train_end_date, CURRENT_TIMESTAMP )) < 0 THEN '3'
+				ELSE '4' END AS edu_train_state
+			]]>
+		FROM lms_edu_detail a
+		JOIN lms_edu f ON a.edu_idx = f.edu_idx
+			<include refid="selectWhere"/>
+		
+		ORDER BY
+		<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(main)">edu_order ASC, edu_train_bgn_date ASC</when>
+			<when test="!@kepco.util.StrUtil@isBlank(lms)">edu_order ASC, detail_idx DESC</when>
+			<otherwise>
+				
+				detail_idx ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.detail.DetailVo">
+		SELECT 
+			a.*, f.edu_title, f.edu_keyword, f.edu_type,
+			(SELECT member_nm FROM cms_member b WHERE b.member_idx = a.teacher_idx ) teacherNm,
+			(SELECT category_nm FROM lms_edu_category b WHERE b.category_idx = f.category_idx) eduCateNm,
+			(SELECT po_subject FROM lms_poll b WHERE a.po_idx = b.po_idx) po_subject,
+			(SELECT ev_subject FROM lms_evaluation b WHERE a.ev_idx = b.ev_idx) ev_subject,
+            (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx != '0' ) edu_reg_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0' ) edu_accept_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx = '0') edu_bot_cnt,
+            <![CDATA[
+	        CASE
+	        	WHEN (DATEDIFF(a.edu_accept_bgn_date, CURRENT_TIMESTAMP )) > 0 THEN '1'
+		        WHEN (CURRENT_TIMESTAMP BETWEEN a.edu_accept_bgn_date AND a.edu_accept_end_date) = 1 THEN '2'
+				WHEN (DATEDIFF(a.edu_accept_end_date, CURRENT_TIMESTAMP )) < 0 THEN '3'
+				ELSE '4' END AS edu_accept_state,
+			]]>
+            <![CDATA[
+	        CASE
+	        	WHEN (DATEDIFF(a.edu_train_bgn_date, CURRENT_TIMESTAMP )) > 0 THEN '1'
+		        WHEN (CURRENT_TIMESTAMP BETWEEN a.edu_train_bgn_date AND a.edu_train_end_date) = 1 THEN '2'
+				WHEN (DATEDIFF(a.edu_train_end_date, CURRENT_TIMESTAMP )) < 0 THEN '3'
+				ELSE '4' END AS edu_train_state
+			]]>
+		FROM lms_edu_detail a
+		JOIN lms_edu f ON a.edu_idx = f.edu_idx
+			<include refid="selectWhere"/>
+	</select>
+
+	<select id="detail" parameterType="map" resultType="egovmap">
+		SELECT 
+			a.*,
+            (SELECT edu_title FROM lms_edu c WHERE c.delete_yn = 'n' AND a.edu_idx = c.edu_idx) edu_title,
+            (SELECT member_nm FROM cms_member c WHERE c.member_idx = a.teacher_idx ) teacherNm,
+            b.team teamIndex,
+            count(case when b.member_idx != 0 then 1 end) member,
+            count(case when b.member_idx = 0 then 1 end) bot
+		FROM lms_edu_detail a
+		LEFT JOIN lms_edu_regist b
+		ON a.detail_idx = b.detail_idx
+		WHERE  
+			b.delete_yn = 'n'
+			AND b.detail_idx = #{detailIdx}
+		    AND b.regist_state = '2'
+        GROUP BY team
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.detail.DetailVo" useGeneratedKeys="true" keyProperty="detailIdx" keyColumn="detailIdx">
+		INSERT INTO lms_edu_detail (
+			edu_idx,train_title,teacher_idx,edu_numeral,edu_image1,edu_image2,edu_desc,edu_goal,edu_target,edu_criteria,edu_order,edu_team_cnt,edu_limit_cnt,edu_limit_cnt1,edu_limit_cnt2,edu_limit_cnt3,edu_limit_cnt4,edu_accept_auto,
+			edu_accept_bgn_date,edu_accept_bgn_time,edu_accept_end_date,edu_accept_end_time,edu_train_bgn_date,edu_train_end_date,edu_date_desc,detail_state,
+			edu_file1,edu_file2,edu_file3,edu_file4,edu_file5,po_idx,ev_idx,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{eduIdx},#{trainTitle},#{teacherIdx},#{eduNumeral},#{eduImage1},#{eduImage2},#{eduDesc},#{eduGoal},#{eduTarget},#{eduCriteria},#{eduOrder},#{eduTeamCnt},#{eduLimitCnt},#{eduLimitCnt1},#{eduLimitCnt2},#{eduLimitCnt3},#{eduLimitCnt4},#{eduAcceptAuto},
+			#{eduAcceptBgnDate},#{eduAcceptBgnTime},#{eduAcceptEndDate},#{eduAcceptEndTime},#{eduTrainBgnDate},#{eduTrainEndDate},#{eduDateDesc},#{detailState},
+			#{eduFile1},#{eduFile2},#{eduFile3},#{eduFile4},#{eduFile5},#{poIdx},#{evIdx},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.detail.DetailVo">
+		UPDATE lms_edu_detail
+		<set>
+			edu_idx=#{eduIdx},
+			train_title=#{trainTitle},
+			teacher_idx=#{teacherIdx},
+			edu_numeral=#{eduNumeral},
+			edu_image1=#{eduImage1},
+			edu_image2=#{eduImage2},
+			edu_desc=#{eduDesc},
+			edu_goal=#{eduGoal},
+			edu_target=#{eduTarget},
+			edu_criteria=#{eduCriteria},
+			edu_order=#{eduOrder},
+			edu_team_cnt=#{eduTeamCnt},
+			edu_limit_cnt=#{eduLimitCnt},
+			edu_limit_cnt1=#{eduLimitCnt1},
+			edu_limit_cnt2=#{eduLimitCnt2},
+			edu_limit_cnt3=#{eduLimitCnt3},
+			edu_limit_cnt4=#{eduLimitCnt4},
+			edu_accept_auto=#{eduAcceptAuto},
+			edu_accept_bgn_date=#{eduAcceptBgnDate},
+			edu_accept_bgn_time=#{eduAcceptBgnTime},
+			edu_accept_end_date=#{eduAcceptEndDate},
+			edu_accept_end_time=#{eduAcceptEndTime},
+			edu_train_bgn_date=#{eduTrainBgnDate},
+			edu_train_end_date=#{eduTrainEndDate},
+			edu_date_desc=#{eduDateDesc},
+			edu_file1=#{eduFile1},
+			edu_file2=#{eduFile2},
+			edu_file3=#{eduFile3},
+			edu_file4=#{eduFile4},
+			edu_file5=#{eduFile5},
+			po_idx=#{poIdx},
+			ev_idx=#{evIdx},
+			detail_state=#{detailState},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND detail_idx = #{detailIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.edu.detail.DetailVo">
+		UPDATE lms_edu_detail
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND detail_idx = #{detailIdx}
+	</update>
+	
+	
+	<select id="dashboardCalendar" parameterType="map" resultType="kepco.lms.edu.detail.DetailVo">
+		SELECT date_format(edu_train_bgn_date, '%Y-%m-%d') edu_train_bgn_date
+		FROM `lms_edu_detail`
+		WHERE delete_yn = 'n'
+	</select>
+	
+	<update id="thumbnailUpdate" parameterType="kepco.lms.edu.detail.DetailVo">
+		UPDATE lms_edu_detail
+		<set>
+			edu_image1=#{eduImage1}
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND detail_idx = #{detailIdx}
+	</update>
+	
+	<update id="fileUpdate" parameterType="kepco.lms.edu.detail.DetailVo">
+		UPDATE lms_edu_detail
+		<set>
+			edu_file1=#{eduFile1}
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND detail_idx = #{detailIdx}
+	</update>
+</mapper>

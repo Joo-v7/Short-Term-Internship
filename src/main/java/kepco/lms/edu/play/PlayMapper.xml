@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.play.PlayMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(memberIdx)">
+				AND a.member_idx = #{memberIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(memberId)">
+				AND a.member_id = #{memberId}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND a.detail_idx = #{detailIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(playIdx)">
+				AND a.play_idx = #{playIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(team)">
+				AND a.team = #{team}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(playTeamIdx)">
+				AND a.play_team_idx = #{playTeamIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eduIdx)">
+				AND b.edu_idx = #{eduIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(role)">
+				AND a.work_role = #{role}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(reviewScWord)">
+				AND
+				(
+					d.member_nm LIKE CONCAT('%', #{reviewScWord}, '%')
+				OR
+					d.member_id LIKE CONCAT('%', #{reviewScWord}, '%')
+				)
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.play.PlayVo">
+		SELECT
+			a.*, b.*, c.*,
+			(SELECT COUNT(1) FROM lms_edu_pack d WHERE c.edu_idx = d.edu_idx ) moduleCnt,
+			(SELECT category_nm FROM lms_edu_category e WHERE c.category_idx = e.category_idx) eduCateNm,
+			(SELECT member_nm FROM cms_member b WHERE b.member_id = a.member_id ) memberNm,
+			(SELECT risk_factor FROM lms_edu_event d WHERE a.play_idx = d.play_idx GROUP BY risk_factor ORDER BY COUNT(*) DESC LIMIT 1) AS most_risk
+		FROM lms_edu_play a
+		LEFT JOIN lms_edu_detail b
+		ON a.detail_idx = b.detail_idx
+		LEFT JOIN lms_edu c
+		ON b.edu_idx = c.edu_idx
+		LEFT JOIN cms_member d
+		ON a.member_idx = d.member_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.play.PlayVo">
+		SELECT
+			a.*, b.*, c.*,
+			(SELECT COUNT(1) FROM lms_edu_pack d WHERE c.edu_idx = d.edu_idx ) moduleCnt,
+			(SELECT category_nm FROM lms_edu_category e WHERE c.category_idx = e.category_idx) eduCateNm,
+			(SELECT member_nm FROM cms_member b WHERE b.member_id = a.member_id ) memberNm,
+			(SELECT risk_factor FROM lms_edu_event d WHERE a.play_idx = d.play_idx GROUP BY risk_factor ORDER BY COUNT(*) DESC LIMIT 1) AS most_risk
+		FROM lms_edu_play a
+		LEFT JOIN lms_edu_detail b
+		ON a.detail_idx = b.detail_idx
+		LEFT JOIN lms_edu c
+		ON b.edu_idx = c.edu_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="playTeamList" parameterType="map" resultType="kepco.lms.edu.play.PlayVo">
+		SELECT
+			a.*
+		FROM lms_edu_play a
+		WHERE a.play_team_idx = #{playTeamIdx}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.play.PlayVo" useGeneratedKeys="true" keyProperty="playIdx" keyColumn="playIdx">
+		INSERT INTO lms_edu_play (
+			detail_idx, member_id, member_idx, edu_idx, 
+			start_time
+		)
+		VALUES (
+			#{detailIdx}, #{memberId}, #{memberIdx}, #{eduIdx},
+			CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	
+	<insert id="start" parameterType="kepco.lms.edu.play.PlayVo" useGeneratedKeys="true" keyProperty="playIdx" keyColumn="playIdx">
+		INSERT INTO lms_edu_play (
+			detail_idx, member_id, member_idx, edu_idx, play_team_idx,
+			team, work_role,
+			start_time
+		)
+		VALUES (
+			#{detailIdx}, #{memberId}, #{memberIdx}, #{eduIdx}, #{playTeamIdx},
+			#{team}, #{workRole},
+			#{startTime}
+		)
+	</insert>
+	
+	<update id="end" parameterType="kepco.lms.edu.play.PlayVo">
+		UPDATE lms_edu_play
+		<set>
+			success_yn = #{successYn},
+			end_time = #{endTime}
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND play_idx = #{playIdx}
+	</update>
+	
+	<update id="update" parameterType="kepco.lms.edu.play.PlayVo">
+		UPDATE lms_edu_play
+		<set>
+			team = #{team},
+			work_role = #{workRole}
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND play_idx = #{playIdx}
+	</update>
+	
+<!-- 	<update id="pollStateUpdate" parameterType="map"> -->
+<!-- 		UPDATE lms_edu_play -->
+<!-- 		<set> -->
+<!-- 			poll_play_yn = #{pollPlayYn} -->
+<!-- 		</set> -->
+<!-- 		WHERE -->
+<!-- 			play_idx = #{playIdx} -->
+<!-- 	</update> -->
+	
+<!-- 	<update id="evStateUpdate" parameterType="map"> -->
+<!-- 		UPDATE lms_edu_play -->
+<!-- 		<set> -->
+<!-- 			ev_play_yn = #{evPlayYn}, -->
+<!-- 			ev_score = #{evScore} -->
+<!-- 		</set> -->
+<!-- 		WHERE -->
+<!-- 			play_idx = #{playIdx} -->
+<!-- 	</update> -->
+	
+	<select id="playLogList" parameterType="map" resultType="kepco.lms.edu.play.PlayVo">
+		SELECT
+			a.*, b.train_title,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = b.teacher_idx ) teacherNm,
+			TIMESTAMPDIFF(MINUTE, a.start_time, a.end_time) AS play_minute,
+			(SELECT COUNT(DISTINCT module_cd) FROM lms_edu_module_play emp WHERE emp.play_idx = a.play_idx) AS module_cd_cnt,
+			(SELECT COUNT(DISTINCT module_play_idx) FROM lms_edu_module_play emp WHERE emp.play_idx = a.play_idx) AS module_play_cnt
+		FROM lms_edu_play a
+		LEFT JOIN lms_edu_detail b ON a.detail_idx = b.detail_idx
+		WHERE a.member_idx = #{memberIdx}
+		<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND b.train_title LIKE CONCAT ('%',#{scWord},'%') 
+		</if>
+		<if test="!@kepco.util.StrUtil@isBlank(scTeacherNm)">
+			AND b.teacher_idx in (SELECT member_idx FROM cms_member WHERE member_type2 = 2 and member_nm LIKE CONCAT ('%',#{scTeacherNm},'%')) 
+		</if>
+		<if test="!@kepco.util.StrUtil@isBlank(scStartDate)">
+			AND a.start_time >= #{scStartDate} 
+		</if>
+		<if test="!@kepco.util.StrUtil@isBlank(scEndDate)">
+			AND a.start_time &lt;= CONCAT(#{scEndDate}, ' 23:59:59') 
+		</if>
+	</select>
+	
+	<select id="studentList" parameterType="map" resultType="kepco.lms.edu.play.PlayVo">
+		SELECT 
+	    a.*,
+<!-- 	    b.work_role AS most_role, -->
+		(SELECT member_nm FROM cms_member c WHERE c.member_id = a.member_id ) memberNm
+		FROM 
+		    lms_edu_play a
+		    INNER JOIN (
+		        SELECT 
+		            member_id, 
+		            work_role,
+		            ROW_NUMBER() OVER(PARTITION BY member_id ORDER BY COUNT(work_role) DESC) AS rn
+		        FROM 
+		            lms_edu_play
+		        GROUP BY 
+		            member_id, work_role
+		    ) b ON a.member_id = b.member_id AND b.rn = 1
+		LEFT JOIN lms_edu_detail b ON a.detail_idx = b.detail_idx 
+		LEFT JOIN lms_edu_event c ON a.play_idx = c.play_idx
+		<include refid="selectWhere"/>
+		GROUP BY a.member_id
+	</select>
+	
+	<select id="mostInfo" parameterType="map" resultType="kepco.lms.edu.play.PlayVo">
+		SELECT
+		    a.most_role,
+		    MAX(b.most_risk) AS most_risk
+		FROM
+		    (
+		        SELECT
+		            work_role AS most_role
+		        FROM
+		            lms_edu_play a
+				<include refid="selectWhere"/>
+		        GROUP BY
+		            work_role
+		        ORDER BY
+		            COUNT(*) DESC
+		        LIMIT 1
+		    ) AS a
+		LEFT JOIN
+		    (
+		        SELECT
+		            b.risk_factor AS most_risk
+		        FROM
+		            lms_edu_play a
+		        LEFT JOIN
+		            lms_edu_event b ON a.play_idx = b.play_idx
+				<include refid="selectWhere"/>  
+		        GROUP BY
+		            b.risk_factor
+		        ORDER BY
+		            COUNT(*) DESC
+		        LIMIT 1
+		    ) AS b ON 1=1;
+	</select>
+	
+	<select id="statSelect" parameterType="map" resultType="kepco.lms.edu.play.PlayVo">
+		SELECT
+			a.*, b.*, c.*,
+			(SELECT COUNT(1) FROM lms_edu_pack d WHERE c.edu_idx = d.edu_idx ) moduleCnt,
+			(SELECT category_nm FROM lms_edu_category e WHERE c.category_idx = e.category_idx) eduCateNm,
+			(SELECT member_nm FROM cms_member b WHERE b.member_id = a.member_id ) memberNm,
+			TIMESTAMPDIFF(SECOND, a.start_time, a.end_time) AS played_time,
+			(SELECT COUNT(*) FROM lms_edu_event d WHERE d.delete_yn = 'n' AND d.risk_factor = '1' AND d.play_idx = a.play_idx ) es_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d WHERE d.delete_yn = 'n' AND d.risk_factor = '2' AND d.play_idx = a.play_idx ) fall_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d WHERE d.delete_yn = 'n' AND d.risk_factor = '3' AND d.play_idx = a.play_idx ) care_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d WHERE d.delete_yn = 'n' AND d.risk_factor = '4' AND d.play_idx = a.play_idx ) load_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d WHERE d.delete_yn = 'n' AND IFNULL(d.event_id, '') != '' AND d.play_idx = a.play_idx) accident_cnt,
+			(SELECT risk_factor FROM lms_edu_event d WHERE a.play_idx = d.play_idx GROUP BY risk_factor ORDER BY COUNT(*) DESC LIMIT 1) AS most_risk
+		FROM lms_edu_play a
+		LEFT JOIN lms_edu_detail b
+		ON a.detail_idx = b.detail_idx
+		LEFT JOIN lms_edu c
+		ON b.edu_idx = c.edu_idx
+			<include refid="selectWhere"/>
+	</select>
+</mapper>

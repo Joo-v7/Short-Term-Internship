@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.layout.log.LogMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+<!-- 				<otherwise>AND delete_yn = 'n'</otherwise> -->
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND layout_code LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+		</where>
+	</sql>
+
+	<select id="selectList" parameterType="map" resultType="kepco.cms.layout.log.LogVo">
+		SELECT *
+		FROM cms_layout_log a
+			<include refid="selectWhere"/>
+			WHERE
+			layout_idx = #{layoutIdx}
+	</select>
+	
+	<insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="logIdx" keyColumn="logIdx">
+		INSERT INTO cms_layout_log 
+			(layout_idx, site_idx, site, layout_nm, layout_cd, layout_path, insert_date, delete_yn)
+		SELECT
+			layout_idx, site_idx, site, layout_nm, layout_cd, layout_path, insert_date, delete_yn
+		FROM cms_layout
+		WHERE layout_idx = #{layoutIdx}
+	</insert>
+	
+	
+	
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.sec.roleAuth.RoleAuthMapper">
+	
+	
+	<select id="selectAuthCdList" parameterType="list" resultType="string">
+		SELECT
+			distinct auth_cd
+		FROM cms_sec_role_auth
+		WHERE
+			role_cd in (
+			<foreach item="item" collection="list" separator=", ">
+			#{item}
+			</foreach>
+			)
+	</select>
+	
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND role_cd LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scUserType)">
+			AND role_cd LIKE CONCAT ('%',#{scUserType},'%')
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.sec.roleAuth.RoleAuthVo">
+		SELECT
+			*
+		FROM cms_sec_role_auth
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.sec.roleAuth.RoleAuthVo">
+		SELECT
+			*
+		FROM cms_sec_role_auth
+		WHERE 1 = 1
+			<if test="!@kepco.util.StrUtil@isBlank(roleCd)">
+				AND role_cd = #{roleCd}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(authCd)">
+				AND auth_cd = #{authCd}
+			</if>
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="kepco.cms.sec.roleAuth.RoleAuthVo" useGeneratedKeys="true">
+		INSERT INTO cms_sec_role_auth
+		(
+		role_cd, auth_cd
+		)
+		VALUES
+		(
+		#{roleCd}, #{authCd}
+		)
+	</insert>
+	
+	<!-- 삭제 -->
+	<delete id="delete" parameterType="map">
+		DELETE FROM cms_sec_role_auth
+		WHERE
+			role_cd = #{roleCd} and auth_cd = #{authCd}
+	</delete>
+	
+	
+	
+</mapper>

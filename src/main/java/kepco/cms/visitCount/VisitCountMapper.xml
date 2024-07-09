@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.visitCount.VisitCountMapper">
+	<insert id="insert" parameterType="kepco.cms.visitCount.VisitCountVo" useGeneratedKeys="true" keyProperty="visitIdx" keyColumn="visitIdx">
+		INSERT INTO cms_visit_count(
+			visit_session_id,
+			visit_browser,
+			visit_os,
+			visit_device,
+			visit_user_agent,
+			visit_url,
+			visit_date,
+			visit_ip,
+			visit_year,
+			visit_month,
+			visit_day,
+			visit_referer
+		)
+		VALUES (
+			#{visitSessionId},
+			#{visitBrowser},
+			#{visitOs},
+			#{visitDevice},
+			#{visitUserAgent},
+			#{visitUrl},
+			NOW(),
+			#{visitIp},
+			DATE_FORMAT(NOW(),'%Y'),
+			DATE_FORMAT(NOW(),'%m'),
+			DATE_FORMAT(NOW(),'%d'),
+			#{visitReferer}
+		)
+	</insert>
+</mapper>

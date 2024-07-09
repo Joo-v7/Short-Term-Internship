@@ -1,0 +1,96 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Script-Type" content="text/javascript">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="초실감훈련센터" name="description">
+    <meta content="초실감훈련센터" name="keywords">
+    <meta content="초실감훈련센터" name="subject">
+
+    <title>초실감훈련센터 &gt; 수료증 발급</title>
+
+    <style>
+
+        .lssued_box{ border:1px solid #ccc; padding:20px; background:url(/pages/suryeonwon/img/sub/lock.jpg) no-repeat 50px 30px}
+        .lssued_box .inner {padding:5px 10px 10px 0px; margin:0 10px 20px 180px; border-bottom:1px solid #ccc}
+        .lssued_form { text-align: center;    top: 49px;    width: 425px;    margin: 0 auto; right: 40px; }
+        .lssued_form .lssued_form_name label { text-align: left; display: inline-block; width:60px;  font-size: 14px;  font-weight: bold; }
+        .lssued_form .lssued_form_year label { text-align: left; display: inline-block;  width:60px;  font-size: 14px;  font-weight: bold; }
+        .lssued_form input[type="text"] { display: inline-block;
+            height: 20px;
+            padding: 4px 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 20px;
+            color: #555555;
+            vertical-align: middle;
+            -webkit-border-radius: 4px;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
+
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+            -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+            -webkit-transition: border linear 0.2s, box-shadow linear 0.2s;
+            -moz-transition: border linear 0.2s, box-shadow linear 0.2s;
+            -o-transition: border linear 0.2s, box-shadow linear 0.2s;
+            transition: border linear 0.2s, box-shadow linear 0.2s; }
+        .lssued_form input[type="submit"] {  background: #35aab7; border: 0 none;font-size: 14px;color: #fff;padding: 25px 24px; font-weight: bold; cursor:pointer;
+            margin-top: -60px;  float: right; border-radius: 5px; }
+        .lssued_form_name input::placeholder { color: #ccc; }
+        .lssued_form_year input::placeholder { color: #ccc; }
+
+/*         @import url(https://fonts.googleapis.com/earlyaccess/nanummyeongjo.css); */
+        @font-face {
+            font-family: 'Nanum Myeongjo';
+            src: url('/assets/fonts/Nanum_Myeongjo/NanumMyeongjo-Regular.ttf') format('truetype');
+        }
+        /* font-family: 'Nanum Myeongjo', serif; */
+        /*body { overflow:hidden; }*/
+        div#printArea {width:706px; margin:1cm}
+        div#printArea { margin:1cm; padding:0cm; font-family:'Nanum Myeongjo', serif; }
+        div#printArea > h1, div#printArea > h2, div#printArea > p, div#printArea > ul, div#printArea > h3, div#printArea > h4  { position:relative; z-index:900; }
+        div#printArea > h1, div#printArea > h2, div#printArea > p { text-align:center; }
+        div#printArea > h1 { top:2cm; font-size:50px; text-align:center; }
+        div#printArea > ul, div#printArea > ul li { margin:0; padding:0; font-size:14pt; list-style:none; line-height:40px;}
+        div#printArea > ul { top:3.5cm; margin-left:2.5cm; }
+        div#printArea > ul li h1 { margin-top:0.05cm; padding-right:5pt; display:inline-block; font-size:14pt; }
+        div#printArea > ul li h1:after { content:':' }
+        div#printArea > p.number { position:relative; top:1.4cm; text-align:left; font-size:12pt; padding:0 2cm}
+        div#printArea > p.number img { vertical-align:middle;}
+        div#printArea > p.description { padding:0 5%; top:4.5cm; font-size:18pt; line-height:30pt; font-weight:bold; }
+        div#printArea > h2 { top:5.5cm; font-size:16pt; }
+        div#printArea > h3 { position:relative; top:6.5cm; text-align:center; font-size:20pt; }
+        div#printArea .seal { width:2cm; margin-left:-20px; vertical-align:middle;}
+        div#printArea > .printBox { position:absolute; top:40px; left:40px; z-index:1; width:10cm; height:27.7cm;  }
+        div#printArea > .printBox img { width:19cm; height:27.7cm; }
+        div#printArea > h4 { margin-top:5%; margin-left:12%; text-align:left; font-size:13pt; }
+        div#printArea > span { padding:0 5%; top:4cm; font-size:18pt; line-height:30pt; font-weight:bold; }
+    </style>
+</head>
+<body>
+<div id="printArea">
+    <div class="printBox">
+        <img src="/assets/img/print_img01.jpg">
+    </div>
+    <p class="number"> 제 0000-A0000 호</p>
+    <h1>수 &nbsp;&nbsp; 료 &nbsp;&nbsp; 증</h1>
+    <ul>
+        <li>훈&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;련 : 전기줄 작업</li>
+        <li>팀&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;명 : 1팀</li>
+        <li>성&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;명 : 홍길동</li>
+        <li>생&nbsp;년&nbsp;월&nbsp;일 : 2000년 01월 01일</li>
+        <li>기&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;간 : 2023. 6. 21.~ 6. 23.</li>
+    </ul>
+    <p class="description">위 사람은 00000에서 소정의 교육과정을<br>마쳤으므로 이 증서를 드립니다.</p>
+    <h2>2023년 07월 10일</h2>
+    <h3><span style="position:relative; z-index:300 !important">초실감훈련센터장</span><img class="seal" src="/assets/img/stamp.jpg" style="z-index:100 !important"></h3>
+</div>
+
+<script>
+    window.print();
+</script>
+
+</body></html>

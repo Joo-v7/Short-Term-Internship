@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+<style>
+</style>
+
+<script>
+
+	$(function () {
+	});
+
+	function saveCategory() {
+
+		var categoryForm = $("#categoryForm");
+
+		if ($("input[name='categoryNm']", categoryForm).val() == "") {
+			toast("카테고리명은 필수입력 입니다.");
+			$("input[name='categoryNm']", categoryForm).focus();
+			return;
+		}
+
+		$.ajax({
+			type: "post",
+			url: categoryForm.attr("action"),
+			data: categoryForm.serialize(),
+			dataType: "json",
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", categoryForm).val());
+			},
+			success: function (data) {
+				
+				toast("정상적으로 처리되었습니다.");
+				$("#pop_modal3").modal('close');
+				get_category_list(); // 첫번째 modal 카테고리 리스트 갱신
+
+			},
+			error: function (data) {
+				if(typeof data.responseJSON.message != "undefined") {
+					toast(data.responseJSON.message);
+				}else{
+					toast('네트워크 또는 시스템 장애입니다.', 4000);	
+				}
+			}
+			
+		});
+	}
+
+</script>
+<form id="categoryForm" method="post"
+	th:action="@{/{adminPath}/lms/edu/category/save(adminPath=${@environment.getProperty('global.admin-path')})}"
+	enctype="multipart/form-data" onsubmit="return false">
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal3');" class="btn grey lighten-1 waves-effect waves-light">
+					<i class="material-icons">clear</i></a>
+				<div class="float_r">
+					<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button"
+						th:if="${!#strings.isEmpty(vo?.categoryIdx)}" th:onclick="categoryDelete();">삭제<i
+							class="material-icons left">delete</i></button>
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" onclick="saveCategory()">저장
+						<i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<input type="hidden" name="categoryIdx" id="categoryIdx" th:value="${vo?.categoryIdx}" />
+
+	<div class="row mt20 pd_box">
+		<div class="input-field col s8">
+			<input type="text" name="categoryNm" th:value="${vo?.categoryNm}" />
+			<label for="categoryNm" class="">카테고리명</label>
+		</div>
+		<div class="input-field col s4">
+			<input type="number" name="categoryOrder" th:value="${vo?.categoryOrder}" />
+			<label for="categoryOrder" class="">순서</label>
+		</div>
+
+		
+
+	</div>
+</form>
+
+</html>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.accessLog.AccessLogMapper">
+	<insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="logIdx" keyColumn="logIdx">
+		INSERT INTO cms_access_log(
+    		log_member_idx,
+    		log_ip,
+    		log_session_id,
+    		log_date,
+			log_access
+		)
+		VALUES (
+			#{logMemberIdx},
+			#{logIp},
+			#{logSessionId},
+			NOW(),
+			#{logAccess}
+		)
+	</insert>
+	
+	<select id="hourList" parameterType="map" resultType="egovMap">
+		SELECT
+			HOURLY, HOURLY_COUNT, IFNULL(TOTAL_COUNT, 0) AS TOTAL_COUNT, IFNULL(ROUND((HOURLY_COUNT/ IF(TOTAL_COUNT = 0, 1, TOTAL_COUNT)*100), 2), 0) AS PERCENT 
+		FROM (
+			SELECT LPAD(AA.ORDERBY,2,'0') AS HOURLY, IFNULL(HOURLY_COUNT, 0) AS HOURLY_COUNT, 
+			(SELECT IFNULL(COUNT(1),0) FROM
+			(SELECT DATE_FORMAT(log_date, '%Y-%m-%d') AS log_date, log_ip , 1 AS DAILY_COUNT FROM cms_access_log
+				WHERE log_ip IS NOT NULL 
+				<if test="@kepco.util.StrUtil@isBlank(sDate)">
+				<![CDATA[
+				and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+				and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+				]]>
+				</if>
+				<if test="!@kepco.util.StrUtil@isBlank(sDate)">
+				<![CDATA[
+				and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( #{sDate}, '%Y%m%d' ) 
+				and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( #{eDate}, '%Y%m%d' ) 
+				]]>
+				</if>
+				GROUP BY DATE_FORMAT(log_date, '%H'), log_ip 
+			) B 
+			) AS TOTAL_COUNT 
+			FROM cms_access_log_idx AA 
+			LEFT JOIN 
+			(SELECT log_date AS HOURLY, SUM(DAILY_COUNT) AS HOURLY_COUNT FROM
+			(SELECT DATE_FORMAT(log_date,'%H') AS log_date, log_ip, 1 AS DAILY_COUNT FROM cms_access_log
+				WHERE log_ip IS NOT NULL 
+				<if test="@kepco.util.StrUtil@isBlank(sDate)">
+				<![CDATA[
+				and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+				and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+				]]>
+				</if>
+				<if test="!@kepco.util.StrUtil@isBlank(sDate)">
+				<![CDATA[
+				and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( #{sDate}, '%Y%m%d' ) 
+				and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( #{eDate}, '%Y%m%d' ) 
+				]]>
+				</if>
+				GROUP BY DATE_FORMAT(log_date, '%H'), log_ip 
+				) A 
+				GROUP BY log_date
+			) BB 
+			ON AA.ORDERBY = BB.HOURLY
+		) AAA 
+		ORDER BY AAA.HOURLY
+	</select>
+
+	<select id="dayList" parameterType="map" resultType="egovMap">
+		SELECT
+			WEEKDAY, WEEKDAY_COUNT, TOTAL_COUNT, ROUND(WEEKDAY_COUNT / TOTAL_COUNT * 100, 2) AS PERCENT  
+		FROM (
+			SELECT AA.ORDERBY AS WEEKDAY, IFNULL(WEEKDAY_COUNT, 0) AS WEEKDAY_COUNT,
+				( SELECT COUNT(*) FROM (
+					SELECT 1 AS TOTAL_COUNT FROM cms_access_log WHERE log_ip IS NOT NULL 
+						<if test="@kepco.util.StrUtil@isBlank(sDate)">
+						<![CDATA[
+						and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+						and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+						]]>
+						</if>
+						<if test="!@kepco.util.StrUtil@isBlank(sDate)">
+						<![CDATA[
+						and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( #{sDate}, '%Y%m%d' ) 
+						and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( #{eDate}, '%Y%m%d' ) 
+						]]>
+						</if>
+					GROUP BY DATE_FORMAT(log_date, '%w'), log_ip 
+				) A
+			) AS TOTAL_COUNT 
+			FROM
+			( SELECT ORDERBY FROM cms_access_log_idx WHERE ORDERBY BETWEEN 1 AND 7 ) AA
+			LEFT JOIN
+			( SELECT WEEKDAY, SUM(WEEKDAY_COUNT) AS WEEKDAY_COUNT
+				FROM ( 
+					SELECT DATE_FORMAT(log_date, '%w')+1 AS WEEKDAY, log_ip, 1 AS WEEKDAY_COUNT 
+					FROM cms_access_log 
+					WHERE log_ip IS NOT NULL 
+						<if test="@kepco.util.StrUtil@isBlank(sDate)">
+						<![CDATA[
+						and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+						and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( NOW(), '%Y%m%d' ) 
+						]]>
+						</if>
+						<if test="!@kepco.util.StrUtil@isBlank(sDate)">
+						<![CDATA[
+						and DATE_FORMAT(log_date,'%Y%m%d') >= DATE_FORMAT( #{sDate}, '%Y%m%d' ) 
+						and DATE_FORMAT(log_date,'%Y%m%d') <= DATE_FORMAT( #{eDate}, '%Y%m%d' ) 
+						]]>
+						</if>
+
+					GROUP BY DATE_FORMAT(log_date, '%w'), log_ip
+				) B
+				GROUP BY WEEKDAY 
+			) BB 
+			ON AA.ORDERBY = BB.WEEKDAY
+		) AAA
+	</select>
+	
+</mapper>

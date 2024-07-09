@@ -1,0 +1,38 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<script th:inline="javascript">
+	var loginCheck = /*[[${session.memberIdx}]]*/;
+	if(loginCheck != null){
+		alert("로그인정보가 있습니다.");
+		location.href = "/";
+	}
+</script>
+
+
+<div class="sub-container">
+		<div class="join_step3_box">
+			<div class="in_box_wrap">
+				<div class="in_box">
+					<dl>
+						<dt>사내직원</dt>
+						<dd>아래 회원가입 버튼을 클릭하여 회원가입을 진행해주세요</dd>
+					</dl>
+					<a th:if="${#strings.equals(type,'join')}" onclick="if(!confirm('사내직원으로 회원가입하시겠습니까?'))return false;" href="/cms/member/join?site=kepco&mn=1002&mod=in" th:text="회원가입" />
+				</div>
+		
+				<div class="in_box">
+					<dl>
+						<dt>사외직원</dt>
+						<dd>아래 회원가입 버튼을 클릭하여 회원가입을 진행해주세요</dd>
+					</dl>
+					<a th:if="${#strings.equals(type,'join')}" onclick="if(!confirm('사외직원으로 회원가입하시겠습니까?'))return false;" href="/cms/member/join?site=kepco&mn=1002&mod=out" th:text="회원가입" />
+				</div>
+			</div>
+		</div>
+</div>
+</th:block>

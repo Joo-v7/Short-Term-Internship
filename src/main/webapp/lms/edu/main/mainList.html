@@ -1,0 +1,88 @@
+<div id="tab-1" class="tab-content3 current3"><!-- 탭 컨텐츠1 -->
+	<div class="more-btn">
+		<a class="link" href="/lms/edu/list/?site=kepco&mn=0101">
+			<div class="pink"></div>
+			<span>view more</span>
+			<i class="fa-solid fa-arrow-right"></i>
+		</a>
+	</div>
+	<div class="swiper_wrap">
+		<div class="swiper-container" id="edu_swiper">
+			<ul class="edu-w swiper-wrapper">
+				<li class="edu-box swiper-slide" th:each="vo : ${detailList}">
+					<div class="edu-video">
+						<img th:src="|/lms/edu/file?detailIdx=${vo?.detailIdx}&file=eduImage1|" onerror="this.src='/pages/kepco/img/sub/edu_none.jpg'"/>
+					</div>
+					<span class="bd_line01"></span>
+					<span class="bd_line02"></span>
+					<span class="bd_line03"></span>
+					<span class="bd_line04"></span>
+					<div class="edu-txt">
+						<div class="edu-txt2">
+							<ul class="edu-list">
+								<li th:each="eduKeyword,idx : ${#strings.setSplit(vo?.eduKeyword,',')}" th:class="|ca${idx.count}|" th:text="${eduKeyword}" />
+							</ul>
+							<h6>[[${vo?.trainTitle}]]</h6>
+							<div class="m-edu-info">
+								<dl>
+									<dt>모집인원</dt><dd>[[${vo?.eduLimitCnt}]]명</dd>
+								</dl>									
+								<dl>
+									<dt>신청기간</dt><dd>[[${vo?.eduAcceptBgnDate}]] ~ [[${vo?.eduAcceptEndDate}]]</dd>
+								</dl>
+								<dl>
+									<dt>교육기간</dt><dd>[[${vo?.eduTrainBgnDate}]] ~ [[${vo?.eduTrainEndDate}]]</dd>
+								</dl>
+							</div>
+							<a th:href="|/lms/edu/view/?site=kepco&&mn=0101&detailIdx=${vo?.detailIdx}|">view more<i class="fa-solid fa-arrow-right"></i></a>
+						</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div><!--// 탭 컨텐츠1 -->
+<script>
+var eduSwiper = new Swiper('#edu_swiper', {
+        slidesPerView: 3.5,
+			spaceBetween:45,
+        speed: 1500,
+        observer: true,
+// 			 breakpoints: { 
+// 			320: { 
+// 			  slidesPerView: 1, 
+// 			},
+// 			500: { 
+// 			  slidesPerView: 1, 
+// 			},
+// 			768: {
+// 			  slidesPerView: 2,
+// 			},
+// 			1024: {
+// 			  slidesPerView: 4,
+// 			},
+// 			1280: {
+// 			  slidesPerView: 4,
+// 			},
+// 		},
+        observeParents: true,
+        centeredSlidesBounds: true,
+        updateOnWindowResize: true,
+        observer : true,
+        loop: true,
+
+        navigation: {
+            nextEl: '#edu_swiper_next',
+            prevEl: '#edu_swiper_prev',
+        },
+
+        on: {
+            init: function() {
+                var idx = this.activeIndex-1;
+            },
+            slideChange: function() {
+                var idx = this.activeIndex-1;
+            }
+        },
+    });
+</script>

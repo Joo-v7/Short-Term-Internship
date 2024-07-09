@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<head>
+</head>
+<body>
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/cms/member/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+		<div class="top">
+			<div class="row">
+				<div class="col s12 right-align">
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장 <i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s12 m12 l12 xl12">
+				<input type="hidden" name="memberIdx" id="memberIdx" th:value="${vo?.memberIdx} ? ${vo?.memberIdx} : ''" />
+				<input type="hidden" name="memberRoleOG" id="memberRoleOG" th:value="${vo?.memberRole} ? ${vo?.memberRole} : ''" />
+				<div class="row">
+					<div class="input-field col s12 m6 l6 xl6">
+						<label for="memberId" class="req">아이디</label>
+						<input id="memberId" name="memberId" type="text" title="아이디" th:value="${vo?.memberId}" th:readonly="${vo?.memberId}"/>
+					</div>
+					<div class="input-field col s12 m6 l6 xl6">
+						<label for="password" class="req">패스워드</label>
+						<input id="memberPw" name="memberPw" type="password" title="패스워드" autocomplete="off"/>
+					</div>
+				</div>	
+				<div class="row">
+					<div class="input-field col s12 m6 l6 xl6">
+						<label for="memberType1" class="req active">회원유형</label>
+						<select id="memberType1" name="memberType1" class="req active">
+		        	        <option value="IN"  th:selected="${vo?.memberType1} == IN">사내 이용자</option>
+		        	        <option value="OUT" th:selected="${vo?.memberType1} == OUT">사외 이용자</option>
+						</select>
+					</div>
+					<div class="input-field col s12 m6 l6 xl6">
+						<label for="memberType2" class="req active">회원구분</label>
+						<select id="memberType2" name="memberType2" class="req active" onchange="updateMemberRoleOptions()">
+		        	        <option value="1"  th:selected="${vo?.memberType2} == 1">학습자</option>
+		        	        <option value="2" th:selected="${vo?.memberType2} == 2">교수자</option>
+							<option value="3" th:selected="${vo?.memberType2} == 3">관리자</option>
+						</select>
+					</div>
+				</div>	
+				<div class="row">
+					<div class="input-field col s12 m4 l4 xl4">
+						<label for="memberNm" class="req">성명</label>
+						<input id="memberNm" name="memberNm" type="text" title="성명" th:value="${vo?.memberNm}" />
+					</div>
+					
+					<div class="input-field col s12 m4 l4 xl4">
+						<!-- 
+						<i class="material-icons prefix">date_range</i>
+						-->
+						<label for="memberBirth">생년월일</label>
+						<input id="memberBirth" name="memberBirth" type="date" th:value="${vo?.memberBirth}">
+					</div>
+					<label for="">성별</label>
+					<div class="col s12 m4 l4 xl4 check_list_box">
+						<label for="memberGender_1">
+						<input type="radio" name="memberGender" id="memberGender_1" value="m" th:checked="${vo?.memberGender eq 'm'}">
+						<span>남</span></label>
+						&nbsp; 
+						<label for="memberGender_2">
+						<input type="radio" name="memberGender" id="memberGender_2" value="f" th:checked="${vo?.memberGender eq 'f'}">
+						<span>여</span></label>
+					</div>
+				</div>	
+				
+				<div class="row">
+					<div class="input-field col s6 m6 l6">
+						<label for="memberPhone" class="">휴대전화</label>
+						<input id="memberPhone" name="memberPhone" type="text" numberOnly maxlength="13" placeholder="010-1234-1234" th:value="${vo?.memberPhone}"/>
+					</div>
+					<div class="input-field col s6 m6 l6">
+						<label for="memberEmail" class="">이메일</label>
+						<input id="memberEmail" name="memberEmail" type="text" placeholder="gildong.hong@kepco.co.kr" th:value="${vo?.memberEmail}" />
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field col s4" id="memberRoleBox">
+						
+	                </div>
+	                <div class="input-field col s4">
+						<label for="loginFail" class="">로그인실패횟수</label>
+	                	<input id="loginFail" type="text" th:value="${vo?.loginFail}" readonly />
+						<button class="btn waves-effect waves-light blue-grey darken-4" type="button" style="width: 100%;" th:onclick="|failReset(${vo?.memberIdx});return false;|" th:disabled="${#strings.isEmpty(vo?.memberIdx)}">초기화</button>
+	                </div>
+					<div class="input-field col s4">
+						<label for="memberApproval" class="req active">가입승인</label>
+						<select id="memberApproval" name="memberApproval" class="req active">
+		        	        <option value="n" th:selected="${#strings.equals(vo?.memberApproval,'n')}">미승인</option>
+		        	        <option value="y" th:selected="${#strings.equals(vo?.memberApproval,'y')}">승인</option>
+						</select>
+					</div>
+				</div>
+				
+				
+				
+				<div class="row">
+					<div class="input-field col s4  m4 l4">
+						<label for="insertDate" class="">등록일시</label>
+						<input id="insertDate" type="text" th:value="${vo?.insertDate}" readonly />
+					</div>
+					<div class="input-field col s4  m4 l4">
+						<label for="updateDate" class="">수정일시</label>
+						<input id="updateDate" type="text" th:value="${vo?.updateDate}" readonly />
+					</div>
+					<div class="input-field col s4 m4 l4">
+						<label for="loginDate" class="">최종로그인</label>
+						<input id="loginDate" type="text" th:value="${vo?.loginDate}" readonly />
+					</div>
+				</div>
+			</div>
+		</div>	
+		
+		<br/>
+	</form>
+</body>
+
+<script>
+	function failReset(memberIdx) {
+		if(confirm("초기화하시겠습니까?")){
+			$.ajax({
+				type: "get",
+				url: gblAdminPath + "/cms/member/failReset?memberIdx=" + memberIdx,
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm(memberIdx);
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		}
+		
+	}
+
+
+	$(function() {
+		$("#memberRole").formSelect();
+		$("#memberType1").formSelect();
+		$("#memberType2").formSelect();
+		$("#memberApproval").formSelect();
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='memberNm']", $frm).val() == "") {
+				toast("이름는 필수입력 입니다.");
+				$("input[name='memberNm']", $frm).focus();
+				return;
+			}
+			if(!hp_check()) {
+				toast("올바른 전화번호가 아닙니다.");
+				$("input[name='memberPhone']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm('');
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+		
+		
+		updateMemberRoleOptions()
+	});
+	
+	//휴대전화 형식 검사
+	function hp_check() {
+	    var member_phone = $("input[name='memberPhone']").val();
+	    if(checkNull(member_phone)) return false;
+	    var pattern1 = /^01([016789])-?([0-9]{3,4})-?([0-9]{4})$/;
+	    member_phone = member_phone.replace(/(^02.{0}|^01.{1}|[0-9]{3})([0-9]+)([0-9]{4})/,"$1-$2-$3");
+	    $("input[name='memberPhone']").val(member_phone);
+		console.log(member_phone)
+	    if(pattern1.test(member_phone)) {
+			return true;
+			
+		}else{
+			return false;
+		}
+	}
+	
+	//공백 검사
+	function checkNull(str) {
+	    return (str == null || str.replace(/\s/gi,"") == "");
+	}
+	
+	function updateMemberRoleOptions() {
+		var memberType2 = document.getElementById("memberType2").value;
+		var memberIdx = $("input[name='memberIdx']").val(); 
+		$('#memberRoleBox').empty();
+		
+		addOption(memberIdx, memberType2);
+    }
+
+    function addOption(memberIdx, memberType2) {
+		$.ajax({
+			url: gblAdminPath +'/cms/member/power?memberIdx=' + memberIdx + '&memberType2='+memberType2,
+			type: 'GET',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#memberRoleBox').html(data);
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+    }
+
+	
+</script>
+</html>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.member.auth.MemberAuthMapper">
+
+	<!-- TODO 회원 구분 확정지어 WHERE문 수정  -->
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(memberId)">
+				AND member_id = #{memberId}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.member.auth.MemberAuthVo">
+		SELECT
+			a.*,
+		FROM cms_member_auth a
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.member.auth.MemberAuthVo">
+		SELECT *
+		FROM cms_member_auth
+		WHERE auth_idx = #{authIdx}
+	</select>
+	
+	<select id="memberList" parameterType="map" resultType="kepco.cms.member.MemberVo">
+		SELECT
+			a.*
+		FROM cms_member a
+		WHERE 
+		member_email = #{memberEmail}
+		AND member_nm = #{memberNm}
+	</select>
+	
+	<select id="memberSelect" parameterType="map" resultType="kepco.cms.member.MemberVo">
+		SELECT
+			a.*
+		FROM cms_member a
+		WHERE 
+		member_email = #{memberEmail}
+		AND member_id = #{memberId}
+	</select>
+	
+	<select id="authCountByEmail" parameterType="map" resultType="int">
+	    SELECT COUNT(1)
+	    FROM cms_member
+	    WHERE 
+	    member_email = #{memberEmail}
+	    <choose>
+	        <when test="@kepco.util.StrUtil@isBlank(findPw)">
+	            AND member_nm = #{memberNm}
+	        </when>
+	        <otherwise>
+	            AND member_id = #{memberId}
+	        </otherwise>
+	    </choose>
+	</select>
+	
+	<insert id="createAuthKey" parameterType="kepco.cms.member.auth.MemberAuthVo" useGeneratedKeys="true" keyProperty="authIdx" keyColumn="authIdx">
+		INSERT INTO cms_member_auth (
+			member_email, member_nm, member_id, authkey, find_type, insert_date
+		)
+		VALUES (
+			#{memberEmail},#{memberNm},#{memberId},#{authKey}, #{findType}, CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deleteOldData" parameterType="map">
+		DELETE
+		FROM cms_member_auth
+		WHERE insert_date &lt; DATE_SUB(NOW(), INTERVAL 1 DAY)
+	</delete>
+</mapper>

@@ -1,0 +1,469 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<th:block layout:fragment="content">
+<script>
+	$(function () {
+		$("select", "#memberTable").formSelect();
+		$('select').formSelect();
+		
+		get_member_list();
+		// 검색
+		$("#frmMemberList").submit(function () {
+			$("#memAll").prop("checked", false);
+		  setTimeout(function () {
+			var formData = $("#frmMemberList").serialize();
+			get_member_list(formData);
+		  }, 40);
+	
+		  return false;
+		});
+		
+		$("#memAll").click(function(){
+			var checked = $("#memAll").is(":checked");
+			
+			if(checked) {
+				$("input:checkbox").prop("checked", true);
+			}else{
+				$("input:checkbox").prop("checked", false);
+			}
+		});
+		
+		$("#memberTable_paginate").click(function(){
+			$("#memAll").prop("checked", false);
+		});
+	});
+	
+	function member_onSubmit() {
+		var param = $("#frmMemberList").serialize();
+		get_member_list(param);
+	}
+
+	function select2() {
+		
+		var detailIdx = '[[${param?.detailIdx}]]';
+		var eduIdx = '[[${param?.eduIdx}]]';
+		
+		$.ajax({
+			url  : gblAdminPath + '/lms/edu/regist/save',
+			type : 'get',
+			data : {
+				'bot' : "1",
+				'detailIdx' : detailIdx,
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			
+			if(data.data.check == "o"){
+				toast("정원을 초과했습니다.");
+				return false;
+			}
+			
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				//var staff_modal = $("#pop_modal").modal();
+				//staff_modal.modal('close');
+				
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				$('#memberTable').DataTable().ajax.reload(dataTableInit, false);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			}
+			
+		});
+	}
+	
+	function botDelete(registIdx) {
+		
+		$.ajax({
+			url  : gblAdminPath + '/lms/edu/regist/delete',
+			type : 'get',
+			data : {
+				'registIdx' : registIdx,
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.", 4000);
+				//var staff_modal = $("#pop_modal").modal();
+				//staff_modal.modal('close');
+				
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				$('#memberTable').DataTable().ajax.reload(dataTableInit, false);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function() {
+			toast('시스템 오류로 처리할 수 없습니다.', 4000);
+		});
+	}
+	
+	function stateUpdate(registIdx,value) {
+		$.ajax({
+			url  : gblAdminPath + '/lms/edu/regist/save',
+			type : 'get',
+			data : {
+				'type': 'stateUpdate',
+				'registIdx' : registIdx,
+				'registState' : value
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				//var staff_modal = $("#pop_modal").modal();
+				//staff_modal.modal('close');
+				
+				$('#memberTable').DataTable().ajax.reload(dataTableInit, false);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			}
+			
+		});
+	}
+
+	function stateAllUpdate(value) {
+		var memberList = [];
+		
+		$("input:checkbox[name=memList]:checked").each(function(i,val){
+			memberList.push(val.value);
+		});
+		
+		if(memberList.length != 0){
+			memberList.forEach(function(registIdx){
+				$.ajax({
+					url  : gblAdminPath + '/lms/edu/regist/save',
+					type : 'get',
+					data : {
+						'type': 'stateUpdate',
+						'registIdx' : registIdx,
+						'registState' : value
+					},
+					dataType : 'json',
+				}).done(function(data) {
+					if(data.code == 0) {
+						//var staff_modal = $("#pop_modal").modal();
+						//staff_modal.modal('close');
+					}
+					else {
+						toast(data.message);
+					}
+				}).fail(function(xhr) {
+					if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+						toast(xhr.responseJSON.message);
+					} else if(xhr.status != 200) {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					}
+					
+				});
+			});
+			toast("정상적으로 처리되었습니다.");
+			$("#memAll").prop("checked", false);
+			$("#registAllState option:eq(0)").prop("selected", true);
+			setTimeout(function () {
+				get_member_list();
+			}, 40);
+		}else{
+			$("#registAllState option:eq(0)").prop("selected", true);
+			toast("체크박스를 확인해주세요.");
+		}
+	}
+	
+	
+	function teamUpdate(registIdx,value) {
+		$.ajax({
+			url  : gblAdminPath + '/lms/edu/regist/save',
+			type : 'get',
+			data : {
+				'registIdx' : registIdx,
+				'team' : value
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				//var staff_modal = $("#pop_modal").modal();
+				//staff_modal.modal('close');
+				
+				$('#memberTable').DataTable().ajax.reload(dataTableInit, false);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			}
+			
+		});
+	}
+	
+	function roleUpdate(registIdx,value) {
+		$.ajax({
+			url  : gblAdminPath + '/lms/edu/regist/save',
+			type : 'get',
+			data : {
+				'type': 'roleUpdate',
+				'registIdx' : registIdx,
+				'registRole' : value
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				//var staff_modal = $("#pop_modal").modal();
+				//staff_modal.modal('close');
+				
+				$('#memberTable').DataTable().ajax.reload(dataTableInit, false);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			}
+			
+		});
+	}
+
+	
+	// 목록
+	function get_member_list(formData) {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#memberTable').DataTable({
+			ajax: {
+				type : 'get',
+				url : gblAdminPath + '/lms/edu/regist/listJson?'+$('#frmMemberList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select: {
+				'style': 'multi'
+			},
+			'columnDefs': [
+				{
+				  'width': '40px',
+				  'searchable': false,
+				  'orderable': true,
+				  'targets': 0,
+				  render: function(data, type, row, meta) {
+					return meta.row + meta.settings._iDisplayStart + 1;
+				  },
+				}],
+				order : [1,'desc'],
+				initComplete: dataTableInit,
+				columns : [
+				{ targets : 1, searchable : false, orderable : false, className : 'dt-body-center',
+            			render: function(data, type, row, meta){
+		                return `
+			                <label for='mem${meta.row+1}'>
+		                	<input type='checkbox' class='filled-in' id='mem${meta.row+1}' name='memList' value='${row.registIdx}' style='position: initial;'/>
+		                	<span></span>
+		                	</label>
+		                	`;
+		            }
+		        },
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'memberId', className : 'dt-body-center' },
+				//아바타 추가
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						var nm = row.memberNm;
+						if(row.memberNm == null){
+							nm = '아바타';
+						} 
+						return nm;
+					}
+				},
+				{
+					data : null, searchable : false, orderable : true, className : 'dt-body-center', 
+					render : function(data, type, row, meta) {
+						var txt = row.team;
+						if(txt == null){
+							txt = "";
+						}
+						return `
+							<span style="display: none;">${row.team}</span>
+							<input name="team" id="team" value="${txt}" onchange="teamUpdate(${row.registIdx},this.value);return false;">
+						`;
+					}
+				},
+				//승인변경
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center', 
+					render : function(data, type, row, meta) {
+						
+						if(row.registState == 1) {var select1 = "selected=selected"}
+						if(row.registState == 2) {var select2 = "selected=selected"}
+						if(row.registState == 3) {var select3 = "selected=selected"}
+						
+						return `
+							<select name="registState" id="registState" class="m0" onchange="stateUpdate(${row.registIdx},this.value);return false;" style="display:flex; width:100%;">
+								<option value="1" ${select1}>대기</option>
+								<option value="2" ${select2}>승인</option>
+								<option value="3" ${select3}>취소</option>
+							</select>	
+						`;
+					}
+				},
+				//역할변경
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center', 
+					render : function(data, type, row, meta) {
+						if(row.registRole == 1) {var select1 = "selected=selected"}
+						if(row.registRole == 2) {var select2 = "selected=selected"}
+						if(row.registRole == 3) {var select3 = "selected=selected"}
+						if(row.registRole == 4) {var select4 = "selected=selected"}
+						
+						return `
+							<select name="registRole" id="registRole" class="m0" onchange="roleUpdate(${row.registIdx},this.value);return false;" style="display:flex; width:100%;">
+								<option value="" >-</option>
+								<option value="1" ${select1}>주작업자</option>
+								<option value="2" ${select2}>보조작업자</option>
+								<option value="3" ${select3}>지상작업자</option>
+								<option value="4" ${select4}>작업책임자</option>
+							</select>	
+						`;
+					}
+				},
+				{ data : 'insertDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+				//수정, 팀삭제 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						var memSelect = '';
+						var botDelete = '';
+						if(row.memberIdx == 0){
+							botDelete = `<button onclick="botDelete(${row.registIdx});" class="waves-effect waves-light btn red" style="width: 100%;"><i class="material-icons left">delete</i>삭제</button>`;
+						}
+						return memSelect + botDelete;
+					}
+				},
+			],
+		});
+
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#memberTableTotCnt').text( $('#memberTable').DataTable().data().count());
+		if ($('#memberTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+</script>
+
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light" name="action"><i class="material-icons">clear</i></a>
+			</div>
+		</div>
+	</div>
+	
+	<div>
+		<div class="row">
+			<!-- // 그룹 -->
+			<div class="col s12 pd_box">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<div class="row">
+							<form id="frmMemberList" method="get">
+								
+								<div class="input-field col s1 select_m0">
+									<label for="scKey1" class="">승인상태</label>
+									<select name="scKey1" id="scKey1">
+										<option value="">전체</option>
+										<option value="1" th:selected="${param?.scKey1} == 1">대기</option>
+										<option value="2" th:selected="${param?.scKey1} == 2">승인</option>
+										<option value="3" th:selected="${param?.scKey1} == 3">취소</option>
+									</select>
+								</div>
+								
+								<!-- 검색창 -->
+								<div class="col search_bar">
+									<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+									<input name="scKey2" type="hidden" th:value="${param?.scKey2}">
+									<input name="type" type="hidden" value="memberList">
+									<input id="detailIdx" name="detailIdx" type="hidden" th:value="${param?.detailIdx}">
+									
+									<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+	 									<i class="material-icons md-18 left">search</i> 검색
+									</button>
+									<div class="title left">
+										전체 : <b id="memberTableTotCnt">0</b>
+									</div>
+								</div>
+									
+								<div class="right">
+									<div class="input-field col s6 select_m0">
+									<label for="registAllState" class="">체크박스 상태수정</label>
+									<select name="registAllState" id="registAllState" class="mr5" onchange="stateAllUpdate(this.value);return false;" >								
+										<option value="" selected disabled>승인상태</option>
+										<option value="1">대기</option>
+										<option value="2">승인</option>
+										<option value="3">취소</option>
+									</select>	
+									</div>
+									<div class="input-field col s6">
+									<button onclick="select2();" class="waves-effect waves-light btn cyan"><i class="material-icons left">edit</i>아바타 추가</button>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="table_type3">
+						<table id="memberTable" class="striped centered highlight">
+							<thead>
+								<tr>
+									<th width="20px">
+										<label for='memAll'>
+					                		<input type='checkbox' class='filled-in' id='memAll' style='position: initial;'/>
+					                		<span></span>
+					                	</label>
+									</th>
+									<th width="30px">NO</th>
+									<th width="100px">아이디</th>
+									<th width="100px">성명</th>
+									<th width="80px">팀</th>
+									<th width="80px">승인상태</th>
+									<th width="80px">역할</th>
+									<th width="80px">등록일시</th>
+									<th width="40px">아바타 삭제</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>	
+	
+</html>

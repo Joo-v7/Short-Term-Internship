@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.template.TemplateMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scTemplate)">
+			AND template = #{template}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND temp_title LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.template.TemplateVo">
+		SELECT
+			*
+		FROM cms_template
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.template.TemplateVo">
+		SELECT
+			*
+		FROM cms_template
+		WHERE
+			delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(tempIdx)">
+				AND temp_idx = #{tempIdx}
+			</if>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.template.TemplateVo" useGeneratedKeys="true" keyProperty="tempIdx" keyColumn="tempIdx">
+		INSERT INTO cms_template
+		(
+			temp_idx,temp_title,temp_code1,temp_code2,temp_content,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES
+		(
+			#{tempIdx},#{tempTitle},#{tempCode1},#{tempCode2},#{tempContent},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.template.TemplateVo">
+		UPDATE cms_template
+		<set>
+			temp_title = #{tempTitle},
+			temp_code1 = #{tempCode1},
+			temp_code2 = #{tempCode2},
+			temp_content = #{tempContent},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND temp_idx = #{tempIdx}
+	</update>
+
+	<update id="logSave" parameterType="kepco.cms.template.TemplateVo">
+		UPDATE cms_template
+		<set>
+			temp_title = (SELECT temp_title FROM cms_template_log WHERE log_idx = ${logIdx} ),
+			temp_code1 = (SELECT temp_code1 FROM cms_template_log WHERE log_idx = ${logIdx} ),
+			temp_code2 = (SELECT temp_code2 FROM cms_template_log WHERE log_idx = ${logIdx} ),
+			temp_content = (SELECT temp_content FROM cms_template_log WHERE log_idx = ${logIdx} ),
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND temp_idx = #{tempIdx}
+	</update>
+	
+	<update id="delete" parameterType="map">
+		UPDATE cms_template
+		<set>
+			delete_yn = 'y',
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND temp_idx = #{tempIdx}
+	</update>
+	
+	
+	
+</mapper>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/login_layout">
+<head>
+	<title>CMS 계정정보 찾기</title>
+</head>
+
+
+
+<th:block layout:fragment="content">
+	<style>
+		#find_box {width:100%; max-width: 460px; height:auto; max-height:calc(100vh - 200px); background: #fff; padding:45px 50px 30px 50px; text-align: center; box-shadow:0 5px 10px rgba(0,0,0,0.1); overflow:hidden; margin: auto; position: fixed; left: 50%; top:
+			50%; z-index: 1; transform: translate(-50%,-50%); overflow-y: auto;}
+		.find_title_box {display: block; width: 100%; height: auto; padding-bottom: 40px;}
+		.find_title_box > ul {display: flex; width: 100%; height: auto; }
+		.find_title_box > ul > li {flex: 1; border-bottom: 1px solid #212121; cursor: pointer; transition: all 0.35s ease;}		
+		.find_title_box > ul > li:focus,
+		.find_title_box > ul > li:hover,
+		.find_title_box > ul > li.current {background-color: #212121; color: #fff;}
+		.find_title_box h2 {display: block; width: 100%; height: auto; font-size: 16px; font-weight: bold; margin: 0; line-height: 1; padding: 10px 20px; color: inherit;}
+
+		.form_box {display: none;}
+		.form_box.current {display: block;}
+
+		.help_text {display: block; width: 100%; height: auto; padding: 10px; background-color: #f8f8f8; font-size: 12px; font-weight: 400; color: #666; margin: 20px auto 0; text-align: left;}
+
+		
+		.cert_time {display: none; width: 100%; height: auto; line-height: 1; padding: 0; font-size: 12px; font-weight: 400; text-align: left;}
+		.cert_time.active {display: block}
+		.cert_timer {display: block; width: 100%; height: auto; color: #f32323; font-size: 12px; font-weight: 400; margin-bottom: 10px;}
+
+		.re_input_pw {display: none; width: 100%; height: auto;}
+		.re_input_pw.active {display: block;}
+
+		.terms_all_check {display: flex; width: 100%; height: 40px; border: 1px solid #ccc; border-bottom: 0; padding-left: 10px;}
+		.terms_all_check span {display: flex!important; align-items: center; line-height: 1!important; width: 100%!important; height: 40px!important; padding: 10px 10px 10px 25px!important; font-size: 14px; font-weight: bold;}
+		.terms_all_check [type="checkbox"].filled-in:not(:checked) + span:not(.lever):after {top: 50%!important; transform: translate(0,-50%);}
+		.terms_all_check [type="checkbox"].filled-in:checked + span:not(.lever):after {top: 50%!important; transform: translate(0,-50%);}
+		.terms_all_check [type="checkbox"].filled-in:not(:checked) + span:not(.lever):before {top: 10px!important;}
+		.terms_all_check [type="checkbox"].filled-in:checked + span:not(.lever):before {top: 10px!important;}
+
+
+		.terms_wrap {display: block; width: 100%; height: auto; margin-bottom: 40px;}
+		.terms_title {display: flex; justify-content: flex-start; align-items: center; width: 100%; height: 40px; background-color: #fff; font-size: 14px; font-weight: 500; padding: 10px; cursor: pointer; position: sticky; border-bottom: 1px solid #ccc; margin-bottom: 10px; left: 0; top: 0;}
+		/* .terms_title::before,
+		.terms_title::after {content: ''; display: block; width: 2px; height: 10px; position: absolute; background-color: #aaa; transition: all 0.35s ease;}
+		.terms_title::before {right: calc(20px + 3px); top: 20px; transform: translate(-50%,-50%) rotate(-45deg);}
+		.terms_title::after {right: calc(20px - 3px); top: 20px; transform: translate(-50%,-50%) rotate(45deg);} */
+		.terms_title .check_list_box {margin-left:auto;}
+		.terms_title .check_list_box span {width: 20px; height: 20px; padding: 0;;}
+		.terms_box {display: block; width: 100%; height: 40px; font-size: 12px; font-weight: 400; text-align: left; padding: 0; border: 1px solid #ccc; overflow: hidden; transition: height 0.35s ease;}
+		.terms_box:not(:first-child) {border-top: 0;}
+		.terms_box.active {height: 200px; padding: 0; overflow-y: auto;}
+		/* .terms_box.active .terms_title::before {right: calc(20px + 3px); top: 20px; transform: translate(-50%,-50%) rotate(45deg);}
+		.terms_box.active .terms_title::after {right: calc(20px - 3px); top: 20px; transform: translate(-50%,-50%) rotate(-45deg);} */
+		.terms_box pre {display: block; width: 100%; height: auto; font-size: 12px; line-height: 1.5; margin: 0; padding: 10px; overflow-x: none; white-space: pre-wrap;}
+
+
+		.find_btn_box {display: flex; width: 100%; height: auto; align-items: center; gap: 10px;}
+		.find_btn_box .btn {flex: 1 1 120px; margin: 0;}
+		.row {position: relative;}
+		.row > label.check {position: absolute; left: 0; top:0;}
+	</style>
+
+<div id="login_wrap">
+	<div id="find_box">
+		<div class="find_title_box">
+			<ul>
+				<li class="current" data-tab="1">
+					<h2>
+						아이디 찾기
+					</h2>
+				</li>
+				<li data-tab="2">
+					<h2>
+						비밀번호 찾기
+					</h2>
+				</li>
+			</ul>
+			<span class="help_text"><strong>상단의 탭</strong>을 이용하여 아이디 및 비밀번호를 찾을 수 있습니다.</span>
+		</div>
+
+
+		<div class="form_box current" style="margin:0; width: 100%;">
+			<form id="frm1" name="frm1" method="post">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+				<div class="row">
+					<div class="input-field">
+						<label>성명</label>
+						<input name="memberNm" type="text" value="" placeholder="입력해주세요">
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field">
+						<label>이메일</label>
+						<input class="member_mail" name="memberEmail" type="text" value="" placeholder="email@mail.com">
+						<button type="button" class="waves-effect waves-light btn grey darken-4 accent-4 z-depth-0 cert_send_btn" data-cert-send="1">인증 요청</button>
+					</div>
+				</div>
+				
+				<div class="row cert_time cert_time_id">
+					<div class="input-field">
+						<label>인증번호</label>
+						<input name="certNumber" type="text" value="">
+						<input type="hidden" name="authIdx" id="idAuthIdx" value="">
+						<button type="button" class="waves-effect waves-light btn grey darken-4 accent-4 z-depth-0 cert_btn id_cert_btn" data-cert-send="1">인증</button>
+					</div>
+					<span class="cert_timer">인증시간 : 00분 00초</span>
+				</div>
+
+				<div class="find_btn_box">
+					<a href="/admin/cms/member/auth" class="btn waves-effect waves-light grey darken-1">취소</a>
+				</div>
+			</form>
+		</div> 
+		
+		<div class="form_box" style="margin:0; width: 100%;">
+			<form id="frm2" name="frm2" method="post">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+				<input type="hidden" name="findPw" value="y">
+				<div class="row">
+					<div class="input-field">
+						<label>찾으실 아이디</label>
+						<input name="memberId" type="text" value="" placeholder="입력해주세요">
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field">
+						<label>이메일</label>
+						<input class="member_mail" name="memberEmail" type="text" value="" placeholder="email@mail.com">
+						<button type="button" class="waves-effect waves-light btn grey darken-4 accent-4 z-depth-0 cert_send_btn" data-cert-send="2">인증 요청</button>
+					</div>
+				</div>
+
+				<div class="row cert_time cert_time_pw">
+					<div class="input-field">
+						<label>인증번호</label>
+						<input name="certNumber" type="text" value="">
+						<input type="hidden" name="authIdx" id="pwAuthIdx" value="">
+						<button type="button" class="waves-effect waves-light btn grey darken-4 accent-4 z-depth-0 cert_btn pw_cert_btn" data-cert-send="2">인증</button>
+					</div>
+					<span class="cert_timer">인증시간 : 00분 00초</span>
+				</div>
+				<div class="re_input_pw">
+					<div class="row">
+						<div class="input-field">
+							<label>새 비밀번호</label>
+							<input name="certNewPw" type="password" value="">
+						</div>
+					</div>
+	
+					<div class="row">
+						<div class="input-field">
+							<label>새 비밀번호 확인</label>
+							<input name="certNewPwCheck" type="password" value="">
+						</div>
+					</div>
+					<button type="submit" class="waves-effect waves-light btn grey darken-4 accent-4 z-depth-0">찾기</button>
+				</div>
+
+				<div class="find_btn_box">
+					<a href="/admin/cms/member/auth" class="btn waves-effect waves-light grey darken-1">취소</a>
+				</div>
+			</form>
+		</div> 
+	</div>
+</div>
+<script>
+
+	let cert_time;
+	let cert_switch_frm1 = false;
+	let cert_switch_frm2 = false;
+	// 인증번호 타이머
+	function cert_timer(frm){
+		let time = 180; //기준시간 작성 3분 = 180
+		let min = parseInt(time/60); //분
+		let sec = time%60; //초
+		// 초기 설정
+		$(".cert_timer", frm).text("인증시간 : " + min + "분" + sec + "초");
+
+		//setInterval(함수, 시간) : 주기적인 실행
+		let x = setInterval(function() {
+			// 인증 여부 확인
+			switch (frm.attr('id')) {
+				case 'frm1':
+					if(cert_switch_frm1){
+						clearInterval(x); //setInterval() 실행을 끝냄
+						if(cert_switch_frm1) return;
+					}
+					break;
+			
+				case 'frm2':
+					if(cert_switch_frm2){
+						clearInterval(x); //setInterval() 실행을 끝냄
+						if(cert_switch_frm2) return;
+					}
+					break;
+			}
+			min = parseInt(time/60); //몫을 계산
+			sec = time%60; //나머지를 계산
+			$(".cert_timer", frm).text("인증시간 : " + min + "분" + sec + "초");
+			time--;
+			// 인증시간 갱신
+			cert_time = time;
+			//타임아웃 시
+			if (time < 0) {
+				clearInterval(x); //setInterval() 실행을 끝냄
+				$(".cert_timer", frm).text("시간초과");
+			}
+		}, 1000);
+	}
+
+	$(function() {
+
+		// get 파라미터 값 가져오기
+		const url_params = new URL(location.href).searchParams;
+		const param_name = url_params.get('id');
+		// console.log(param_name);
+		var adminPath = "[[${@environment.getProperty('global.admin-path')}]]";
+		// 아이디 찾기 결과에서 비밀번호 찾기로 넘어 올 때
+		if (param_name){
+			var $frm = $('#frm2');
+			$('.find_title_box > ul > li').removeClass('current');
+			$('.form_box').removeClass('current');
+			$('.find_title_box > ul > li').eq(1).addClass('current');
+			$('.form_box').eq(1).addClass('current');
+			$("input[name='memberId']", $frm).val(param_name);
+			$("input[name='memberEmail']", $frm).focus();
+		}
+
+
+		// 탭
+		$('.find_title_box > ul > li').click(function(){
+			$('.find_title_box > ul > li').removeClass('current');
+			$(this).addClass('current');
+			$('.form_box').removeClass('current');
+			$('.form_box').eq($(this).data('tab')-1).addClass('current');
+		});
+
+		// 인증요청 버튼
+		$('.cert_send_btn').click(function(e){
+			e.preventDefault();
+			var $frm = $('#frm'+$(this).data('cert-send'));
+
+			if($("input[name='memberNm']", $frm).val() == "") {
+				toast("성명을 먼저 입력하셔야 합니다.");
+				$("input[name='memberNm']", $frm).focus();
+				return;
+			}
+
+			if($("input[name='memberEmail']", $frm).val() == ""){
+				toast("이메일은 인증번호를 요청하기 위한 필수입력 입니다.");
+				$("input[name='memberEmail']", $frm).focus();
+				return;
+			}
+
+			if($("input[name='memberEmail']", $frm).val() != "") {
+				var regExp = /\w+([-+.]\w+)*@\w+([-.]\w+)*\.[a-zA-Z]{2,4}$/;
+				if(!regExp.test($("input[name='memberEmail']", $frm).val())){					
+					toast("이메일 형식이 올바르지 않습니다.");
+					$("input[name='memberEmail']", $frm).focus();
+					return;
+				}				
+			}
+			
+			$.ajax({
+				type: "post",
+				url: "/admin/cms/member/auth/findByEmail",
+				//url: "/admin/cms/member/auth/find_result",
+				data: $frm.serialize(),
+				//contentType: "application/json",
+				contentType: "application/x-www-form-urlencoded", 
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				console.log(data);
+				toast(data.message);
+				if(data.data.cnt > 0){
+					// 인증절차 진행
+					$("input[name='certNumber']", $frm).focus();
+					cert_timer($frm);
+					$(this).text('재 요청');
+					if(data.data.findType == "패스워드"){
+						$('#pwAuthIdx').val(data.data.authIdx); //아이디 인증번호인지 비밀번호 인증번호인지 구분
+						$('.cert_time_pw').addClass('active');
+					}else{
+						$('#idAuthIdx').val(data.data.authIdx);
+						$('.cert_time_id').addClass('active');
+					}
+				}
+				
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message); 
+					$("input[name='memberEmail']", $frm).focus();
+				}
+				console.log(xhr.responseJSON);
+			});
+			
+			
+		});
+
+		// 아이디 인증버튼
+		$('.id_cert_btn').click(function(e){
+			var $frm = $('#frm'+$(this).data('cert-send'));
+			e.preventDefault();
+			if($("input[name='certNumber']", $frm).val() == "") {
+				toast("인증번호가 입력되지 않았습니다.");
+				$("input[name='certNumber']", $frm).focus();
+				return;
+			}
+			// 인증 시간 초과
+			if(cert_time < 0) {
+				toast("인증시간 초과하였습니다.");
+				$("input[name='certNumber']", $frm).focus();
+				return;
+			}
+			$.ajax({ //인증 버튼 시
+				type: "post",
+				url: "/admin/cms/member/auth/verification",
+				data: $frm.serialize(),
+				//contentType: "application/json",
+				contentType: "application/x-www-form-urlencoded",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+				success: function(data) {
+					console.log(data);
+					if(data.data.verification){
+						
+						var redirectUrl = "/admin/cms/member/auth/find_result?auth="+data.data.auth;
+            			window.location.href = redirectUrl;
+						
+					}else{
+						toast("인증번호가 일치하지 않습니다.");
+					}
+			    },
+			    error: function(xhr) {
+					toast(xhr.responseJSON.message); // toast("입력한 이메일이 회원정보와 일치하지 않습니다.");
+					console.log("asdf"+xhr.responseJSON);
+			    }
+				
+			});
+		});
+		
+		
+		// 비밀번호 인증버튼
+		$('.pw_cert_btn').click(function(e){
+			e.preventDefault();
+			var $frm = $('#frm'+$(this).data('cert-send'));
+			
+			if($("input[name='certNumber']", $frm).val() == "") {
+				toast("인증번호가 입력되지 않았습니다.");
+				$("input[name='certNumber']", $frm).focus();
+				return;
+			}
+			// 인증 시간 초과
+			if(cert_time < 0) {
+				toast("인증시간 초과하였습니다.");
+				$("input[name='certNumber']", $frm).focus();
+				return;
+			}
+			$.ajax({ //인증 버튼 시
+				type: "post",
+				url: "/admin/cms/member/auth/verification",
+				data: $frm.serialize(),
+				//contentType: "application/json",
+				contentType: "application/x-www-form-urlencoded",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+				success: function(data) {
+					console.log(data);
+					if(data.data.verification){
+						
+						toast("인증되었습니다.");
+						$(".cert_timer", $frm).text("인증완료");
+						cert_switch_frm2 = true;
+						$(".re_input_pw", $frm).addClass('active');
+						
+					}else{
+						toast("인증번호가 일치하지 않습니다.");
+					}
+			    },
+			    error: function(xhr) {
+					toast(xhr.responseJSON.message); // toast("입력한 이메일이 회원정보와 일치하지 않습니다.");
+					console.log("asdf"+xhr.responseJSON);
+			    }
+				
+			});
+		});
+		/*
+		// 약관 동의 박스
+		$('.terms_box').click(function (){
+			$(this).toggleClass('active');
+		});
+
+		// 전체 동의
+		$('[name=alluseYn]').change(function (){
+			let checked = $(this).is(':checked');
+
+			if (checked){
+				$('[name=useYn]').prop('checked', true);
+				$('[name=useYn2]').prop('checked', true);	
+				return;
+			}else {
+				$('[name=useYn]').prop('checked', false);
+				$('[name=useYn2]').prop('checked', false);	
+				return;
+			}
+		});
+		// 동의 해제하면 전체동의도 해제
+		$('[name=useYn]').change(function (){
+			let checked = $(this).is(':checked');
+
+			if (!checked){
+				return $('[name=alluseYn]').prop('checked', false);	
+			}
+		});
+
+		// 이메일 셀렉트 박스
+		$('#memberEmailSelet').change(function (){
+			$('input[name=memberEmail2').val($(this).val());
+		});
+
+		// 휴대전화 입력 기능
+		$("input:text[numberOnly]").on("keyup", function() {
+			$(this).val( $(this).val().replace(/[^0-9]/g, "").replace(/(^02|^0505|^1[0-9]{3}|^0[0-9]{2})([0-9]+)?([0-9]{4})$/,"$1-$2-$3").replace("--", "-") );
+			// $(this).val($(this).val().replace(/[^0-9]/g,""));
+		});
+
+
+		
+		*/
+		/** 아이디 찾기 */
+		/*
+		$("#frm1").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			if($("input[name='memberNm']", $frm).val() == "") {
+				toast("성명은 필수입력 입니다.");
+				$("input[name='memberNm']", $frm).focus();
+				return;
+			}
+			if($("input[name='memberEmail']", $frm).val() == "") {
+				toast("이메일은 인증번호를 요청하기 위한 필수입력 입니다.");
+				$("input[name='memberEmail']", $frm).focus();
+				return;			
+			}
+			if($("input[name='memberEmail']", $frm).val() != "") {
+				var regExp = /\w+([-+.]\w+)*@\w+([-.]\w+)*\.[a-zA-Z]{2,4}$/;
+				if(!regExp.test($("input[name='memberEmail']").val())){
+					toast("이메일 형식이 올바르지 않습니다.");
+					$("input[name='memberEmail']", $frm).focus();
+					return;
+				}			
+			}
+			// 인증여부
+			if(!cert_switch_frm1){
+				toast("인증이 완료되지 않았습니다");
+				$("input[name='memberEmail']", $frm).focus();
+				return;
+			}
+			$.ajax({
+				type: "post",
+				url: gblAdminPath + "/cms/member/auth/findIdByEmail",
+				data: $frm.serialize(),
+				//contentType: "application/json",
+				contentType: "application/x-www-form-urlencoded", // 왜 이렇게 해야하지? spring-security 설정에 뭐가 있나?
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				console.log(data);
+					toast(data.message);
+			}).fail(function(xhr) {
+				// 정확히 어떤 경우에 들어오는거지?
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message); // toast("입력한 이메일이 회원정보와 일치하지 않습니다.");
+					$("input[name='memberEmail']", $frm).focus();
+				}
+				console.log(xhr.responseJSON);
+			});
+		});
+	
+	*/
+	
+		/** 비밀번호 찾기 */
+		$("#frm2").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			if($("input[name='memberId']", $frm).val() == "") {
+				toast("찾으실 아이디는 필수입력 입니다.");
+				$("input[name='memberId']", $frm).focus();
+				return;
+			}
+			if($("input[name='memberEmail']", $frm).val() == "") {
+				toast("이메일은 인증번호를 요청하기 위한 필수입력 입니다.");
+				$("input[name='memberEmail']", $frm).focus();
+				return;			
+			}
+
+			if($("input[name='memberEmail']", $frm).val() != "") {
+				var regExp = /\w+([-+.]\w+)*@\w+([-.]\w+)*\.[a-zA-Z]{2,4}$/;
+				if(!regExp.test($("input[name='memberEmail']", $frm).val())){					
+					toast("이메일 형식이 올바르지 않습니다.");
+					$("input[name='memberEmail']", $frm).focus();
+					return;
+				}		
+				// 인증여부
+				if(!cert_switch_frm2){
+					toast("인증이 완료되지 않았습니다");
+					$("input[name='memberEmail']", $frm).focus();
+					return;
+				}
+			}
+
+			if($("input[name='certNewPw']", $frm).val() == "") {
+				toast("새 비밀번호은 필수입력입니다.");
+				$("input[name='certNewPw']", $frm).focus();
+				return;			
+			}
+			if($("input[name='certNewPwCheck']", $frm).val() == "") {
+				toast("새 비밀번호 확인은 필수입력입니다.");
+				$("input[name='certNewPwCheck']", $frm).focus();
+				return;			
+			}
+			if($("input[name='certNewPwCheck']", $frm).val() != "" && $("input[name='certNewPwCheck']", $frm).val() != $("input[name='certNewPw']", $frm).val()) {
+				toast("새 비밀번호와 새 비밀번호 확인에 입력하신 정보가 다릅니다.");
+				$("input[name='certNewPwCheck']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: "/admin/cms/member/auth/changePw",
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded", 
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				console.log(data);
+				if(data.code == "0000") {
+					if(data.data.successYn){
+						toast("비밀번호를 성공적으로 변경했습니다.");
+						location.href = "/admin/cms/member/auth/";
+					}else{
+						toast(data.message);
+					}
+				}else{
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				// 정확히 어떤 경우에 들어오는거지?
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+				console.log(xhr.responseJSON);
+			});
+		});
+		
+	});
+</script>
+
+</th:block>
+
+</html>

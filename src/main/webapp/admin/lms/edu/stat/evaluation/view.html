@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<style>
+    .first_info_box {
+        display: flex;
+        width: 100%;
+        height: auto;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .first_info_box .tit_name {
+        flex: 1;
+        width: 100%;
+        font-size: 16px;
+        font-weight: bold;
+        height: auto;
+        line-height: 1;
+    }
+
+    .first_info_box .info {
+        flex: 1;
+        display: flex;
+        width: 100%;
+        height: auto;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 20px;
+        font-size: 16px;
+        font-weight: 500;
+        color: inherit;
+        opacity: 0.8;
+        line-height: 1;
+    }
+
+    .first_info_box .info span {
+        flex: 0 1 auto;
+        display: inline;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .first_info_box .info span.full {
+        flex: 1;
+        width: 100%;
+    }
+
+    .time_split {
+        display: flex;
+        width: 100%;
+        height: auto;
+        gap: 20px;
+        padding: 20px;
+        flex-wrap: wrap;
+    }
+
+    .time_split dl {
+        flex: 1 1 calc(20% - 20px);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        margin: 0;
+    }
+
+    .time_split dl dt {
+        display: flex;
+        width: 100%;
+        height: auto;
+        padding: 16px;
+        align-items: center;
+        justify-content: center;
+        background-color: #78909c;
+        border-radius: 10px 10px 0 0;
+        color: #fff;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .time_split dl:nth-child(1) dt {
+        background-color: #43aceb;
+    }
+
+    .time_split dl:nth-child(2) dt {
+        background-color: #244ea4;
+    }
+
+    .time_split dl:nth-child(3) dt {
+        background-color: #623788;
+    }
+
+    .time_split dl:nth-child(4) dt {
+        background-color: #922c59;
+    }
+
+    .time_split dl:nth-child(5) dt {
+        background-color: #f54545;
+    }
+
+    .time_split dl dd {
+        display: flex;
+        width: 100%;
+        height: auto;
+        padding: 20px;
+        align-items: center;
+        justify-content: center;
+        background-color: #eee;
+        border-radius: 0 0 10px 10px;
+        color: #212121;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .time_split dl dd::after {
+        content: '(회)';
+        display: inline;
+        width: auto;
+        height: auto;
+        font-size: 0.6em;
+        font-weight: 500;
+        color: inherit;
+        opacity: 0.8;
+        margin-left: 4px;
+    }
+
+    /* .time_split dl:first-child {margin-right: 20px;} */
+    /* .time_split dl:first-child::after {content: ''; display: block; width: 1px; height: 100%; background-color: #ccc; position: absolute; right: -20px; top: 0;} */
+
+    .count_wrap {
+        display: flex;
+        width: 100%;
+        height: auto;
+        padding: 20px;
+    }
+
+    .count_wrap .count_box {
+        flex: 1 1 calc(100% / 5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin: 0;
+    }
+
+    .count_wrap .count_box dt {
+        display: flex;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background-color: #3f89eb;
+        color: #fff;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0;
+        box-shadow: 0 5px 10px #ccc;
+    }
+
+    .count_wrap .count_box dd {
+        display: flex;
+        width: auto;
+        height: auto;
+        align-items: center;
+        gap: 4px;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .count_wrap .count_box dd > span {
+        display: inline-block;
+        opacity: 0.8;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
+    .caution {
+        background-color: #ffc244 !important;
+    }
+
+    .danger {
+        background-color: #ee7745 !important;
+    }
+
+    .accident {
+        background-color: #ef2c32 !important;
+    }
+
+    .carelessness {
+        background-color: #9639ef !important;
+    }
+</style>
+
+<script>
+    // Parse time in HH:MM format to minutes
+    function parseTime(time) {
+        var parts = time.split(":");
+        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    }
+
+</script>
+
+<div id="statistics_info_wrap" class="col s12 scroller bg_lightblue h100 pd_box"
+     style="max-height: calc(100vh - 116px); display:block;">
+    <input type="hidden" name="detailIdx" th:value="${req?.detailIdx}">
+    <div class="row">
+        <div class="col s12">
+
+        </div>
+
+        <div class="pd_box border_box">
+            <h5 class="tit_name" th:text="${detailEduInfo.trainTitle}"></h5>
+            <p style="margin-top: 5px;" th:text="|기수 : ${detailEduInfo.eduNumeral}|"></p>
+            <p style="margin-top: 5px;" th:text="|교수자 : ${detailEduInfo.memberNm}|"></p>
+            <p style="margin-top: 5px;" th:text="|만족도조사 : ${detailEduInfo.evSubject}|"></p>
+            <p style="margin-top: 5px;" th:text="|총 훈련자 수 : ${detailEduInfo.evalStudentAllCnt}명|"></p>
+            <p style="margin-top: 5px;" th:text="|총 참여자 수 : ${detailEduInfo.evalStudentPlayCnt}명|"></p>
+        </div>
+
+        <div class="pd_box border_box" style="margin-bottom: 5px; margin-top: 20px;" th:each="val:${evalQsonList}">
+
+            <!-- 객관식 -->
+            <th:block th:if="${val.evqType == 'A'}">
+                <!-- 사후평가 리스트 -->
+                <h5 class="tit_name col s12" th:text="|${val.evqSubject} (정답 : ${val.evqText})|"></h5>
+
+                <div
+                        th:id="|numChartDiv_${val.evqIdx}|"
+                        th:data-evq_idx="${val.evqIdx}"
+                        style="height: 400px; margin-top: 50px;"
+                >
+
+                </div>
+            </th:block>
+
+            <!-- 이외 -->
+            <th:block th:unless="${val.evqType == 'A'}">
+                <!-- 사후평가 리스트 -->
+                <h5 class="tit_name col s12" th:text="|${val.evqSubject} (정답 : ${val.evqAnswer})|"></h5>
+
+                <div class="table_type3" style="width: 100%; margin-top: 30px;">
+                    <table class="striped centered highlight" th:id="|descDataTable_${val.evqIdx}|"
+                           th:data-evq_idx="${val.evqIdx}">
+                        <colgroup>
+                            <!-- NO -->
+                            <col width="5%">
+                            <!-- ID -->
+                            <col width="10%">
+                            <!-- NAME -->
+                            <col width="10%">
+                            <!-- ANSWER -->
+                            <col width="*%">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>아이디</th>
+                            <th>성명</th>
+                            <th>내용</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </th:block>
+        </div>
+    </div>
+</div>
+
+<script>
+    // pieChart data 가져오기
+    function getData(evqIdx, elem) {
+        var detailIdx = $("input[name='detailIdx']").val();
+        $.ajax({
+            url: gblAdminPath + "/lms/poll/stat/chart/getEvalPieChartData?detailIdx=" + detailIdx + "&evqIdx=" + evqIdx,
+            type: "get",
+            dataType: "json",
+            success: function (data) {
+                var rsData = data.data.rsData;
+                drawPieChart(rsData, elem);
+            }, error: function (err) {
+                toastr.error("서버 및 네트워크 오류");
+            }
+        });
+    }
+</script>
+
+<script>
+    // pieChart 그리기
+    function drawPieChart(data, elem) {
+        // setTheme
+        am4core.useTheme(am4themes_animated);
+        am4core.addLicense("CH247864937");
+
+        // Create Chart
+        var chartId = $(elem).attr("id");
+        var chart = am4core.create(chartId, am4charts.PieChart);
+
+        // Add Data
+        chart.data = data;
+        chart.data.forEach(function (val) {
+            if (val.evqdText.split(",").length > 1) {
+                val.evqdText = val.evqdText.replace(",", "\n");
+            }
+        })
+        // Add and configure Series
+        var pieSeries = chart.series.push(new am4charts.PieSeries());
+        pieSeries.dataFields.value = "answerCount";
+        pieSeries.dataFields.category = "evqdText";
+
+        // center hole
+        chart.innerRadius = am4core.percent(40);
+
+        // border
+        pieSeries.slices.template.stroke = am4core.color("white");
+        pieSeries.slices.template.strokeWidth = 1;
+        pieSeries.slices.template.strokeOpacity = 1;
+
+        // legend
+        var legend = new am4charts.Legend();
+        chart.legend = legend;
+        // chart.legend.parent = chart.chartContainer;
+        // chart.legend.align = "right";
+        // chart.legend.position = "right";
+        // chart.legend.width = 300;
+        // chart.legend.minWidth = 300;
+        // chart.legend.maxWidth = 300;
+        chart.legend.data = chart.data;
+        // chart.legend.valueLabels.template.align = "right";
+        // chart.legend.valueLabels.template.textAlign = "end";
+        chart.legend.labels.template.textDecoration = "none";
+        chart.legend.valueLabels.template.textDecoration = "none";
+        chart.legend.valueLabels.template.text = "{answerCount}명";
+
+        chart.legend.scrollable = true;
+    }
+</script>
+
+<script>
+    $(function () {
+        var chartDivElem = $("div[id^='numChartDiv_']");
+        chartDivElem.each(function (idx, elem) {
+            var evqIdx = $(elem).data("evq_idx");
+            getData(evqIdx, elem);
+        });
+
+
+        // 데이터 테이블 생성
+        var tableElem = $("table[id^='descDataTable_']");
+        tableElem.each(function (idx, elem) {
+            var detailIdx = $("input[name='detailIdx']").val();
+            var evqIdx = $(elem).data("evq_idx");
+            $(elem).DataTable({
+                autoWidth: false,
+                lengthChange: false,
+                searching: false,
+                bDestroy: true,
+                bInfo: false,
+                responsive: true,
+                processing: true,
+                ordering: true,
+                select: false,
+                paging: true,
+                pageLength: 5,
+                fixedHeader: {
+                    header: false,
+                    footer: false,
+                },
+                ajax: {
+                    url: gblAdminPath + "/lms/poll/stat/chart/getEvalDescData?detailIdx=" + detailIdx + "&evqIdx=" + evqIdx,
+                    type: "get",
+                    dataType: "json",
+                    dataSrc: "data.rsData"
+                },
+                select: {
+                    style: "multi"
+                },
+                initComplete: function (data, type, row, meta) {
+
+                },
+                columns: [
+                    // No
+                    {
+                        data: null, className: 'dt-body-center', render: function (data, type, row, meta) {
+                            return meta.settings._iDisplayStart + meta.row + 1;
+                        }
+                    },
+                    // 아이디
+                    {
+                        data: "memberId", className: "dt-body-center"
+                    },
+                    // 성명
+                    {
+                        data: "memberNm", className: "dt-body-center"
+                    },
+                    // 내용
+                    {
+                        data: "answer", className: "dt-body-center"
+                    }
+                ]
+            });
+        });
+    });
+</script>
+	

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+	
+<th:block layout:fragment="content">
+<script>
+
+	$(function() {
+		
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+
+		// 추가,수정 폼
+		//dataForm('');
+		
+		// get 파라미터 값 가져오기 - 내정보 수정
+		const url_params = new URL(location.href).searchParams;
+		const param_uidx = url_params.get('userIdx');
+		if(param_uidx){
+			$("#areaForm").load(gblAdminPath + "/cms/member/form?memberIdx=" + param_uidx);
+		}
+		
+	});
+	
+	//화면설계서용 임시 폼페이지 변환
+	function formAdd(){
+        var pdBox = $('.main_box');
+        var areaForm = document.getElementById('areaForm');
+
+        pdBox.removeClass('s12');
+        pdBox.addClass('s8');
+
+        areaForm.classList.add('s4');
+	}
+	
+	
+	// 목록
+	function dataList() {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		var dataT = $('#dataTable').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : false,
+			paging : true,
+			pageLength : 10,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/cms/member/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			
+			initComplete : dataTableInit,
+			columns : [
+				//{ data : 'memberIdx', className : 'dt-body-center' },
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'memberId', className : 'dt-body-center' },
+				{ data : 'memberNm', className : 'dt-body-center' },
+				{ data : 'insertDate', className : 'dt-body-center' ,render: $.fn.dataTable.render.datetime() },
+				{ data : 'updateDate', className : 'dt-body-center',render: $.fn.dataTable.render.datetime() },
+				{ data : 'loginDate', className : 'dt-body-center' ,render: $.fn.dataTable.render.datetime() },
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						
+						var txt = null;
+						if(row.memberApproval == 'y'){
+							return `<i class="material-icons green-text">check_circle</i>`;
+						}else{
+							return `<i class="material-icons red-text">remove_circle</i>`;
+						}
+					}
+				},
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `
+							<button onclick="dataForm(${row.memberIdx},this);" class="waves-effect waves-light btn teal accent-4 z-depth-0"><i class="material-icons left">edit</i>수정</button>
+							<button onclick="dataDelete(${row.memberIdx}, '회원');" class="waves-effect waves-light btn z-depth-0 red"><i class="material-icons left">delete</i>삭제</button>
+						`;
+					}
+				},
+				//삭제
+				// {
+				// 	data : null, searchable : false, orderable : false, className : 'dt-body-center',
+				// 	render : function(data, type, row, meta) {
+				// 		return `<button onclick="dataDelete(${row.memberIdx}, '회원');" class="waves-effect waves-light btn z-depth-0 red"><i class="material-icons left">delete</i>삭제</button>`;
+				// 	}
+				// },
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count()+'건');
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+	// 삭제
+	function dataDelete(memberIdx, title) {
+		if (!memberIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : title + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/cms/member/delete',
+						type : 'get',
+						data : {
+							'memberIdx' : memberIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							dataForm('');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+
+	// 추가,수정 폼
+	function dataForm(memberIdx,ts) {
+		formAdd(); //화면설계서용 임시 폼페이지 변환
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+		
+		$("#areaForm").load(gblAdminPath + "/cms/member/form?memberIdx=" + memberIdx);
+	}
+</script>
+
+<div class="row">
+	<div class="col s12 sideline pd_box main_box"><!--s8>s12 임시-->
+		<div class="basic">
+			<div class="basic_top_searchbox left">
+				<div class="row">
+					<form id="frmList" method="get">
+						<!-- 검색창 -->
+						<div class="col search_bar">
+							<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+							<input id="scMemberRole" name="scMemberRole" type="hidden" value="ROLE_ADMIN_LMS">
+							
+							<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+									<i class="material-icons md-18 left">search</i> 검색
+							</button>
+							<div class="title left">
+								전체 : <b id="dataTableTotCnt">0건</b>
+							</div>
+						</div>
+					</form>
+					<div class="btn_infolist right">
+						<button onclick="dataForm('')" class="waves-effect waves-light btn cyan accent-4 z-depth-0 left">
+							<i class="material-icons left">create</i>등록
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="table_type3">
+				<table id="dataTable" class="striped centered highlight">
+					<colgroup>
+						<col width="80px">
+						<col width="140px">
+						<col width="140px">
+						<col width="140px">
+						<col width="140px">
+						<col width="140px">
+						<col width="100px">
+						<col width="180px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>번호</th>
+							<th>아이디</th>
+							<th>성명</th>
+							<th>등록일시</th>
+							<th>수정일시</th>
+							<th>최종로그인</th>
+							<th>승인여부</th>
+							<th>비고</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+			
+	<div id="areaForm" class="col scroll_defalt pd_box areaForm"> 
+		<!--s4 임시제거-->
+	</div>
+</div>
+</body>
+</html>

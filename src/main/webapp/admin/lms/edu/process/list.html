@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+<script>
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+	});
+	
+	// 목록
+	function dataList() {
+		$('#dataTable').DataTable({
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/edu/process/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			order : [0,'desc'],
+			initComplete : dataTableInit,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'scenario', className : 'dt-body-center' },
+				{ data : 'moduleCd', className : 'dt-body-center' },
+				{ data : 'step', className : 'dt-body-center' },
+				{
+					data : null, searchable : false, orderable : true, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						var workRole = row.workRole;
+						if(row.workRole == '1'){
+							workRole = "주작업자";
+						}else if(row.workRole == '2'){
+							workRole = "보조작업자";
+						}else if(row.workRole == '3'){
+							workRole = "지상작업자";
+						}else if(row.workRole == '4'){
+							workRole = "작업책임자";
+						}
+						return workRole;
+					}
+				},
+				
+				{ data : 'taskTool', className : 'dt-body-center' },
+				{ data : 'processContents', className : 'dt-body-left' },
+				
+// 				{ data : 'memberNm', className : 'dt-body-center' },
+// 				{ data : 'updateDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+// 				{ data : 'insertDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+				//기능
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `
+							<button onclick="dataForm(${row.processIdx}, this);" class="waves-effect waves-light btn teal accent-4" i-guide="4" i-guide-title="" i-guide-text=""><i class="material-icons left">edit</i>수정</button>
+							<button onclick="dataDeleteAtList(${row.processIdx}, '절차');" class="waves-effect waves-light btn red" i-guide="5" i-guide-title="" i-guide-text=""><i class="material-icons left">delete</i>삭제</button>
+						`;
+					}
+				},
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		// 가이드 활성화
+		// user_guide_flow();
+	}
+	
+	// 추가,수정 폼
+	function dataForm(processIdx, ts) {
+		
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+
+		if (processIdx==undefined) {
+			processIdx = '';
+		}
+		
+		$.ajax({
+			url: gblAdminPath + "/lms/edu/process/form?processIdx=" + processIdx,
+			type: 'GET',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal6').html(data);
+			var pop_modal_contents = $("#pop_modal6").modal({
+				complete: function() {
+				}
+			});
+		
+			pop_modal_contents.modal('open');
+			$('#pop_modal6').css({'min-height':'150px', 'height':'auto', 'min-width':'600px', 'width':'20%', 'top':'30%'});
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+	
+	// 절차 삭제
+	function dataDeleteAtList(processIdx, title) {
+		if (!processIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : title + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/lms/edu/process/delete',
+						type : 'get',
+						data : {
+							'processIdx' : processIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							//dataForm('');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+	
+</script>
+
+
+	<div>
+		<div class="row">
+			<!-- // 그룹 -->
+			<div class="col s12 pd_box">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<form id="frmList" method="get">
+							<div class="row">								
+								<input type="hidden" name="sessionMemberIdx" th:value="${session.memberIdx}" />
+								<input type="hidden" name="sessionMemberRole" th:value="${session.memberRole}" />
+								<!-- 검색 -->
+								
+								<div class="input-field col s12 m6 l2 xl1 select_m0">
+									<label for="scModuleCd" class="">모듈코드</label>
+									<input name="scModuleCd" type="text" th:value="${param?.scModuleCd}" placeholder="">
+								</div>
+								
+								<div class="input-field col s12 m6 l2 xl1 select_m0">
+									<label for="scWorkRole" class="">역할</label>
+									<select name="scWorkRole">
+										<option value="">전체</option>
+										<option th:each="workRoleCode : ${workRoleCodeList}" th:value="${workRoleCode?.code}" th:utext="${workRoleCode?.codeNm}" th:selected="${workRoleCode?.code} == ${param?.scWorkRole}"></option>
+									</select>
+								</div>
+								
+								<!-- 검색창 -->
+								<div class="col s12 m12 l6 xl6 search_bar">
+									<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="절차내용">
+									
+									<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+	 									<i class="material-icons md-18 left">search</i> 검색
+									</button>
+									<div class="title left">
+										전체 : <b id="dataTableTotCnt">0</b>
+									</div>
+								</div>
+								<div class="right">
+									<div class="input-field col select_m0">
+										<button type="button" onclick="dataForm('')" class="waves-effect waves-light btn cyan left" i-guide="2" i-guide-title="콘텐츠 - 등록" i-guide-text="콘텐츠 기본정보(콘텐츠명, 훈련구분, 훈련분야, 훈련키워드)와 <strong class='color'>모듈을 조합하여 등록</strong>합니다.<br><strong class='color'>모듈의 구성과 순서에 따라 콘텐츠가 진행되기 때문에 순서에 유의</strong>하여 등록해주시기 바랍니다.">
+											<i class="material-icons left">add_box</i>등록
+										</button>										
+									</div>
+								</div>
+								<span class="desc">
+									<p>
+										훈련의 절차 목록 조회[훈련 구성 : <strong>절차</strong> > 모듈 > 콘텐츠]
+									</p>
+								</span>
+							</div>
+						</form>
+					</div>
+					<div class="table_type3">
+						<table id="dataTable" class="striped centered highlight" i-guide="" i-guide-title="" i-guide-text="" style="min-width:1600px">
+							<colgroup>
+								<col width="80px">
+								<col width="120px">
+								<col width="120px">
+								<col width="100px">
+								<col width="120px">
+								<col width="120px">
+								<col width="auto">
+								<col width="180px">
+							</colgroup>
+							<thead>
+								<tr>
+									<th>NO</th>
+									<th>시나리오코드</th>
+									<th>모듈코드</th>
+									<th>절차단계</th>
+									<th>역할</th>
+									<th>작업도구</th>
+									<th>절차내용</th>
+									<th>비고</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>	
+</body>
+</html>

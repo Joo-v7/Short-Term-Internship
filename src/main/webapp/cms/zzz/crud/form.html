@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<script>
+function dataDelete(crudIdx) {
+	return;
+}
+</script>
+</head>
+<body>
+
+<form method="post" action="/zzz/crud/save">
+	<input th:if="${row?.crudIdx != null}" type="hidden" name="userIdx" id="userIdx" th:value="${row?.crudIdx}" />
+	이름 : <input type="text" name="userNm" id="userNm" th:value="${row?.userNm}" /><br/>
+	이메일 : <input type="text" name="userEmail" id="userEmail" th:value="${row?.userEmail}" /><br/>
+	나이 : <input type="text" name="userAge" id="userAge" th:value="${row?.userAge}" /><br/>
+	생년월일 : <input type="text" name="userBirth" id="userBirth" th:value="${row?.userBirth}" /><br/>
+	
+	남<input type="radio" name="userGender" id="userGender_1" value="1" th:checked="${row?.userGender eq 'm'}">
+	여<input type="radio" name="userGender" id="userGender_2" value="2" th:checked="${row?.userGender eq 'f'}"><br/>
+	
+	
+	가입일 : [(${row?.insertDate})]
+	
+	<input type="submit" value="저장" />
+</form>
+
+<button th:onclick="|dataDelete(${row?.crudIdx})|">삭제</button>
+
+<a href="list">목록</a>
+
+</body>
+</html>

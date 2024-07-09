@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.EduMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey1)">
+				AND category_idx = #{scKey1}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey2)">
+				AND edu_state = #{scKey2}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					edu_title LIKE CONCAT ('%',#{scWord},'%') 
+				) 
+				OR (SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx AND a.delete_yn = 'n') LIKE CONCAT('%',#{scWord},'%')
+				OR (SELECT category_nm FROM lms_edu_category c WHERE c.category_idx = a.category_idx AND a.delete_yn = 'n') LIKE CONCAT('%',#{scWord},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eduIdx)">
+				AND edu_idx = #{eduIdx}
+			</if>
+<!--			<if test="@kepco.util.StrUtil@getContextPath() eq 'ADMIN' and @kepco.util.StrUtil@getUserRole() eq 'ADMIN'">-->
+<!--				<bind name="memberIdx" value="@kepco.util.StrUtil@getSessionIdx()"/>-->
+<!--				AND insert_idx = #{memberIdx}-->
+<!--			</if>-->
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.EduVo">
+		SELECT
+			a.*,
+			(SELECT member_nm FROM cms_member b WHERE b.member_idx = a.member_idx ) memberNm,
+			(SELECT category_nm FROM lms_edu_category b WHERE b.category_idx = a.category_idx) eduCateNm,
+			(SELECT COUNT(1) FROM lms_edu_pack b WHERE b.edu_idx = a.edu_idx ) moduleCnt,
+            (SELECT COUNT(1) FROM lms_edu_detail b WHERE b.delete_yn = 'n' AND b.edu_idx = a.edu_idx) detailCnt
+            
+		FROM lms_edu a
+			<include refid="selectWhere"/>
+			<if test="!@kepco.util.StrUtil@isBlank(type)">
+				AND edu_state  = 2
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(lms)">
+				AND edu_state  = 2
+			</if>
+		ORDER BY
+		<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(lms)">
+				edu_idx DESC
+			</when>
+			<otherwise>
+				edu_idx ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.EduVo">
+		SELECT 
+			*,
+			(SELECT member_nm FROM cms_member b WHERE a.member_idx = b.member_idx) member_nm,
+			(SELECT category_nm FROM lms_edu_category f WHERE f.category_idx = a.category_idx ) eduCateNm,
+			(SELECT COUNT(1) FROM lms_edu_pack b WHERE b.edu_idx = a.edu_idx ) moduleCnt,
+            (SELECT COUNT(1) FROM lms_edu_detail b WHERE b.delete_yn = 'n' AND b.edu_idx = a.edu_idx) detailCnt
+		FROM lms_edu a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.EduVo" useGeneratedKeys="true" keyProperty="eduIdx" keyColumn="eduIdx">
+		INSERT INTO lms_edu (
+			member_idx,edu_title,edu_category,category_idx,edu_type,edu_keyword,edu_module,edu_state,
+			attachment_file_name, attachment_file_origin,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{memberIdx},#{eduTitle},#{eduCategory},#{categoryIdx},#{eduType},#{eduKeyword},#{eduModule},#{eduState},
+			#{attachmentFileName}, #{attachmentFileOrigin},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.EduVo">
+		UPDATE lms_edu
+		<set>
+			member_idx = #{memberIdx},
+			edu_title = #{eduTitle},
+			edu_category = #{eduCategory},
+			category_idx = #{categoryIdx},
+			edu_type = #{eduType},
+			edu_keyword = #{eduKeyword},
+			edu_module = #{eduModule},
+			edu_state = #{eduState},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND edu_idx = #{eduIdx}
+	</update>
+	
+	<update id="fileUpdate" parameterType="kepco.lms.edu.EduVo">
+		UPDATE lms_edu
+		<set>
+			attachment_file_name = #{attachmentFileName},
+			attachment_file_origin = #{attachmentFileOrigin},
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND edu_idx = #{eduIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.edu.EduVo">
+		UPDATE lms_edu
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND edu_idx = #{eduIdx}
+	</update>
+	
+	<select id="myListSelect" parameterType="int" resultType="egovMap">
+	    SELECT
+	        a.regist_idx, a.detail_idx, a.team_idx, a.regist_state, a.regist_date, a.edu_state, a.edu_date,
+	        b.edu_numeral, b.edu_image1, b.edu_image2, b.edu_desc, b.edu_goal, b.edu_target, b.edu_criteria, b.edu_limit_cnt, b.edu_file1,
+	        b.edu_accept_bgn_date, b.edu_accept_bgn_time, b.edu_accept_end_date, b.edu_accept_end_time, b.edu_train_bgn_date, b.edu_train_end_date,
+	        b.detail_state, b.po_idx, c.edu_title, c.edu_keyword, c.edu_category, d.edu_pack_count, d.module_time_sum, b.ev_idx,
+	        cc.poqr_idx, cc.poqr_insert_date, dd.evqr_idx, dd.evqr_insert_date,
+	        b.train_title,
+	        (
+	            SELECT member_nm
+	            FROM cms_member f
+	            WHERE f.member_idx = b.teacher_idx
+	        ) AS teacherNm,
+	        (
+	            SELECT category_nm
+	            FROM lms_edu_category f
+	            WHERE f.category_idx = c.category_idx
+	        ) AS eduCateNm
+	    FROM
+	        lms_edu_regist a
+	        LEFT JOIN lms_edu_detail b ON a.detail_idx = b.detail_idx
+	        LEFT JOIN lms_edu c ON b.edu_idx = c.edu_idx
+	        LEFT JOIN (
+	            SELECT edu_idx, COUNT(1) AS edu_pack_count, SUM(module_time) AS module_time_sum
+	            FROM lms_edu_pack aa
+	            LEFT JOIN lms_edu_module bb ON aa.module_idx = bb.module_idx
+	            GROUP BY edu_idx
+	        ) d ON b.edu_idx = d.edu_idx
+	        LEFT JOIN lms_poll_qson_review cc ON b.po_idx = cc.po_idx AND b.detail_idx = cc.detail_idx
+	        LEFT JOIN lms_evaluation_qson_review dd ON b.ev_idx = dd.ev_idx AND b.detail_idx = cc.detail_idx
+	    WHERE a.member_idx = #{memberIdx} AND a.delete_yn = 'n'
+	    GROUP BY regist_idx
+	    ORDER BY a.insert_date DESC
+	</select>
+	
+	<select id="myPlayListSelect" parameterType="int" resultType="egovMap">
+	    SELECT
+			p.play_idx, 
+			b.detail_idx,
+	        b.edu_numeral, b.edu_image1, b.edu_image2, b.edu_desc, b.edu_goal, b.edu_target, b.edu_criteria, b.edu_limit_cnt, b.edu_file1,
+	        b.edu_accept_bgn_date, b.edu_accept_bgn_time, b.edu_accept_end_date, b.edu_accept_end_time, b.edu_train_bgn_date, b.edu_train_end_date,
+	        b.detail_state, b.po_idx, c.edu_title, c.edu_keyword, c.edu_category, d.edu_pack_count, d.module_time_sum, b.ev_idx,
+	        cc.poqr_idx, cc.poqr_insert_date, dd.evqr_idx, dd.evqr_insert_date,
+	        b.train_title,
+	        pp.po_play_idx, 
+	        ep.ev_play_idx,
+	        
+	        
+	        (
+	            SELECT member_nm
+	            FROM cms_member f
+	            WHERE f.member_idx = b.teacher_idx
+	        ) AS teacherNm,
+	        (
+	            SELECT category_nm
+	            FROM lms_edu_category f
+	            WHERE f.category_idx = c.category_idx
+	        ) AS eduCateNm
+	    FROM
+	    	lms_edu_play p
+	        LEFT JOIN lms_edu_detail b ON b.detail_idx = p.detail_idx
+	        LEFT JOIN lms_edu c ON b.edu_idx = c.edu_idx
+	        LEFT JOIN (
+	            SELECT edu_idx, COUNT(1) AS edu_pack_count, SUM(module_time) AS module_time_sum
+	            FROM lms_edu_pack aa
+	            LEFT JOIN lms_edu_module bb ON aa.module_idx = bb.module_idx
+	            GROUP BY edu_idx
+	        ) d ON b.edu_idx = d.edu_idx
+	        LEFT JOIN lms_poll_qson_review cc ON b.po_idx = cc.po_idx AND b.detail_idx = cc.detail_idx
+	        LEFT JOIN lms_evaluation_qson_review dd ON b.ev_idx = dd.ev_idx AND b.detail_idx = cc.detail_idx
+	        LEFT JOIN lms_poll_play pp ON p.detail_idx = pp.detail_idx AND p.member_idx = pp.member_idx
+	        LEFT JOIN lms_evaluation_play ep ON p.detail_idx = ep.detail_idx AND p.member_idx = ep.member_idx
+	        
+	    WHERE p.member_idx = #{memberIdx}
+	    GROUP BY p.play_idx
+	    ORDER BY p.play_idx DESC
+	</select>
+	
+	<!-- 	신청 승인, 완료 목록 -->
+	<select id="myApplyListSelect"  parameterType="int" resultType="egovMap">
+		select a.regist_idx, a.detail_idx, a.team, a.regist_state, a.regist_date, a.edu_state, a.edu_date, 
+		b.edu_numeral, b.edu_image1, b.edu_image2, b.edu_desc, b.edu_goal, b.edu_target, b.edu_criteria, b.edu_limit_cnt, b.edu_file1,
+		b.edu_accept_bgn_date, b.edu_accept_bgn_time, b.edu_accept_end_date, b.edu_accept_end_time, b.edu_train_bgn_date, b.edu_train_end_date,
+		b.detail_state, po_idx, c.edu_title, c.edu_keyword, c.edu_category, d.edu_pack_count, d.module_time_sum,
+		b.train_title,
+		(SELECT member_nm FROM cms_member f WHERE f.member_idx = b.teacher_idx ) teacherNm,
+		(SELECT category_nm FROM lms_edu_category f WHERE f.category_idx = c.category_idx ) eduCateNm
+		from lms_edu_regist a
+		left join lms_edu_detail b
+		on a.detail_idx = b.detail_idx
+		left join lms_edu c
+        on b.edu_idx = c.edu_idx
+        left join (select edu_idx, count(1) edu_pack_count, sum(module_time) module_time_sum from lms_edu_pack aa
+		left join lms_edu_module bb
+		on aa.module_idx = bb.module_idx  GROUP by edu_idx) d
+		on b.edu_idx = d.edu_idx
+		where a.member_idx = #{memberIdx} 
+		AND a.regist_state != '3'
+		group by regist_idx
+	</select>
+	
+	<!-- 	신청 승인, 완료 목록 (교수자) -->
+	<select id="myApplyListSelect2"  parameterType="int" resultType="egovMap">
+		select b.detail_idx, b.edu_numeral, b.edu_image1, b.edu_image2, b.edu_desc, b.edu_goal, b.edu_target, b.edu_criteria, b.edu_limit_cnt, b.edu_file1,
+		b.edu_accept_bgn_date, b.edu_accept_bgn_time, b.edu_accept_end_date, b.edu_accept_end_time, b.edu_train_bgn_date, b.edu_train_end_date,
+		b.detail_state, po_idx, c.edu_title, c.edu_keyword, c.edu_category, d.edu_pack_count, d.module_time_sum,
+		b.train_title,
+		(SELECT member_nm FROM cms_member f WHERE f.member_idx = b.teacher_idx ) teacherNm,
+		(SELECT category_nm FROM lms_edu_category f WHERE f.category_idx = c.category_idx ) eduCateNm
+		from lms_edu_detail b
+		left join lms_edu c
+        on b.edu_idx = c.edu_idx
+        left join (select edu_idx, count(1) edu_pack_count, sum(module_time) module_time_sum from lms_edu_pack aa
+		left join lms_edu_module bb
+		on aa.module_idx = bb.module_idx  GROUP by edu_idx) d
+		on b.edu_idx = d.edu_idx
+		where b.delete_yn = 'n'
+		and b.teacher_idx = #{memberIdx}
+		AND b.detail_state = '2'
+		AND b.edu_train_end_date > CURRENT_TIMESTAMP
+	</select>
+</mapper>

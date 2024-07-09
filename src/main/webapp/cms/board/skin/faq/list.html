@@ -1,0 +1,251 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<link rel="stylesheet" href="/assets/css/board.css">
+
+<link href="/assets/css/jquery-confirm.min.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/jquery-confirm.min.js"></script>
+
+<link href="/assets/libs/jquery-ui/jquery-ui.min.css" type="text/css" rel="stylesheet">
+<script src="/assets/libs/jquery-ui/jquery-ui.js"></script>
+
+<script src="/assets/libs/jquery-form/jquery.form.min.js"></script>
+
+<style>
+.t_num {width: 100px;}
+.t_date {width: 250px;}
+.t_title {width: calc(100% - 810px);}
+.t_user {width: 200px;}
+.t_file {width: 160px;}
+.t_hit {width: 100px;}
+
+
+#board_list_faq{font-size:16px;line-height:30px;width:100%;height:auto;overflow:hidden}
+#board_list_faq ul{margin:0;padding:0;list-style:none}
+#board_list_faq .faq_top{text-align:right;padding-bottom:10px}
+#board_list_faq .faq_top button{background:#5e6971;border:1px solid #485158;text-align:center;padding:8px 10px;color:#fff;letter-spacing:-1px;font-size:14px;cursor:pointer;
+	behavior: url(/pages/headquarter/js/PIE.htc);}
+#board_list_faq .faq_top button:hover{background:#485158}
+#board_list_faq .q{cursor:pointer;margin:4px 0;border:1px solid #ddd;display:block;float:left;width:100%;box-sizing:border-box;}
+#board_list_faq .q:hover{border:1px solid #ddd;background:url("./img/faq_arrow.png") right top no-repeat}
+#board_list_faq .q a.trigger{display:block;padding:13px 20px;font-weight:400;text-align:left;text-decoration:none !important;font-size:17px;letter-spacing:-1px}
+#board_list_faq .hides .q a.trigger{font-weight:700;background:url("./img/faq_arrow.png") right top no-repeat}
+#board_list_faq .q a.trigger:hover,
+#board_list_faq .q a.trigger:active,
+#board_list_faq .q a.trigger:focus{font-weight:700;background:url("./img/faq_arrow.png") right top no-repeat}
+#board_list_faq .q a.trigger:hover{background:url("./img/faq_arrow.png") right top no-repeat}
+#board_list_faq .a ul li a{font-weight:600;color:#2e95d2}
+
+
+#board_list_faq .a{background:#1e1e1e; margin:0 auto;overflow:hidden;padding:20px 0 20px 0px;line-height:25px;letter-spacing:-1px;box-sizing:border-box;
+	width:100%;border:1px solid #ddd;margin-bottom:25px;padding:20px}
+#board_list_faq .a p{padding:0 20px 0 0;font-size:17px;line-height:30px}
+#board_list_faq .a img{text-align:center;margin:0 auto}
+#board_list_faq	.title_q{font-weight:800;padding-right:5px;font-size:15px;color:#71b9c5}
+#board_list_faq	.title_a{font-weight:800;padding-right:5px;font-size:15px;color:#ffae00}
+#board_list_faq .a .btn_area{padding:10px 0;width:100%;display:block;text-align:right}
+#board_list_faq .q input{margin-right:5px}
+
+#board_list_faq .article.show .q a.trigger{background:url("./img/faq_arrow.png") right -56px no-repeat;}
+
+
+</style>
+<div class="sub-container">
+
+<!-- 게시판 검색 영역 -->
+<div id="board_search">
+	<div class="board_search_form text-center">
+		<form id="board_search_form" action="" method="get">
+			<input type="hidden" name="site" th:value="${req?.site}"/>	 
+			<input type="hidden" name="mn" th:value="${req?.mn}"/> 
+			<input type="hidden" name="boardId" th:value="${req?.boardId}"/> 
+			<input type="hidden" name="pageNum" th:value="${req?.pageNum}"/> 
+			<div class="input_box select float-none input_category">
+				<select name="scKey" title="검색분류" id="board_select_label" class="select_type">
+					<option value="title" th:selected="title == ${req.scKey}">제목</option>
+					<option value="content" th:selected="content == ${req.scKey}">내용</option>
+					<option value="name" th:selected="name == ${req.scKey}">작성자</option>
+				</select>
+			</div>
+			<div class="input_box search float-none">
+				<input type="text" title="검색어" name="scWord" id="search_keyword" class="search_keyword input_type" th:value="${req?.scWord}"/> 
+				<input type="submit" value="검색" title="검색" class="btn_serach">
+			</div>
+		</form>
+	</div>
+</div>
+<!-- //게시판 검색 영역 -->
+
+
+<div id="list_total_count">
+	전체 : <strong th:text="${list?.total}"></strong>,
+	페이지 : <strong id="page_num" th:text="${list.pageNum}"></strong>/<span th:text="${#numbers.formatInteger(list.total, 1, 'COMMA')}"></span>
+	
+</div>
+<div id="board_list_faq">
+	<div class="faq_top">
+		<button type="button" class="trigger"><span>답변 모두 여닫기</span></button>
+	</div>
+	<ul>
+		 <li class="article hides" th:each="vo, voStatus: ${list}">
+			<p class="q">
+				<a href="#" class="trigger no_link" th:text="${vo.postTitle}"></a>
+			</p>
+			
+			<div class="a" style="display: none;">
+							
+				<span th:utext="${vo?.postContent}"></span>
+								
+				<div id="board_btn" class="mt20" th:if="${vo.insertIdx == memberIdx or boardPermission.isBoardAdmin}">
+					<div class="fl">
+						<a href="#" id="delete_btn" class="button_type4" th:onclick="dataDelete([[${vo.postIdx}]],'게시물');">삭제</a>
+					</div>
+					<div class="fr">
+						<span><a class="button_type1"th:href="@{/cms/board/post/form/?site=kepco&type=form(mn = ${req?.mn}, boardId=${req?.boardId}, postIdx=${vo.postIdx})}">수정</a></span>
+					</div>
+				</div>
+			</div>
+			
+		</li>
+	</ul>
+</div>
+<script th:inline="javascript">
+
+set_faq();
+
+//삭제
+function dataDelete(postIdx, title) {
+	if (!postIdx) {
+		toast('잘못된 접근입니다.');
+		return false;
+	}
+	$.confirm({
+		theme : 'supervan',
+		title : title + ' 삭제',
+		content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+		buttons : {
+			확인 : function() {
+				$.ajax({
+					url	: '/cms/board/post/delete',
+					type : 'get',
+					data : {
+						'postIdx' : postIdx
+					},
+					dataType : 'json',
+				}).done(function(data) {
+					if(data.code == 0) {
+						alert("삭제되었습니다.");
+						let boardId = /*[[${req.boardId}]]*/ 0;
+						let mn = /*[[${req.mn}]]*/ 0;
+						let site = /*[[${req.site}]]*/ "";
+						let pageNum = /*[[${req.pageNum}]]*/ 1;
+						let scKey = /*[[${req.scKey}]]*/ "";
+						let scWord = /*[[${req.scWord}]]*/ "";
+							
+						location.href="/cms/board/post/list/?site="+site+"&mn="+mn+"&boardId="+boardId+"&pageNum="+pagenum+"&scKey="+sckey+"&scWord="+scword;
+					}
+					else {
+						alert(data.message);
+					}
+				}).fail(function() {
+					alert('시스템 오류로 처리할 수 없습니다.');
+				});
+			},
+			취소 : function() {
+			}
+		}
+	});
+}
+	
+function set_faq(){
+	var article = $('#board_list_faq .article');
+	article.addClass('hides');
+	article.find('.a').slideUp(100);
+
+	$('#board_list_faq .article .trigger').click(function(){
+		var myArticle = $(this).parents('.article:first');
+		if(myArticle.hasClass('hides')){
+			article.addClass('hides').removeClass('show');
+			article.find('.a').slideUp(100);
+			myArticle.removeClass('hides').addClass('show');
+			myArticle.find('.a').slideDown(100);
+			return false;
+		} else {
+			myArticle.removeClass('show').addClass('hides');
+			myArticle.find('.a').slideUp(100);
+		 return false;
+		}
+	 return false;
+	});
+
+	$('#board_list_faq .faq_top .trigger').click(function(){
+		var hidden = $('#board_list_faq .article.hides').length;
+		if(hidden > 0){
+			article.removeClass('hides').addClass('show');
+			article.find('.a').slideDown(100);
+			return false;
+		} else {
+			article.removeClass('show').addClass('hides');
+			article.find('.a').slideUp(100);
+			return false;
+		}
+		return false;
+	});
+}
+</script>
+	
+	<div id="paginate_complex" class="mt20 clear" th:if="${!#lists.isEmpty(list)}">
+			<p class="btn_page">
+			
+				<a 
+				class="first_back" 
+				th:classappend="${list.pageNum == 1} ? 'anchor_disabled'"
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=1, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">처음페이지</span>
+				</a>
+				
+				<a 
+				class="prev_back"
+				th:classappend="${list.pageNum == 1} ? 'anchor_disabled'" 
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pageNum-1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">이전페이지</span>
+				</a>
+				
+				<a th:each="i : ${#numbers.sequence(1, list.pages)}"
+				th:if="${i >= list.pageNum - 2 && i <= list.pageNum + 2}"
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${i}, scKey=${req.scKey}, scWord=${req.scWord})}"
+				th:text="${i}"
+				th:classappend="${list.pageNum == i} ? 'on'"
+				>
+				</a>
+				
+				<a 
+				class="next_back"
+				th:classappend="${list.pageNum >= list.pages} ? 'anchor_disabled'" 
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pageNum+1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">다음페이지</span>
+				</a>
+				
+				
+				<a 
+				class="last_back" 
+				th:classappend="${list.pageNum >= list.pages} ? 'anchor_disabled'"
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pages}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">마지막페이지</span>
+				</a>
+				
+			</p>
+		</div>
+		<div th:if="${boardPermission.write}" class="board_btn clear">
+			<div class="fr mt20">
+				<a class="go_list"
+				th:href="@{/cms/board/post/form(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}">쓰기
+				</a>
+			</div>
+		</div>
+		
+</th:block>

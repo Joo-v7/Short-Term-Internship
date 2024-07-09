@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+
+<style>
+	
+	li.collection-item:not(.nohover):hover{background-color:#ddd}
+	
+	div.notice_title{line-height:21px;letter-spacing:-.02em;margin: 10px;}
+</style>
+
+	<form id="frmForm" name="frmForm" method="post" th:action="@{/{adminPath}/cms/board/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+		<input type="hidden" name="boardIdx" id="boardIdx" th:value="${vo?.boardIdx} ? ${vo?.boardIdx} : ''" />
+		<div class="top pop-title">
+			<div class="row pd_box2">
+				<div class="col s12">
+					<a href="#" onclick="side_close('#side_view');" class="btn grey lighten-1 waves-effect waves-light" name="action"><i class="material-icons">clear</i></a>
+					<div class="float_r">
+<!-- 	삭제버튼		<a class="btn waves-effect z-depth-0 red lighten-1 " onclick="get_bbs_config_delete('18', '테스트 삭제'); return false;"><i class="material-icons left">delete</i>삭제</a> -->
+						<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장 <i class="material-icons left">check</i></button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<ul id="main_tabs" class="tabs row">
+				<li class="tab col s3 m3 l3 xl3"><a href="#default_info">기본정보</a></li>
+				<li class="tab col s3 m3 l3 xl3"><a href="#use_setting">사용여부</a></li>
+				<li class="tab col s3 m3 l3 xl3"><a href="#addition">부가옵션</a></li>
+				<li class="tab col s3 m3 l3 xl3"><a href="#skin_setting">스킨설정</a></li>
+			</ul>
+		</div>
+		<div class="row pd_box">
+			<div class="row">
+				<div class="input-field col s12 m6 l3 xl3">
+					<select id="siteIdx" name="siteIdx" class="req active">
+						<option value="" >전체</option>
+						<option th:each="svo : ${siteList}" th:value="${svo?.siteIdx}" th:utext="${svo?.siteNm}" th:selected="${svo?.siteIdx} == ${vo?.siteIdx}" >[[${svo?.siteNm}]]</option>
+					</select>
+					<label for="siteIdx" class="req active">사이트</label>
+				</div>
+				<div class="input-field col s12 m6 l4 xl4">
+					<label for="boardName" class="req active">게시판명</label>
+					<input type="text" name="boardName" id="boardName" th:value="${vo?.boardName}" placeholder="게시판명"/>
+				</div>
+				<div class="input-field col s12 m12 l5 xl5">
+					<label for="boardId" class="req active">게시판 아이디</label>
+					<input type="text" name="boardId" id="boardId" th:value="${vo?.boardId}"  onkeyup="$(this).val(input_regexp(this,/[0-9a-z.;\_]/))" placeholder="게시판 아이디"/>
+				</div>
+			</div>
+			
+			<!-- 기본정보 -->
+			<div id="default_info" class="row ">
+				<div class="border_view_con">
+					<!--
+					<div class="row">
+						 <textarea name="boardUseCateTree" id="boardUseCateTree" cols="30" rows="10" style="display: none"></textarea>
+						<div class=" col s12 m12 l2 mt0">
+							<div> 
+								<label for="boardUseCate">카테고리</label>
+								<div class="check_list_box col s12">
+									<input type="checkbox" name="boardUseCate" id="boardUseCate" th:value="${vo?.boardUseCate}" th:checked="${vo?.boardUseCate eq 'y'}">
+									<span>사용</span>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col s12 m12 l10">
+							<div id="tree_menu" class="tree_box"></div>
+						</div>
+					</div>
+					-->
+					<div class="row">
+						<div class="input-field col s12">
+							<label for="boardId" class="active">게시판 관리자 아이디</label>
+							<input type="text" name="boardAdminMemberId" id="boardAdminMemberId" th:value="${vo?.boardAdminMemberId}" placeholder="게시판 관리자의 아이디를 쉼표(,)로 구분하여 지정"/>
+						</div>
+					</div>
+					
+					<div class="row">
+						<div class="col s12">
+							<label for="">권한</label>
+							<!--
+							<div class="notice_title"><i class="material-icons left">sms_failed</i> 모든 항목 미체크시 모든 사용자에게 허용되며, 체크시 해당되는 사용자만 접근가능합니다.</div>
+							<div class="notice_title"><i class="material-icons left">sms_failed</i> 비밀글의 경우 답변권한이 있는 등급이면 볼 수 있습니다.</div>
+							-->
+							<div class="notice_title"><i class="material-icons left">sms_failed</i> 사용자 권한별 기능을 허용합니다. 수퍼관리자는 모든 기능이 허용됩니다.</div>
+							<div class="col s12">
+								<ul class="collection with-header">
+									<li class="collection-item">
+										<span class="title">비회원(기본값)</span>
+										<div class="btn_box right">
+											<span class="mr10">
+												<label for="board_auth_list_non_member" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_list_non_member" name="board_auth_list_non_member" value="y" th:checked="${vo?.boardAuthListNonMember eq 'y'}" title="비회원">
+													<span>목록</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_read_non_member" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_read_non_member" name="board_auth_read_non_member" value="y" th:checked="${vo?.boardAuthReadNonMember eq 'y'}" title="비회원">
+													<span>읽기</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_write_non_member" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_write_non_member" name="board_auth_write_non_member" value="y" th:checked="${vo?.boardAuthWriteNonMember eq 'y'}" title="비회원">
+													<span>쓰기</span>
+												</label>
+											</span>
+											<span class="mr10">
+											<label for="board_auth_reply_non_member" class="grey-text text-darken-1">
+												<input type="checkbox" class="filled-in" id="board_auth_reply_non_member" name="board_auth_reply_non_member" value="y" th:checked="${vo?.boardAuthReplyNonMember eq 'y'}" title="비회원">
+												<span>답변</span>
+											</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_comment_non_member" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_comment_non_member" name="board_auth_comment_non_member" value="y" th:checked="${vo?.boardAuthCommentNonMember eq 'y'}" title="비회원">
+													<span>댓글</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_upload_non_member" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_upload_non_member" name="board_auth_upload_non_member" value="y" th:checked="${vo?.boardAuthUploadNonMember eq 'y'}" title="비회원">
+													<span>업로드</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_download_non_member" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_download_non_member" name="board_auth_download_non_member" value="y" th:checked="${vo?.boardAuthDownloadNonMember eq 'y'}" title="비회원">
+													<span>다운로드</span>
+												</label>
+											</span>
+										</div>
+									</li>
+									<li class="collection-item">
+										<span class="title">학습자</span>
+										<div class="btn_box right">
+											<span class="mr10">
+												<label for="board_auth_list_user" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_list_user" name="board_auth_list_user" value="y" th:checked="${vo?.boardAuthListUser eq 'y'}" title="일반회원">
+													<span>목록</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_read_user" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_read_user" name="board_auth_read_user" value="y" th:checked="${vo?.boardAuthReadUser eq 'y'}" title="일반회원">
+													<span>읽기</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_write_user" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_write_user" name="board_auth_write_user" value="y" th:checked="${vo?.boardAuthWriteUser eq 'y'}" title="일반회원">
+													<span>쓰기</span>
+												</label>
+											</span>
+											<span class="mr10">
+											<label for="board_auth_reply_user" class="grey-text text-darken-1">
+												<input type="checkbox" class="filled-in" id="board_auth_reply_user" name="board_auth_reply_user" value="y" th:checked="${vo?.boardAuthReplyUser eq 'y'}" title="일반회원">
+												<span>답변</span>
+											</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_comment_user" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_comment_user" name="board_auth_comment_user" value="y" th:checked="${vo?.boardAuthCommentUser eq 'y'}" title="일반회원">
+													<span>댓글</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_upload_user" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_upload_user" name="board_auth_upload_user" value="y" th:checked="${vo?.boardAuthUploadUser eq 'y'}" title="일반회원">
+													<span>업로드</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_download_user" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_download_user" name="board_auth_download_user" value="y" th:checked="${vo?.boardAuthDownloadUser eq 'y'}" title="일반회원">
+													<span>다운로드</span>
+												</label>
+											</span>
+										</div>
+									</li>
+									<li class="collection-item">
+										<span class="title">CMS관리자</span>
+										<div class="btn_box right">
+											<span class="mr10">
+												<label for="board_auth_list_cms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_list_cms_admin" name="board_auth_list_cms_admin" value="y" th:checked="${vo?.boardAuthListCmsAdmin eq 'y'}" title="CMS관리자">
+													<span>목록</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_read_cms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_read_cms_admin" name="board_auth_read_cms_admin" value="y" th:checked="${vo?.boardAuthReadCmsAdmin eq 'y'}" title="CMS관리자">
+													<span>읽기</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_write_cms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_write_cms_admin" name="board_auth_write_cms_admin" value="y" th:checked="${vo?.boardAuthWriteCmsAdmin eq 'y'}" title="CMS관리자">
+													<span>쓰기</span>
+												</label>
+											</span>
+											<span class="mr10">
+											<label for="board_auth_reply_cms_admin" class="grey-text text-darken-1">
+												<input type="checkbox" class="filled-in" id="board_auth_reply_cms_admin" name="board_auth_reply_cms_admin" value="y" th:checked="${vo?.boardAuthReplyCmsAdmin eq 'y'}" title="CMS관리자">
+												<span>답변</span>
+											</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_comment_cms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_comment_cms_admin" name="board_auth_comment_cms_admin" value="y" th:checked="${vo?.boardAuthCommentCmsAdmin eq 'y'}" title="CMS관리자">
+													<span>댓글</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_upload_cms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_upload_cms_admin" name="board_auth_upload_cms_admin" value="y" th:checked="${vo?.boardAuthUploadCmsAdmin eq 'y'}" title="CMS관리자">
+													<span>업로드</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_download_cms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_download_cms_admin" name="board_auth_download_cms_admin" value="y" th:checked="${vo?.boardAuthDownloadCmsAdmin eq 'y'}" title="CMS관리자">
+													<span>다운로드</span>
+												</label>
+											</span>
+										</div>
+									</li>
+									<li class="collection-item">
+										<span class="title">LMS관리자</span>
+										<div class="btn_box right">
+											<span class="mr10">
+												<label for="board_auth_list_lms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_list_lms_admin" name="board_auth_list_lms_admin" value="y" th:checked="${vo?.boardAuthListLmsAdmin eq 'y'}" title="LMS관리자">
+													<span>목록</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_read_lms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_read_lms_admin" name="board_auth_read_lms_admin" value="y" th:checked="${vo?.boardAuthReadLmsAdmin eq 'y'}" title="LMS관리자">
+													<span>읽기</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_write_lms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_write_lms_admin" name="board_auth_write_lms_admin" value="y" th:checked="${vo?.boardAuthWriteLmsAdmin eq 'y'}" title="LMS관리자">
+													<span>쓰기</span>
+												</label>
+											</span>
+											<span class="mr10">
+											<label for="board_auth_reply_lms_admin" class="grey-text text-darken-1">
+												<input type="checkbox" class="filled-in" id="board_auth_reply_lms_admin" name="board_auth_reply_lms_admin" value="y" th:checked="${vo?.boardAuthReplyLmsAdmin eq 'y'}" title="LMS관리자">
+												<span>답변</span>
+											</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_comment_lms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_comment_lms_admin" name="board_auth_comment_lms_admin" value="y" th:checked="${vo?.boardAuthCommentLmsAdmin eq 'y'}" title="LMS관리자">
+													<span>댓글</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_upload_lms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_upload_lms_admin" name="board_auth_upload_lms_admin" value="y" th:checked="${vo?.boardAuthUploadLmsAdmin eq 'y'}" title="LMS관리자">
+													<span>업로드</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_download_lms_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_download_lms_admin" name="board_auth_download_lms_admin" value="y" th:checked="${vo?.boardAuthDownloadLmsAdmin eq 'y'}" title="LMS관리자">
+													<span>다운로드</span>
+												</label>
+											</span>
+										</div>
+									</li>
+									<li class="collection-item">
+										<span class="title">RAS관리자</span>
+										<div class="btn_box right">
+											<span class="mr10">
+												<label for="board_auth_list_ras_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_list_ras_admin" name="board_auth_list_ras_admin" value="y" th:checked="${vo?.boardAuthListRasAdmin eq 'y'}" title="RAS관리자">
+													<span>목록</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_read_ras_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_read_ras_admin" name="board_auth_read_ras_admin" value="y" th:checked="${vo?.boardAuthReadRasAdmin eq 'y'}" title="RAS관리자">
+													<span>읽기</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_write_ras_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_write_ras_admin" name="board_auth_write_ras_admin" value="y" th:checked="${vo?.boardAuthWriteRasAdmin eq 'y'}" title="RAS관리자">
+													<span>쓰기</span>
+												</label>
+											</span>
+											<span class="mr10">
+											<label for="board_auth_reply_ras_admin" class="grey-text text-darken-1">
+												<input type="checkbox" class="filled-in" id="board_auth_reply_ras_admin" name="board_auth_reply_ras_admin" value="y" th:checked="${vo?.boardAuthReplyRasAdmin eq 'y'}" title="RAS관리자">
+												<span>답변</span>
+											</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_comment_ras_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_comment_ras_admin" name="board_auth_comment_ras_admin" value="y" th:checked="${vo?.boardAuthCommentRasAdmin eq 'y'}" title="RAS관리자">
+													<span>댓글</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_upload_ras_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_upload_ras_admin" name="board_auth_upload_ras_admin" value="y" th:checked="${vo?.boardAuthUploadRasAdmin eq 'y'}" title="RAS관리자">
+													<span>업로드</span>
+												</label>
+											</span>
+											<span class="mr10">
+												<label for="board_auth_download_ras_admin" class="grey-text text-darken-1">
+													<input type="checkbox" class="filled-in" id="board_auth_download_ras_admin" name="board_auth_download_ras_admin" value="y" th:checked="${vo?.boardAuthDownloadRasAdmin eq 'y'}" title="RAS관리자">
+													<span>다운로드</span>
+												</label>
+											</span>
+										</div>
+									</li>
+								 </ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /기본정보 -->
+			
+			
+			
+			<!-- 사용여부 -->
+			<div id="use_setting" class="row " >
+				<div class="col s12 m6 l6 xl6">
+					<ul class="collection with-header">
+						<li class="collection-item">
+							<b class="title">공지사항</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUsePriority" class="tooltipped" data-tooltip="게시물을 공지로 설정하여 1페이지 최상단에 노출 허용" data-position="right">
+										<input type="checkbox" name="boardUsePriority" class="filled-in" id="boardUsePriority" value="y" th:checked="${vo?.boardUsePriority eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">공지사항 사용여부</span>
+							</div>
+						</li>
+						<li class="collection-item">
+							<b class="title">에디터</b>
+							<div class="btn_box right">
+							<span class="mr10">
+								<label for="boardUseEditor" class="tooltipped" data-tooltip="이미 에디터로 등록된 게시물을 수정할 경우 주의" data-position="right">
+									<input type="checkbox" name="boardUseEditor" class="filled-in" id="boardUseEditor" value="y" th:checked="${vo?.boardUseEditor eq 'y'}">
+									<span>사용</span>
+								</label>
+							</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">에디터 사용여부</span>
+							</div>
+						</li>
+						<!--
+						<li class="collection-item">
+							<b class="title">썸네일</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									 <label for="boardUseThumb" class="tooltipped" data-tooltip="썸네일 생성시 사용" data-position="right">
+										<input type="checkbox" name="boardUseThumb" class="filled-in" id="boardUseThumb" value="y" th:checked="${vo?.boardUseThumb eq 'y'}">
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">썸네일 사용여부</span>
+							</div>
+						</li>
+						-->
+						<li class="collection-item">
+							<b class="title">비밀글</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseSecret" class="tooltipped" data-tooltip="게시판 관리자는 비밀글 조회 가능" data-position="right">
+										<input type="checkbox" name="boardUseSecret" class="filled-in" id="boardUseSecret" value="y" th:checked="${vo?.boardUseSecret eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">비밀글 사용여부</span>
+							</div>
+						</li>
+						<li class="collection-item">
+							<b class="title">답변</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseReply" class="tooltipped" data-tooltip="이미 등록된 게시물에는 영향을 주지 않음" data-position="right">
+										<input type="checkbox" name="boardUseReply" class="filled-in" id="boardUseReply" value="y"  th:checked="${vo?.boardUseReply eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">답변글 사용여부</span>
+							</div>
+						</li>
+						<li class="collection-item">
+							<b class="title">댓글</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseComment"  class="tooltipped" data-tooltip="이미 등록된 게시물에는 영향을 주지 않음" data-position="right">
+										<input type="checkbox" name="boardUseComment" class="filled-in" id="boardUseComment" value="y" th:checked="${vo?.boardUseComment eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">댓글 사용여부</span>
+							</div>
+						</li>
+						
+						<li class="collection-item">
+							<b class="title">작성일자 직접입력</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseInsertDate" class="tooltipped" data-tooltip="등록,수정시 작성일자를 직접 입력토록 지원할지 여부" data-position="right">
+										<input type="checkbox" name="boardUseInsertDate" class="filled-in" id="boardUseInsertDate" value="y" th:checked="${vo?.boardUseInsertDate eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">작성일자 임의입력 지원여부</span>
+							</div>
+						</li>
+						
+						<li class="collection-item">
+							<b class="title">작성자 직접입력</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseName" class="tooltipped" data-tooltip="등록,수정시 작성자명을 직접 입력토록 지원할지 여부" data-position="right">
+										<input type="checkbox" name="boardUseName" class="filled-in" id="boardUseName" value="y" th:checked="${vo?.boardUseName eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">작성자명 임의입력 지원여부</span>
+							</div>
+						</li>
+						
+						<li class="collection-item">
+							<b class="title">조회수</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseViewCount" class="tooltipped" data-tooltip="목록,조회 페이지에서 조회수를 표시할지 여부" data-position="right">
+										<input type="checkbox" name="boardUseViewCount" class="filled-in" id="boardUseViewCount" value="y" th:checked="${vo?.boardUseViewCount eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">조회수 표시여부</span>
+							</div>
+						</li>
+						
+						<li class="collection-item">
+							<b class="title">통합검색</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardSearch" class="tooltipped" data-tooltip="비밀글이 포함된 경우 통합검색에 포함치 않도록 주의" data-position="right">
+										<input type="checkbox" name="boardSearch" class="filled-in" id="boardSearch" value="y" th:checked="${vo?.boardSearch eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+							<div class="btn_box right">
+								<span class="mr10 f_alert" style="display: inline;">통합검색 포함여부</span>
+							</div>
+						</li>
+						
+						<!--
+						<li class="collection-item">
+							<b class="title">자동등록방지사용</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseCaptcha" class="tooltipped" data-tooltip="일반회원의 경우에만 표시" data-position="left">
+										<input type="checkbox" name="boardUseCaptcha" class="filled-in" id="boardUseCaptcha" value="y" th:checked="${vo?.boardUseCaptcha eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+						</li>
+						-->
+						
+					</ul>
+				</div>
+				
+				<div class="col s12 m6 l6 xl6">
+					<ul class="collection with-header">
+						<li class="collection-item">
+							<b class="title">첨부파일</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseUpload" class="tooltipped" data-tooltip="첨부파일 사용안할시 게시물에 첨부되있는<br /> 첨부파일을 다운로드 및 수정 불가능합니다." data-position="left">
+										<input type="checkbox" name="boardUseUpload" class="filled-in" id="boardUseUpload" value="y" th:checked="${vo?.boardUseUpload eq 'y'}" >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+						</li>
+						<!--
+						<li class="collection-item">
+							<b class="title">첨부파일 뷰사용</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseDownload" class="tooltipped" data-tooltip="첨부파일 뷰 사용안할시 게시물에 첨부되있는<br /> 첨부파일을 다운로드 및 내용에 출력되지 않습니다." data-position="left">
+										<input type="checkbox" name="boardUseDownload" class="filled-in" id="boardUseDownload" value="y" th:checked="${vo?.boardUseDownload eq 'y'}">
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+						</li>
+						<li class="collection-item">
+							<b class="title">첨부파일 설명</b>
+							<div class="btn_box right">
+								<span class="mr10">
+									<label for="boardUseFileInfo">
+										<input type="checkbox" name="boardUseFileInfo" class="filled-in" id="boardUseFileInfo" value="y" th:checked="${vo?.boardUseFileInfo eq 'y'}"  >
+										<span>사용</span>
+									</label>
+								</span>
+							</div>
+						</li>
+						-->
+						<li class="collection-item nohover">
+							<div class="btn_box ">
+								<div class="input-field col s6">
+									<input type="text" name="boardUploadCount" id="boardUploadCount" th:value="${vo?.boardUploadCount}">
+									<label for="b_upload_count">최대 등록가능 첨부파일(개)</label>
+								</div>
+								<div class="input-field col s6">
+									<input type="text" name="boardUploadSize" id="boardUploadSize" th:value="${vo?.boardUploadSize}" >
+									<label for="b_upload_size">개당 최대 파일 용량(MB)</label>
+								</div>
+								<!--
+								<div class="input-field col s6" style="padding: 0 0.75rem 0 0;">
+									<input id="b_thumb_width" name="boardThumbWidth" type="text" th:value="${vo?.boardThumbWidth}">
+									<label for="b_thumb_width">가로(px)</label>
+								</div>
+								<div class="input-field col s6">
+									<input id="vvvv" name="boardThumbHeight" type="text" th:value="${vo?.boardThumbHeight}">
+									<label for="b_thumb_height">세로(px)</label>
+								</div>
+								<div class="s12" ><span class="f_alert">첨부파일 이미지 썸네일 크기</span></div>
+								-->
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+			
+			<!-- 부가옵션 -->
+			<div id="addition" class="row " >
+				<div class="notice_title mb20"><i class="material-icons left">sms_failed</i>스킨에서 직접 조정하므로 임의수정시 주의</div>
+				
+				<div class="col s12 m6 l3 xl3">
+					<div class="input-field">
+						<input id="boardPageLines" name="boardPageLines" type="text" th:value="${vo?.boardPageLines}" >
+						<label for="boardPageLines">목록의 페이지당 게시물 수</label>
+					</div>
+				</div>
+				<div class="col s12 m6 l3 xl3">
+					<div class="input-field">
+						<input id="boardPageLists" name="boardPageLists" type="text"  th:value="${vo?.boardPageLists}">
+						<label for="boardPageLists">목록의 페이징 갯수</label>
+					</div>
+				</div>
+				
+				<div class="col s12 m12 l6 xl6">
+					<div class="input-field">
+						<input id="boardSortList" name="boardSortList" type="text" th:value="${vo?.boardSortList}">
+						<label for="boardSortList">목록의 정렬방식</label>
+					</div>
+				</div>
+				
+				<div class="col s12 m12 l12 xl12">
+					<div class="input-field">
+						<textarea id="boardContentDefault" name="boardContentDefault" class="materialize-textarea" style="min-height: 150px;" placeholder="게시글 기본 내용">[[${vo?.boardContentDefault}]]</textarea>
+						<label for="boardContentDefault">게시물 작성시 내용 항목의 기본값</label>
+					</div>
+				</div>
+			
+				
+			</div>
+			
+			<!-- 스킨설정 -->
+			<div id="skin_setting" class="row " >
+				<div class="col s12">
+					<div class="input-field col s3 clear">
+						<div class="select-wrapper">
+							<select id="boardSkin" name="boardSkin">
+								<option value="basic" th:selected="${vo?.boardSkin} == 'basic'">basic</option>
+								<option value="faq" th:selected="${vo?.boardSkin} == 'faq'">faq</option>
+							</select>
+						<label for="boardSkin">게시판 스킨</label>
+						</div>
+					</div>
+					<div class="input-field col s9">
+						<div class="notice_title"><i class="material-icons left">sms_failed</i> 스킨 임의수정 주의. 파일경로 : /cms/board/__skin__/*</div>
+					</div>
+				</div>
+			</div>
+			<!-- /스킨설정 -->
+		</div>
+ 	</form>
+<style>
+	.jstree-default .jstree-anchor {
+		line-height: 24px;
+		height: 24px;
+		display: inline-block;
+		padding: 0;
+	}
+	.vakata-context, .vakata-context ul {
+		z-index: 100000;
+	}
+</style>
+<script>
+	$(function() {
+		$('.tooltipped').tooltip();
+		$('#main_tabs').tabs();
+		$('#siteIdx').formSelect();
+		$("#boardSkin").formSelect();
+		
+		M.textareaAutoResize($('#boardContentDefault'));
+//		 set_tree();
+		$("#frmForm").submit(function(e) {
+			
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='boardName']", $frm).val() == "") {
+				toast("게시판명은 필수입력 입니다.");
+				$("input[name='boardName']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					$('.sidenav').sidenav('close');
+					
+// 					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+		
+		$("#frmForm").submit(function(){
+			if($("#skin_css_source").length > 0 && editor ){
+				var pg_css = editor.getValue();
+				$("#skin_css_source").val(pg_css);
+			}
+			if($("#skin_js_source").length > 0 && editor2){
+				var pg_js = editor2.getValue();
+				$("#skin_js_source").val(pg_js);
+			}
+			var category = $('#tree_menu').jstree(true).get_json('#', {flat:true});
+			var board_category =  JSON.stringify(category);
+			$("textarea[name=board_category]").val(board_category);
+		});
+		
+		$('#frmForm').ajaxForm({
+			dataType: 'json',
+			success: function(response) {
+				if (response.status == 200) { //성공 메시지 출력 후 이동
+					toast(response.message, 3000);
+					bbs_config_table.ajax.reload(null, false);
+					$('.sidenav').sidenav('close');
+				} else if (response.status == 500) {
+					toast(response.message, 4000);
+				} else {
+					$.each(response.message, function(k, v) {
+						$('#' + k).focus();
+						toast(v, 3000);
+						return false;
+					});
+				}
+			},
+			error: function(result, status, error) {
+				toast('네트워크 및 시스템 에러', 3000);
+			},
+		});
+	});
+	function set_style(_this){
+		if($(_this). prop("checked") === true){
+			$("#skin_source").show();
+			setTimeout(function(){
+				get_skin();
+			},200);
+		}
+		else{
+			$.confirm({
+				theme: 'supervan', // 'material', 'bootstrap'
+				title: 'CSS, JS 삭제',
+				content: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+				buttons: {
+					확인: function() {
+						$("#skin_source").hide();
+						load_skin = false;
+					},
+					취소: function() {
+						$(_this). prop("checked",true)
+					}
+				}
+			});
+
+		}
+
+	}
+
+	function get_skin(){
+		if(load_skin === true){
+			return false;
+		}
+		load_skin = true;
+
+		$('#skin_tabs').tabs();
+		ini_set();
+		editor = CodeMirror.fromTextArea($('#skin_css_source')[0], {
+			mode: "text/css",
+			lineNumbers: true,
+			theme: 'material',
+			extraKeys: {
+				"Ctrl-Space": "autocomplete",
+				"F11": function(cm) {
+					setFullScreen(cm, !isFullScreen(cm));
+				},
+				"Esc": function(cm) {
+					if (isFullScreen(cm)) setFullScreen(cm, false);
+				}
+			},
+			value: document.documentElement.innerHTML,
+		});
+
+		editor2 = CodeMirror.fromTextArea($('#skin_js_source')[0], {
+			mode: "text/javascript",
+			lineNumbers: true,
+			theme: 'material',
+			extraKeys: {
+				"Ctrl-Space": "autocomplete",
+				"F11": function(cm) {
+					setFullScreen(cm, !isFullScreen(cm));
+				},
+				"Esc": function(cm) {
+					if (isFullScreen(cm)) setFullScreen(cm, false);
+				}
+			},
+			value: document.documentElement.innerHTML,
+		});
+	}
+
+	function set_tree(){
+		// jsTree 사용예
+		var json_data = $("textarea[name=board_category]").val();
+		$('#tree_menu').jstree({
+			"core": {
+				"animation" : 50, "strings": { loading : "Loading ...", new_node : "새그룹" },"check_callback": true,"themes": {"responsive": false},'check_callback': true,
+				'data' : JSON.parse(json_data),
+				'check_callback' : function (operation, node, node_parent, node_position, more) {
+					if ((operation == "delete_node" && node.type && node.id == "root")){
+						return false;
+					}
+					return true;
+				}
+			},
+			"types": {
+				"#": {
+					"max_children": 1,
+					"max_depth": 2,
+					"valid_children": ["root"]
+				},
+				"root": {
+					"icon": "glyphicon glyphicon-folder",
+					"valid_children": ["default"]
+				},
+				"default": {
+					"valid_children": ["default", "file"]
+				},
+				"file": {
+					"icon": "glyphicon glyphicon-file",
+					"valid_children": ["file"]
+				}
+			},
+			"plugins": ["contextmenu", "dnd","search", "state", "types", "html_data"]
+		}).bind("before.jstree", function (e, data) {
+			return false;
+			if(data.func === "delete_node") {
+				var node = data.args[0][0];
+			}
+		});
+	}
+</script>

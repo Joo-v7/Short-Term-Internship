@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.zzz.crud.CrudMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(scUserNm)">
+			AND user_nm = #{scUserNm}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scUserEmail)">
+			AND user_email = #{scUserEmail}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectListCnt" parameterType="egovMap" resultType="long">
+		SELECT
+			COUNT(1) cnt
+		FROM zzz_crud
+		<include refid="selectWhere"/>
+	</select>
+	
+	<select id="selectList" parameterType="egovMap" resultType="kepco.cms.zzz.crud.CrudVo">
+		SELECT
+			*
+		FROM zzz_crud
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="egovMap" resultType="kepco.cms.zzz.crud.CrudVo">
+		SELECT
+			*
+		FROM zzz_crud
+		WHERE
+		crud_idx = #{crudIdx}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.zzz.crud.CrudVo" useGeneratedKeys="true" keyProperty="crudIdx" keyColumn="crud_idx">
+		INSERT INTO zzz_crud
+		(user_idx, user_nm, user_email, user_age, user_birth, user_gender, insert_date)
+		VALUES
+		(#{userIdx}, #{userNm}, #{userEmail}, #{userAge}, #{userBirth}, #{userGender}, CURRENT_TIMESTAMP);
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.zzz.crud.CrudVo">
+		UPDATE zzz_crud
+		<set>
+			USER_NM = #{userNm},
+			USER_EMAIL = #{userEmail},
+			USER_AGE = #{userAge},
+			USER_BIRTH = #{userBirth},
+			USER_GENDER = #{userGender},
+			<if test="insertDate == null">
+			INSERT_DATE = #{insertDate},
+			</if>
+			UPDATE_DATE = CURRENT_TIMESTAMP,
+		</set>
+		WHERE crud_idx = #{crudIdx}
+	</update>
+	
+	<delete id="delete" parameterType="egovMap">
+		DELETE FROM zzz_crud
+		WHERE
+		<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(crudIdxList)">
+				crud_idx IN
+				<foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</when>
+			<otherwise>
+				crud_idx = #{crudIdx}
+			</otherwise>
+		</choose>
+	</delete>
+</mapper>

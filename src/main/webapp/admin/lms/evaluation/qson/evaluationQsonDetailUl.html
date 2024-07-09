@@ -1,0 +1,187 @@
+<style>
+    .poq_order {
+        display: inline-block;
+        background: #5998d3;
+        color: #fff;
+        padding: 0 10px;
+        position: relative;
+        left: -10px;
+    }
+
+    .nested-list-handle2 {
+        position: absolute;
+        margin: 0;
+        left: 0;
+        top: 4px;
+        padding-left: 5px;
+        cursor: move;
+        width: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        background: none;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border: 0 none;
+        height: 40px;
+    }
+
+
+    .evaluation_chk_icon {
+        font-size: 23px;
+        position: relative;
+        top: 11px;
+        margin-left: 18px;
+    }
+
+    .evaluation_chk_icon2 {
+        font-size: 19px;
+        position: relative;
+        top: 6px;
+        margin-left: 18px;
+    }
+
+    .dd-handle2:before {
+        content: '';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 7px;
+        width: 100%;
+        text-align: center;
+        text-indent: 0;
+        color: #000;
+        font-size: 20px;
+        font-weight: normal;
+    }
+
+    .evaluation_qson_detail_delete {
+        font-size: 15px;
+        font-weight: bold;
+        position: relative;
+        top: 13px;
+        color: red !important;
+    }
+
+    #select_list li:hover input {
+        border-bottom: 1px solid #dfdfdf !important;
+    }
+
+    #select_list li:hover .dd-handle2:before {
+        content: '::';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 7px;
+        width: 100%;
+        text-align: center;
+        text-indent: 0;
+        color: #000;
+        font-size: 20px;
+        font-weight: normal;
+    }
+
+    #grid_select_list1 li:hover input {
+        border-bottom: 1px solid #dfdfdf !important;
+    }
+
+    #grid_select_list1 li:hover .dd-handle2:before {
+        content: '::';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 7px;
+        width: 100%;
+        text-align: center;
+        text-indent: 0;
+        color: #000;
+        font-size: 20px;
+        font-weight: normal;
+    }
+
+
+    #grid_select_list2 li:hover input {
+        border-bottom: 1px solid #dfdfdf !important;
+    }
+
+    #grid_select_list2 li:hover .dd-handle2:before {
+        content: '::';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 7px;
+        width: 100%;
+        text-align: center;
+        text-indent: 0;
+        color: #000;
+        font-size: 20px;
+        font-weight: normal;
+    }
+
+
+</style>
+
+<ol class="dd-list">
+    <li class="dd-item nested-list-item" th:each="list, i : ${list}" th:attr="data-id=${list?.evqdIdx}">
+        <div class="dd-handle dd-handle2 nested-list-handle2"></div>
+        <div class="nested-list-content2">
+
+            <span class="material-icons evaluation_chk_icon" th:if="${list.evqdType == 'A'}">panorama_fish_eye</span>
+            <span class="material-icons evaluation_chk_icon"
+                  th:if="${list.evqdType == 'B'}">check_box_outline_blank</span>
+
+            <form style="display: inline-block;  width: calc(100% - 76px);" name="frm_search_form"
+                  th:id="|frm_evaluation_qson_detail_form_${i.index+1}|" method="post" enctype="multipart/form-data"
+                  action="/admin/lms/evaluation/qson/evaluationQsonDetailSaveIn" onsubmit="return false">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="evqdIdx" th:value="${list?.evqdIdx}">
+                <input type="hidden" name="evqdOrder" th:value="${i.index+1}">
+                <input type="text" name="evqdText" th:value="${list?.evqdText}"
+                       style="border: 0 none; position: relative; top: 4px;" th:onblur="onblur_event([[${i.index+1}]])">
+            </form>
+            <div class="pull-right">
+                <a href="#"
+                   th:onclick="set_evaluation_qson_detail_del([[${list.evqdIdx}]],[[${list.evqIdx}]]); return false;"
+                   class="evaluation_qson_detail_delete"><span class="material-icons">close</span></a>
+            </div>
+        </div>
+    </li>
+</ol>
+<script th:inline="javascript">
+    $(function () {
+        total = /*[[${#lists.size(list)}]]*/;
+
+        for (i = 1; i <= total; i++) {
+            $('#frm_evaluation_qson_detail_form_' + i).ajaxForm({
+                dataType: 'json',
+                success: function (response) {
+                },
+                error: function (result, status, error) {
+                    toast('네트워크 및 시스템 에러', 3000);
+                },
+            });
+        }
+
+
+    });
+
+    function onblur_event(idx) {
+        $('#frm_evaluation_qson_detail_form_' + idx).submit();
+    }
+
+    function set_evaluation_qson_detail_del(evqd_idx, evq_idx) {
+
+        csrf = $('#csrf').val();
+
+        $.ajax({
+            url: gblAdminPath + '/lms/evaluation/qson/evaluationQsonDetailDelete',
+            type: 'POST',
+            data: {'evqdIdx': evqd_idx, '_csrf': csrf},
+            dataType: 'json',
+        }).done(function (d) {
+            evaluation_qson_detail_ul(evq_idx);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+</script>
+

@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<style>
+#chartdiv1 {
+	width: 100%;
+	height: 250px;
+}
+.graduate {background-color: #456568!important;}
+.satisfaction {background-color: #3d5057!important;}
+
+</style>
+<!-- AM 차트 4 -->
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<!-- <script src="/assets/libs/amchart4/themes/animated.js"></script> -->
+<!-- <script src="/assets/libs/amchart4/plugins/timeline.js"></script> -->
+<!-- <script src="/assets/libs/amchart4/plugins/bullets.js"></script> -->
+
+<div id="statistics_info_wrap" class="col s12 scroller bg_lightblue h100 pd_box" style="max-height: calc(100vh - 116px); display:block;">
+<!-- 	<div class="row"> -->
+				
+<!-- 		<div class="right"> -->
+<!-- 			<div class="input-field col"> -->
+<!-- 				<button id="traning_data_open_btn" class="waves-effect waves-light cyan btn">상세정보</button> -->
+<!-- 			</div> -->
+<!-- 		</div> -->
+<!-- 	</div> -->
+
+
+	<div class="row">
+		<input type="hidden" name="vodIdx" th:value="${vo?.vodIdx}"/>
+		<h2 class="h2_butt mb10">기본 정보</h2>
+		<div class="first_info_box">
+			<!-- 공통 - 명칭 -->
+			<span class="tit_name">[[${vo.vodTitle}]]</span>
+			<div class="info">
+				<!-- 훈련 -->
+				<span>교육명 : [[${vo.vodTitle}]]</span>
+				<span th:if="${!#strings.isEmpty(vo.vodKeyword)}">영상키워드 : [[${vo.vodKeyword}]]</span>
+				<span th:if="${!#strings.isEmpty(vo.vodSummary)}" class="full ellipsis">개요 : [[${vo.vodSummary}]]</span>
+				<span th:if="${!#strings.isEmpty(vo.vodDesc)}" class="full ellipsis">내용 : [[${vo.vodDesc}]]</span>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<h2 class="h2_butt">통계 정보</h2>
+		<div class="row">
+			<div class="vod_info_split">
+				<dl>
+					<dt>평균 학습시간</dt>
+					<dd>[[${vo.avgLearnMinute}]]<span>(분)</span></dd>
+				</dl>
+				<dl>
+					<dt>최소 학습시간</dt>
+					<dd>[[${vo.minLearnMinute}]]<span>(분)</span></dd>
+				</dl>
+				<dl>
+					<dt>최대 학습시간</dt>
+					<dd>[[${vo.maxLearnMinute}]]<span>(분)</span></dd>
+				</dl>
+			</div>
+		</div>
+
+		
+
+		<div class="row">
+			<h3 class="h3_butt">학습 수료 현황</h3>
+			<div class="stat_box">
+				<div class="col s6">
+					<div class="pd_box">
+						<div id="chartdiv1"></div>
+					</div>
+				</div>
+				<div class="col s6 count_wrap">
+					<dl class="count_box">
+						<dt>학습자</dt>
+						<dd>
+							[[${vo.applyCnt}]]
+							<span>명</span>
+						</dd>
+					</dl>
+					<dl class="count_box">
+						<dt class="graduate">수료자</dt>
+						<dd>
+							[[${vo.graduateCnt}]]
+							<span>참여</span>
+						</dd>
+					</dl>
+				</div>	
+			</div>
+		</div>
+
+		<div class="table_type3">
+			<table id="dataTable" class="striped centered highlight">
+				<colgroup>
+					<col width="80px" />
+					<col width="150px" />
+					<col width="150px" />
+					<col width="180px" />
+					<col width="180px" />
+					<col width="120px" />
+					<col width="100px" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th>NO</th>
+						<th>훈련자 ID</th>
+						<th>성명</th>
+						<th>교육시작일자</th>
+						<th>교육종료일자</th>
+						<th>학습시간(분)</th>
+						<th>수료여부</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+
+	</div>
+	
+</div>
+<script>
+	$(function() {
+		var vodIdx = $("input[name='vodIdx']").val();
+		studentList(vodIdx);
+		graduateRate(vodIdx);
+	});
+
+// 목록
+function studentList(vodIdx) {
+	
+	$('#dataTable').DataTable({
+		pageLength: 5,
+		ajax: {
+			type: "get",
+			url: gblAdminPath + "/lms/vod/stat/overview/studentList?vodIdx=" + vodIdx,
+			dataType: "json",
+			dataSrc: "data.list",
+		},
+		order: [0, "desc"],
+		initComplete: dataTableInit,
+		columns: [
+			{ data: null, className: 'dt-body-center', render: function (data, type, row, meta) { return meta.settings._iDisplayStart + meta.row + 1; } },
+			{ data: "memberId", className: "dt-body-center" },
+			{ data: "memberNm", className: "dt-body-center" },
+			{ data: "applyDate", className: "dt-body-center" },
+			{ data: "learnDate", className: "dt-body-center" },
+			{ data: "sumLearnTime", className: "dt-body-center" },
+			{ data: null, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var learnState = "미수료";
+					if(row.learnState == 2){
+						learnState = "수료";
+					}
+					return learnState;
+				}
+			},
+		],
+		createdRow: function (row, data, dataIndex) {
+			$(row).on("click", function () {
+			});
+		},
+		
+	});
+}	
+
+function graduateRate(vodIdx){ //chartdiv1 학습 수료 현황 수료자/학습자 백분율
+	$.ajax({
+        url: gblAdminPath + "/lms/vod/stat/chart/graduateRate?vodIdx=" + vodIdx,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+		
+		var chartMin = 0;
+		var chartMax = 100;
+		
+		var data = {
+		  score: data.data.vo.graduateRate,
+// 		  score: 1,
+		  gradingData: [
+			{
+		      title: "경고",
+		      color: "#ee1f25",
+		      lowScore: 0,
+		      highScore: 25
+		    },
+		    {
+		      title: "저조",
+		      color: "#f3eb0c",
+		      lowScore: 25,
+		      highScore: 50
+		    },
+		    {
+		      title: "양호",
+		      color: "#9ED136",
+		      lowScore: 50,
+		      highScore: 75
+		    },
+		    {
+		      title: "우수",
+		      color: "#0f9747",
+		      lowScore: 75,
+		      highScore: 100
+		    }
+		  ]
+		};
+		
+		
+		/**
+		Grading Lookup
+		 */
+		function lookUpGrade(lookupScore, grades) {
+		  // Only change code below this line
+		  for (var i = 0; i < grades.length; i++) {
+		    if (
+		      grades[i].lowScore < lookupScore &&
+		      grades[i].highScore >= lookupScore
+		    ) {
+		      return grades[i];
+		    }
+		  }
+		  return null;
+		}
+		// create chart
+		var chart = am4core.create("chartdiv1", am4charts.GaugeChart);
+		chart.logo.disabled = true;
+		chart.hiddenState.properties.opacity = 0;
+		chart.fontSize = 14;
+		chart.innerRadius = am4core.percent(80);
+		chart.resizable = true;
+		
+		/**
+		 * Normal axis
+		 */
+		
+		var axis = chart.xAxes.push(new am4charts.ValueAxis());
+		axis.min = chartMin;
+		axis.max = chartMax;
+		axis.strictMinMax = true;
+		axis.renderer.radius = am4core.percent(80);
+		axis.renderer.inside = true;
+		axis.renderer.line.strokeOpacity = 0.1;
+		axis.renderer.ticks.template.disabled = false;
+		axis.renderer.ticks.template.strokeOpacity = 1;
+		axis.renderer.ticks.template.strokeWidth = 0.5;
+		axis.renderer.ticks.template.length = 5;
+		axis.renderer.grid.template.disabled = true;
+		axis.renderer.labels.template.radius = am4core.percent(15);
+		axis.renderer.labels.template.fontSize = "0.9em";
+		
+		/**
+		 * Axis for ranges
+		 */
+		
+		var axis2 = chart.xAxes.push(new am4charts.ValueAxis());
+		axis2.min = chartMin;
+		axis2.max = chartMax;
+		axis2.strictMinMax = true;
+		axis2.renderer.labels.template.disabled = true;
+		axis2.renderer.ticks.template.disabled = true;
+		axis2.renderer.grid.template.disabled = false;
+		axis2.renderer.grid.template.opacity = 0.8;
+		axis2.renderer.labels.template.bent = true;
+		axis2.renderer.labels.template.fill = am4core.color("#000");
+		axis2.renderer.labels.template.fontWeight = "bold";
+		axis2.renderer.labels.template.fillOpacity = 0.5;
+		
+		
+		
+		/**
+		Ranges
+		*/
+		
+		for (let grading of data.gradingData) {
+		  var range = axis2.axisRanges.create();
+		  range.axisFill.fill = am4core.color(grading.color);
+		  range.axisFill.fillOpacity = 0.8;
+		  range.axisFill.zIndex = -1;
+		  range.value = grading.lowScore > chartMin ? grading.lowScore : chartMin;
+		  range.endValue = grading.highScore < chartMax ? grading.highScore : chartMax;
+		  range.grid.strokeOpacity = 0;
+		  range.stroke = am4core.color(grading.color).lighten(-0.1);
+		  range.label.inside = true;
+		  range.label.text = grading.title.toUpperCase();
+		  range.label.inside = true;
+		  range.label.location = 0.5;
+		  range.label.inside = true;
+		  range.label.radius = am4core.percent(10);
+		  range.label.paddingBottom = -5; // ~half font size
+		  range.label.fontSize = "0.9em";
+		}
+		
+		var matchingGrade = lookUpGrade(data.score, data.gradingData);
+		
+		/**
+		 * Label 1
+		 */
+		
+		var label = chart.radarContainer.createChild(am4core.Label);
+		label.isMeasured = false;
+		label.fontSize = "3em";
+		label.x = am4core.percent(50);
+		label.paddingBottom = 15;
+		label.horizontalCenter = "middle";
+		label.verticalCenter = "bottom";
+		//label.dataItem = data;
+		label.text = data.score.toFixed(1);
+		label.fontWeight = "bold";
+		//label.text = "{score}";
+		// label.fill = am4core.color(matchingGrade.color);
+		label.fill = am4core.color("#212121");
+		
+		/**
+		 * Label 2
+		 */
+		
+		var label2 = chart.radarContainer.createChild(am4core.Label);
+		label2.isMeasured = false;
+		label2.fontSize = "1.4em";
+		label2.horizontalCenter = "middle";
+		label2.verticalCenter = "bottom";
+// 		label2.text = matchingGrade.title.toUpperCase();
+// 		label2.fill = am4core.color(matchingGrade.color);
+		
+		
+		/**
+		 * Hand
+		 */
+		
+		var hand = chart.hands.push(new am4charts.ClockHand());
+		hand.axis = axis2;
+		hand.innerRadius = am4core.percent(55);
+		hand.startWidth = 8;
+		hand.pin.disabled = true;
+		hand.value = data.score;
+		hand.fill = am4core.color("#444");
+		hand.stroke = am4core.color("#000");
+		
+		hand.events.on("positionchanged", function(){
+		  label.text = axis2.positionToValue(hand.currentPosition).toFixed(1);
+		  var value2 = axis.positionToValue(hand.currentPosition);
+		  var matchingGrade = lookUpGrade(axis.positionToValue(hand.currentPosition), data.gradingData);
+// 		  label2.text = matchingGrade.title.toUpperCase();
+// 		  label2.fill = am4core.color(matchingGrade.color);
+// 		  label2.stroke = am4core.color(matchingGrade.color);  
+// 		  label.fill = am4core.color(matchingGrade.color);
+		})
+		
+    }).fail(function () {
+		console.log("평균 근육 활성도를 불러오지 못했습니다.");
+    });
+}
+
+
+//데이터테이블 initComplete
+function dataTableInit(settings, json) {
+	if ($("#dataTable").DataTable().data().count() == 10000) {
+		toast("데이터 조회를 10,000건으로 제한합니다.");
+	}
+	$("#dataTableTotCnt").text($("#dataTable").DataTable().data().count());
+	
+	if ($('#dataTable').DataTable().data().count() > 0) {
+		$('#dataTable').DataTable().row(':first').nodes().to$().trigger('click');
+	}
+}
+
+function click_btn_e(){
+	$('.module_list .module-item > button').removeClass('active');
+	$(this).addClass('active');
+	console.log($(this));
+}
+
+
+</script>	
+	

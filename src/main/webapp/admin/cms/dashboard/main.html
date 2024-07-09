@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+    
+<th:block layout:fragment="content">
+	<style>
+    hr{border:none;display:none}
+	.h2_butt{font-size:14px;margin:10px 0;float:left;font-weight:700}
+    .h2_butt a {color: inherit;}
+    #dashboard_box{width:100%;height:auto;background:#f2f3f8;padding: 28px;box-sizing:border-box;}
+	.dashboard_wrap{width:100%;margin:0 auto}
+    .dash_top{width:100%;overflow:hidden;display:flex;}
+    .dash_top > div{width:calc(100% / 4 - 15px);float:left;height:120px;margin:0 20px 0 0;background:#fff;}
+    .dash_top > div:last-child{margin-right:0}
+    .dash_top > div h2{background:#56717e; font-size:14px;height:40px;line-height:38px;font-weight:400;color:#fff;letter-spacing:-.08em;width:100%;border-bottom:1px solid #e7eaec;padding:0 20px;}
+    .dash_top > div > .dash_box{font-size:17px;line-height:27px;padding:10px 20px}
+    .dash_top > div p span.subtxt{font-size:13px;color:#999}
+    .dash_topbox{padding:0;float:left;border:1px solid #ddd}
+
+    .dash_bbs{width:100%;overflow:hidden;margin:10px 0;display:flex;}
+    .dash_bbs:not(:first-child) {margin-top: 40px;}
+    .dash_bbs > div{width:calc(100% / 2 - 10px);margin:0 20px 0 0;}
+    .dash_bbs > div:last-child{margin-right:0;}
+	
+	/*최근게시물*/
+    /*.recent_board {float:left;width:58%}*/
+    .recent_board {height: auto;}
+    .notice_box{float:left;position:relative;border:1px solid #ddd;width:100%;background:#fff; padding: 20px; border-radius: 10px;}
+    .notice_box a.tab_h3{position:relative;color:#333;display:block;float:left;}
+    .notice_box a.tab_h3 h3{font-size:14px;text-align:center;line-height:40px;padding:0 20px}
+    .notice_box a.tab_h3.active{border-bottom:3px solid #21b9bb;z-index: 1;}
+    .notice_box a.tab_h3 br{display:none}
+    .notice_box a:hover{text-decoration:none;}
+    .notice_box a:hover h3{font-weight:800}
+    .notice_box ul{position:absolute;left:0;top:42px;width:100%;padding:10px 20px;border-top:1px solid #e7eaec;display:none}
+    .notice_box ul li{overflow:hidden;line-height:21px}
+    .notice_box ul li:last-child{border-bottom:none}
+    .notice_box ul li a{position:relative;color:#999;font-weight:400;font-size:13px;width:80%;float:left;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;padding-left:15px}
+    .notice_box ul li a:before{content:'';position:absolute;top:10px;left:0;width:3px;height:3px;background:#5998d3}
+    .notice_box ul li a .cate{color:#333;background:#f2f2f2;float:left;padding:4px 10px;border-radius:4px;margin-right:10px;font-weight:700}
+    .notice_box ul li .date{padding-right:3px;width:20%;text-align:right;font-size:12px;float:right;color:#999}
+    .notice_box ul li a:hover{color:#333;font-weight:600}
+    .notice_box a.tab_more span{font-size:0;position:absolute;left:0;top:0}
+	.notice_tab{display: inline-block;width: 100%;}
+	a.tab_more{position:absolute;display:block;width:34px;height:40px;font-size:20px;line-height:40px;right:0;top:0;text-align:center;font-weight:200;color:#20252a;display: flex; align-items: center;display: flex; align-items: center;}
+    a.tab_more i{font-size:26px;color:#585858;}	
+	a.tab_more span{font-size:0;}
+
+    /*.center_board{float:left;width:40.6%;margin-left:20px}*/
+    .center_board .notice_box{height:370px}
+    .center_board .notice_box:first-child{margin-bottom:10px}
+
+    .progress{width:98%;margin:22px auto 0;height: 8px;position: relative;border-radius: 100px;}
+    .progress-bar{background:#21b9bb}
+
+    /*일일검색어*/
+    .rank_board{float:left;width:17.2%;height:380px;margin-left:20px;padding:20px;background:#5998d3;position: relative}
+    .rank_board h3{font-size:15px;padding-bottom:20px;color:#fff}
+
+    .rank_board a.more{position:absolute;display:block;width:40px;height:40px;font-size:20px;line-height:40px;right:0;top:0;text-align:center;font-weight:200;color:#fff;background: #4e8ec9}
+    .rank_board a.more:hover{text-decoration:none;background:#4686c1}
+    .rank_board a.more span{font-size:0;position:absolute;left:0;top:0}
+
+    #rank_tab ol{display:inline-block;width:100%}
+    #rank_tab ol li{display:block;float:left;width:100%;padding:3px 0}
+    #rank_tab ol li span{text-align:center;line-height:20px;padding:5px 0 0 0;box-sizing:border-box;display:block;overflow:hidden;float:left;width:20px;height:20px;margin-right:5px;padding:0;
+		background:#999;font-weight:bold;line-height:19px;color:#272e3c;font-size:11px;color:#fff}
+    #rank_tab ol li .first{background:#35a2b0  none repeat scroll 0 0;color:#fff}
+    #rank_tab ol li .second{background:#35a2b0  none repeat scroll 0 0;color:#fff}
+    #rank_tab ol li .third{background:#35a2b0  none repeat scroll 0 0;color:#fff}
+    #rank_tab ol li a{display:block;float:left;height:auto;border:0 none;font-size:1em;line-height:1.3em;color:#fff}
+
+
+
+    /*일정안내*/
+    .schedule_board{float:left;width:40%;margin-right:20px}
+    .schedule_board .notice_box{height:255px;background:#f6fdff}
+
+    /*통계안내*/
+    .dash_status{width:100%;overflow:hidden}
+    .status_board{float:left;width:100%;}
+    .status_board .status_box{height:265px}
+    .status_box{float:left;background:#fff;position:relative;border:1px solid #ddd;width:100%;display:flex;}
+    .status_box a.tab_h3{position:relative;color:#333;display:block;float:left;}
+    .status_box a.tab_h3 h3{font-size: 14px;text-align: center;line-height: 40px;padding: 0 20px;}
+    .status_box a.tab_h3.active{border-bottom:3px solid #21b9bb;z-index:1;}
+    .status_box a.tab_h3 br{display:none}
+    .status_box a:hover{text-decoration:none;}
+    .status_box a:hover h3{font-weight:800}
+    .status_box .cont_box{position:absolute;left:0;top:42px;width:100%;padding:39px 30px 30px;border-top:1px solid #e7eaec;display:none;box-sizing: border-box;}
+    .status_box a.more:hover{text-decoration:none;background:#f2f2f2}
+    .status_box a.more span{font-size:0;position:absolute;left:0;top:0}
+    
+
+
+
+	@media screen and (max-width: 1200px) {
+	#dashboard_box{height:100%;padding: 25px;}
+	.dash_top{display:block;}
+	.dash_top .dashbox{width: calc(100% / 2 - 10px);margin-bottom: 20px;}
+	.dash_top .dashbox:nth-child(3){margin-right:0 !important;}
+	}
+
+	@media screen and (max-width: 900px) {
+	.status_box a.tab_h3 h3{font-size: 14px;padding: 0 10px;}
+	}
+
+	@media screen and (max-width: 600px) {
+	#dashboard_box{padding: 15px;}
+	.dash_top > div{height:auto;}
+	.dash_top .dashbox{width:100%; background:#fff;}
+	.dash_bbs{display:block;}
+	.dash_bbs > div{width:100%;}
+	.status_box{display:block;}
+	.status_box a.tab_h3{width:100%;border-bottom: 1px solid #e7eaec;}
+	.status_box .cont_box{top: 124px;padding: 5px;}
+	a.tab_more{right: -10px;top: -38px;}
+	.status_board .status_box{height: 280px;}
+	}
+
+.cnt_wrap, .cnt_box { display: block; width: 100%; height: auto;  }
+  
+  .cnt_wrap::after, .cnt_box::after { content: ''; display: block; clear: both;  }
+  
+  .text-hide { overflow: hidden; position: absolute; display: inline-block; border: 0; width: 1px; height: 1px; clip: rect(1px 1px 1px 1px); clip: rect(1px, 1px, 1px, 1px); clip-path: inset(50%); z-index: -1;  }
+  
+  .calendar { display: block; width: 100%; height: auto; margin: 0; padding: 0; font-size: 10px; }
+  
+  .calendar::after { content: ''; display: block; clear: both;  }
+  
+  .calendar .calendar_header { display: block; width: 100%; height: auto; text-align: center; margin: 0 auto 10px; padding: 0;}
+  
+  .calendar .calendar_header::after { content: ''; display: block; clear: both; }
+  
+  .calendar .calendar_header .ym_title { display: inline-block; width: auto; height: auto; padding: 0 10px; margin: 0; box-sizing: border-box; font-size: 2.6em; line-height: 40px; vertical-align: top; font-weight: bold;  }
+  
+  .calendar .calendar_header .ym_title .year {color: #333;}
+  
+  .calendar .calendar_header .ym_title .month {color: #783267; }
+  
+  .calendar .calendar_header .m_btn { display: inline-block; width: 40px; height: 40px; padding: 0; margin: 0; position: relative; box-sizing: border-box; cursor: pointer;  }
+  
+  .calendar .calendar_header .m_btn:before, .calendar .calendar_header .m_btn:after { content: ''; display: block; width: 16px; height: 2px; background-color: #333; position: absolute; transform: translate(-50%, -50%);  }
+  
+  .calendar .calendar_header .m_btn.prev:before { left: 50%; top: calc(50% - 5px); transform: translate(-50%, -50%) rotate(-45deg);  }
+  
+  .calendar .calendar_header .m_btn.prev:after { left: 50%; top: calc(50% + 5px); transform: translate(-50%, -50%) rotate(45deg);  }
+  
+  .calendar .calendar_header .m_btn.next:before { left: 50%; top: calc(50% - 5px); transform: translate(-50%, -50%) rotate(45deg);  }
+  
+  .calendar .calendar_header .m_btn.next:after { left: 50%; top: calc(50% + 5px); transform: translate(-50%, -50%) rotate(-45deg);  }
+  
+  .calendar .calendar_table { display: block; width: 100%; height: auto; margin: 0; padding: 0;  }
+  
+  .calendar .calendar_table::after { content: ''; display: block; clear: both;  }
+  
+  .calendar .calendar_table table { width: 100%; height: auto; border-collapse: collapse; border-spacing: 0;  }
+  
+  .calendar .calendar_table table th, .calendar .calendar_table table td { width: auto; height: auto; padding: 10px; margin: 0; vertical-align: middle;  }
+  
+  /* section calendar */
+  .sec_cal { width: 100%; margin: 0 auto; font-family: "NotoSansR"; font-size: 10px;  }
+  
+  .sec_cal .cal_nav {display: flex;justify-content: center;align-items: center;font-weight: 700;font-size: 2em;line-height: 40px;  }
+  
+  .sec_cal .cal_nav .year-month {width: 300px;text-align: center;line-height: 1;  }
+  
+  .sec_cal .cal_nav .year-month .year_wrap {display: inline-block;}
+  
+  .sec_cal .cal_nav .year-month .month_wrap {display: inline-block; }
+  
+  .sec_cal .cal_nav .nav { display: flex; border: 1px solid #333333; border-radius: 5px;  }
+  
+  .sec_cal .cal_nav .go-prev,
+  .sec_cal .cal_nav .go-next { display: block; width: 50px; height: 40px; font-size: 0; display: flex; justify-content: center; align-items: center;  }
+  
+  .sec_cal .cal_nav .go-prev:before, .sec_cal .cal_nav .go-prev:before,
+  .sec_cal .cal_nav .go-next:before,
+  .sec_cal .cal_nav .go-next:before { content: ""; display: block; width: 10px; height: 10px; border: 3px solid #000; border-width: 3px 3px 0 0; transition: border 0.1s;  }
+  
+  .sec_cal .cal_nav .go-prev:hover:before, .sec_cal .cal_nav .go-prev:hover:before,
+  .sec_cal .cal_nav .go-next:hover:before,
+  .sec_cal .cal_nav .go-next:hover:before {border-color: #ed2a61;}
+  
+  .sec_cal .cal_nav .go-prev:before {transform: rotate(-135deg);}
+  
+  .sec_cal .cal_nav .go-next:before {transform: rotate(45deg);}
+  
+  .sec_cal .cal_wrap {position: relative; margin: 0 auto;}
+  
+  .sec_cal .cal_wrap:after {top: 368px;}
+  
+  .sec_cal .cal_wrap .days {display: flex; padding-bottom: 10px; border-bottom: 1px solid #783267;}
+  
+  .sec_cal .cal_wrap .day { display: flex; align-items: center; justify-content: center; width: calc(100% / 7); text-align: left; color: #999; font-size: 12px; font-weight: bold; text-align: center; border-radius: 5px;}
+  
+  .sec_cal .cal_wrap .day:nth-child(7n) {color: #3c6ffa;}
+  
+  .sec_cal .cal_wrap .day:nth-child(7n + 1) {color: #ed2a61;}
+  
+  .sec_cal .cal_wrap .day.disable {color: #ddd;}
+  
+  .sec_cal .cal_wrap .dates {display: flex; flex-flow: wrap; height: 180px;}
+  
+  .sec_cal .cal_wrap .dates .current.today {background: #f2f2f2;}
+  
+
+
+
+
+
+  .t_scroll_wrap {height: 100%; overflow-y: auto;}
+  .dash_data_table {width: 100%; height: auto; font-size: 14px; font-weight: 500; margin: 0;}
+  .dash_data_table thead {position: sticky; left: 0; top: 0; background-color: #fff;}
+  .dash_data_table thead th,
+  .dash_data_table thead td {font-weight: bold;}
+  .dash_data_table th,
+  .dash_data_table td {padding: 10px; text-align: center; border: 1px solid #eee;}
+  .dash_data_table th {background-color: #56717e; color: #fff;}
+  .dash_data_table .t_left {text-align: left;}
+  .dash_data_table .t_right {text-align: right;}
+  .dash_data_table .t_center {text-align: center;}
+  .dash_data_table .point {color: red;}
+
+
+    .rank_table {width: 100%; height: auto; min-height: 227px;}
+    .rank_table thead th {font-size: 18px; font-weight: bold;}
+    .rank_table thead tr {border-top: 0;}
+    .rank_table tr {border-top: 1px solid #ddd; border-bottom: 0;}
+    /* .rank_table tbody tr:nth-child(odd) {background-color: rgba(242, 242, 242, 0.5);} */
+    .rank_table th,
+    .rank_table td {padding: 10px; font-size: 16px; text-align: center; border: 0;}
+    .rank_table .t_left {text-align: left;}
+    .rank_table .t_right {text-align: right;}
+    .rank_table tr:nth-child(1) .rank {color: red;}
+    .rank_table tr:nth-child(2) .rank {color: blue;}
+    .rank_table tr:nth-child(3) .rank {color: purple;}
+
+
+    .rank_area_wrap {display: block; border: 0; background-color: #fff; position: relative;}
+    /* .rank_area_wrap::before,
+    .rank_area_wrap::after {content: ''; display: block; width: 100%; height: 10px; position: absolute;
+        background: linear-gradient(to right, transparent, #42f2ff, transparent);
+    }
+    .rank_area_wrap::before {clip-path: polygon(0% 0%, 30% 0%, calc(30% + 10px) 8px, calc(70% - 10px) 8px, 70% 0%, 100% 0%, 100% 1px, calc(70% + 2px) 1px, calc(70% - 10px) 10px, calc(30% + 10px) 10px, 30% 1px, 0% 1px); left: 0; top: 2px;}
+    .rank_area_wrap::after {clip-path: polygon(0% 8px, 30% 8px, calc(30% + 10px) 0, calc(70% - 10px) 0, 70% 8px, 100% 8px, 100% 10px, calc(70% + 2px) 10px, calc(70% - 10px) 2px, calc(30% + 10px) 2px, 30% 10px, 0% 10px); left: 0; bottom: 2px;} */
+
+    .rank_list_wrap {display: flex!important; width: 100%; height: auto; flex-direction: column; position: relative!important; left: auto!important; top: auto!important; border: 0!important; padding: 0!important; gap: 10px;}
+    .rank_list_box {display: flex; justify-content: flex-start; align-items: center; width: 100%; height: auto; gap:10px;}
+    .rank_list_box:hover {border-radius: 100px 0 0 100px; background: linear-gradient(to right, #eee, transparent);}
+    .rank_list_box:not(:first-child) {margin-top: 10px;}
+    .rank_list_box .rank_circle {flex: 0 1 auto; display: flex; width: 40px; height: 40px; background-color: #eee; border-radius: 50%; justify-content: center; align-items: center; font-weight: bold; position: relative; border: 0;}
+    /* .rank_list_box .rank_circle::before {content: ''; display: block; width: inherit; height: inherit; background-color: transparent; border: 4px solid transparent; border-bottom-color: #fff; border-top-color: #fff; border-radius: 50%; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); transition: all 1.5s ease;} */
+    .rank_list_box:hover .rank_circle::before {transform: translate(-50%,-50%) rotate(720deg);}
+    .rank_list_box:nth-child(1) .rank_circle {background-color: #5189f8; color: #fff;}
+    .rank_list_box:nth-child(2) .rank_circle {background-color: #44B7E1; color: #fff;}
+    .rank_list_box:nth-child(3) .rank_circle {background-color: #62c5dd; color: #fff;}
+    .rank_list_box .info_box {flex: 1; display: flex; width: 100%; height: auto; padding: 0; background-color: transparent; text-align: left; align-items: center; border: 0;}
+    .rank_list_box .info_box .tit {flex: 1; display: block; width: 100%; height: auto; font-size: 16px; font-weight: bold; margin-right: auto; padding: 0; color: inherit;}
+    .rank_list_box .info_box .tit::before {display: none;}
+    .rank_list_box .info_box .count {flex: 0 1 auto; display: block; width: auto; height: auto; font-size: 12px; font-weight: 400; line-height: 1; text-align: right; margin-bottom: 4px;}
+    .rank_list_box .info_box .count > span {display: block; width: auto; height: auto;  font-size: 16px; font-weight: 500; white-space: nowrap; line-height: 1;}
+
+</style>
+
+<!-- AM 차트 4 -->
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<script src="/assets/libs/amchart4/themes/animated.js"></script>
+
+<div id="dashboard_box">
+<div class="dashboard_wrap">
+<div class="dash_bbs">
+        <div class="popular_board" style="width:100%;">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">최근 일주일 방문자 추이</a>
+            </h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_1" style="width: 100%; height:280px"></div>
+            </div>
+        </div>
+        <div class="popular_board" style="width:100%;">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">최근 일주일 시간대별 방문자 추이</a>
+            </h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_2" style="width: 100%; height:280px;"></div>
+            </div>
+        </div>
+        <div class="popular_board" style="margin-right:0;">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">주간 메뉴 순위 TOP 5</a>
+            </h2>
+            <div id="board_new" class="notice_box border_box rank_area_wrap">
+                <ul class="rank_list_wrap">
+                    <li class="rank_list_box">
+                        <span class="rank_circle">1</span>
+                        <div class="info_box">
+                            <a href="" class="tit">수강신청현황</a>
+                            <span class="count">방문자 수 <span>878,345</span></span>
+                        </div>
+                    </li>
+                    <li class="rank_list_box">
+                        <span class="rank_circle">2</span>
+                        <div class="info_box">
+                            <a href="" class="tit">훈련과정현황</a>
+                            <span class="count">방문자 수 <span>567,856</span></span>
+                        </div>
+                    </li>
+                    <li class="rank_list_box">
+                        <span class="rank_circle">3</span>
+                        <div class="info_box">
+                            <a href="" class="tit">실감훈련</a>
+                            <span class="count">방문자 수 <span>456,765</span></span>
+                        </div>
+                    </li>
+                    <li class="rank_list_box">
+                        <span class="rank_circle">4</span>
+                        <div class="info_box">
+                            <a href="" class="tit">영상교육</a>
+                            <span class="count">방문자 수 <span>345,765</span></span>
+                        </div>
+                    </li>
+                    <li class="rank_list_box">
+                        <span class="rank_circle">5</span>
+                        <div class="info_box">
+                            <a href="" class="tit">공지사항</a>
+                            <span class="count">방문자 수 <span>123,765</span></span>
+                        </div>
+                    </li>
+
+                </ul>
+            </div>
+        </div>  
+
+        <script>
+            am4core.ready(function() {
+
+            // Themes begin
+            am4core.useTheme(am4themes_animated);
+            // Themes end
+
+            var chart = am4core.create("chartdiv_1", am4charts.XYChart);
+
+            // Add data
+            chart.data = [{
+            "date": new Date(2023, 7, 20),
+            "value": 2653
+            }, {
+            "date": new Date(2023, 7, 21),
+            "value": 3567
+            }, {
+            "date": new Date(2023, 7, 22),
+            "value": 4567
+            }, {
+            "date": new Date(2023, 7, 23),
+            "value": 5678
+            }, {
+            "date": new Date(2023, 7, 24),
+            "value": 6897
+            }, {
+            "date": new Date(2023, 7, 25),
+            "value": 5678
+            }, {
+            "date": new Date(2023, 7, 26),
+            "value": 7674
+            }, {
+            "date": new Date(2023, 7, 27),
+            "value": 8567,
+            "disabled": false
+            }];
+
+            // Create axes
+            var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+            dateAxis.renderer.labels.template.fill = '#999';
+            dateAxis.renderer.labels.template.fontSize = 12;
+            dateAxis.renderer.grid.template.stroke = '#1da7fa';
+            dateAxis.renderer.grid.template.strokeOpacity = 0.08;
+            // Create value axis
+            var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+            valueAxis.renderer.labels.template.fill = '#999';
+            valueAxis.renderer.labels.template.fontSize = 12;
+            valueAxis.renderer.grid.template.stroke = '#1da7fa';
+            valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+            // Create series
+            var lineSeries = chart.series.push(new am4charts.LineSeries());
+            lineSeries.dataFields.valueY = "value";
+            lineSeries.dataFields.dateX = "date";
+            lineSeries.name = "Sales";
+            lineSeries.strokeWidth = 2;
+            var gradient = new am4core.LinearGradient();
+			gradient.addColor(am4core.color("#53e7f5"));
+			gradient.addColor(am4core.color("#1da7fa"));
+            gradient.addColor(am4core.color("#0680f9"));
+            lineSeries.stroke = gradient;
+            // lineSeries.strokeDasharray = "5,4";
+            // lineSeries.tensionX = 0.7;
+
+            
+            // Add simple bullet
+            var bullet = lineSeries.bullets.push(new am4charts.CircleBullet());
+            bullet.disabled = true;
+            bullet.propertyFields.disabled = "disabled";
+            bullet.fill = am4core.color("#1da7fa");
+            bullet.stroke = am4core.color("#1da7fa");
+
+            var secondCircle = bullet.createChild(am4core.Circle);
+            secondCircle.radius = 6;
+            secondCircle.fill = am4core.color("#53e7f5");
+            bullet.stroke = am4core.color("#1da7fa");
+            bullet.strokeWidth = 2;
+
+            bullet.events.on("inited", function(event){
+            animateBullet(event.target.circle);
+            })
+
+
+            function animateBullet(bullet) {
+                var animation = bullet.animate([{ property: "scale", from: 1, to: 5 }, { property: "opacity", from: 1, to: 0 }], 1000, am4core.ease.circleOut);
+                animation.events.on("animationended", function(event){
+                animateBullet(event.target.object);
+                })
+            }
+
+
+            }); // end am4core.ready()
+
+            am4core.ready(function() {
+
+                // Themes begin
+                am4core.useTheme(am4themes_animated);
+                // Themes end
+
+                // Create chart instance
+                var chart = am4core.create("chartdiv_2", am4charts.XYChart);
+
+                // Add data
+                chart.data = [ {
+                "date": "2013-01-24",
+                "value": 65
+                }, {
+                "date": "2013-02-25",
+                "value": 76
+                }, {
+                "date": "2013-03-26",
+                "value": 85
+                }, {
+                "date": "2013-04-27",
+                "value": 77
+                }, {
+                "date": "2013-05-28",
+                "value": 89
+                }, {
+                "date": "2013-06-29",
+                "value": 95
+                }, {					
+                "date": "2013-07-09",
+                "value": 84
+                }, {					
+                "date": "2013-08-12",
+                "value": 76
+                }, {
+                "date": "2013-09-15",
+                "value": 89
+                }, {
+                "date": "2013-10-20",
+                "value": 94
+                } ];
+
+                // Create axes
+                var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+                dateAxis.renderer.grid.template.location = 0;
+                // dateAxis.renderer.minGridDistance = 50;
+                dateAxis.renderer.labels.template.fill = '#999';
+                dateAxis.renderer.labels.template.fontSize = 12;
+                dateAxis.renderer.grid.template.stroke = '#1da7fa';
+                dateAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+                var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+                valueAxis.renderer.labels.template.fill = '#999';
+                valueAxis.renderer.labels.template.fontSize = 12;
+                valueAxis.renderer.grid.template.stroke = '#1da7fa';
+                valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+                // Create series
+                var series = chart.series.push(new am4charts.LineSeries());
+                series.dataFields.valueY = "value";
+                series.dataFields.dateX = "date";
+                series.strokeWidth = 3;
+                var gradient = new am4core.LinearGradient();
+                gradient.addColor(am4core.color('#fff'));
+                gradient.addColor(am4core.color("#1da7fa"));
+                gradient.addColor(am4core.color("#1da7fa"));
+                gradient.addColor(am4core.color("#53e7f5"));
+                // series.stroke = '#1da7fa';
+                series.stroke = gradient;
+
+                // var gradient = new am4core.LinearGradient();
+                // gradient.addColor(am4core.color("#53e7f5"));
+                // gradient.addColor(am4core.color("#1da7fa"));
+                // gradient.rotation = 90;
+
+                // series.fill = gradient;
+                // series.fillOpacity = 1;
+                series.tensionX = 0.8;
+                // series.tensionY = 1;
+
+                // Add vertical scrollbar
+                // chart.scrollbarY = new am4core.Scrollbar();
+                // chart.scrollbarY.marginLeft = 0;
+
+                // Add cursor
+                chart.cursor = new am4charts.XYCursor();
+                chart.cursor.behavior = "zoomY";
+                chart.cursor.lineX.disabled = true;
+
+                }); // end am4core.ready()
+
+
+        </script>
+    </div>
+    <script>
+        $(function(){
+            $("#board_new .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#board_new  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#board_new  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+
+            $("#board_comment .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#board_comment  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#board_comment  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+
+            $("#board_delete .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#board_delete  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#board_delete  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+
+            $("#calendar .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#calendar  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#calendar  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+        })
+    </script>
+
+    <div class="dash_bbs">
+        <div class="popular_board" style="width:calc(100% / 5 - 15px)">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">실감훈련 만족도 평점</a>
+            </h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_4" style="width: 100%; height:240px"></div>
+            </div>
+        </div>
+        <div class="popular_board" style="width:calc(100% / 5 - 15px)">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">실감훈련 평균 수료율</a>
+            </h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_5" style="width: 100%; height:240px"></div>
+            </div>
+        </div>
+        <div class="popular_board" style="width: 100%; margin-right:0;">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">실감훈련 연간 평균 이수율</a>
+            </h2>
+            <div id="board_new" class="notice_box border_box" style="height: 100%">
+                <div id="chartdiv_6" style="width: 100%; height:calc(100% - 16px)"></div>
+            </div>
+        </div>  
+
+        <script>
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_4", am4charts.PieChart);
+
+            // Add data
+            chart.data = [ {
+            "country": "5점",
+            "litres": 103
+            }, {
+            "country": "4점",
+            "litres": 65
+            }, {
+            "country": "3점",
+            "litres": 54
+            }, {
+            "country": "1점",
+            "litres": 12
+            }, {
+            "country": "2점",
+            "litres": 11
+            }];
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "litres";
+            pieSeries.dataFields.category = "country";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 1;
+            pieSeries.slices.template.strokeOpacity = 1;
+            // pieSeries.slices.template.fill = '#ccc';
+            pieSeries.colors.list = [                
+                am4core.color("#7760f9"),
+                am4core.color("#344678"),
+                am4core.color("#2e7df4"),
+                am4core.color("#1da7fa"),
+                am4core.color("#6af4ff"),
+            ];
+
+
+
+            // This creates initial animation
+            pieSeries.hiddenState.properties.opacity = 1;
+            pieSeries.hiddenState.properties.endAngle = -90;
+            pieSeries.hiddenState.properties.startAngle = -90;
+
+            // Disable ticks and labels
+            pieSeries.labels.template.disabled = true;
+            pieSeries.ticks.template.disabled = true;
+
+        });
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_5", am4charts.PieChart);
+
+            // Add data
+            chart.data = [ {
+            "country": "수료율",
+            "litres": 67
+            }, {
+            "country": "",
+            "litres": 33
+            }];
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "litres";
+            pieSeries.dataFields.category = "country";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 1;
+            pieSeries.slices.template.strokeOpacity = 1;
+
+            // This creates initial animation
+            pieSeries.hiddenState.properties.opacity = 1;
+            pieSeries.hiddenState.properties.endAngle = -90;
+            pieSeries.hiddenState.properties.startAngle = -90;
+
+            // Disable ticks and labels
+            pieSeries.labels.template.disabled = true;
+            pieSeries.ticks.template.disabled = true;
+            pieSeries.colors.list = [
+                am4core.color("#1da7fa"),
+                am4core.color("#6af4ff"),
+            ];
+
+        });
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_6", am4charts.XYChart);
+            chart.padding(20, 20, 20, 20);
+            // Add data
+            chart.data = [
+            {date:new Date(2023, 0,01), value1:50, value2:48, previousDate:new Date(2022, 0, 01)},
+            {date:new Date(2023, 1,01), value1:50, value2:48, previousDate:new Date(2022, 1, 01)},
+            {date:new Date(2023, 2,01), value1:53, value2:51, previousDate:new Date(2022, 2, 01)},
+            {date:new Date(2023, 3,01), value1:65, value2:58, previousDate:new Date(2022, 3, 01)},
+            {date:new Date(2023, 4,01), value1:52, value2:53, previousDate:new Date(2022, 4, 01)},
+            {date:new Date(2023, 5,01), value1:45, value2:44, previousDate:new Date(2022, 5, 01)},
+            {date:new Date(2023, 6,01), value1:75, value2:42, previousDate:new Date(2022, 6, 01)},
+            {date:new Date(2023, 7,01), value1:86, value2:55, previousDate:new Date(2022, 7, 01)},
+            {date:new Date(2023, 8,01), value1:65, value2:45, previousDate:new Date(2022, 8, 01)},
+            {date:new Date(2023, 9,01), value1:76, value2:56, previousDate:new Date(2022, 9, 01)},
+            {date:new Date(2023, 10,01), value1:67, value2:65, previousDate:new Date(2022, 10, 01)},
+            {date:new Date(2023, 11,01), value1:87, value2:76, previousDate:new Date(2022, 11, 01)}
+            // {date:new Date(2023, 12,01), value1:59, value2:55, previousDate:new Date(2022, 12, 01)}
+            ]
+
+            // Create axes
+            var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+            dateAxis.renderer.minGridDistance = 50;
+            dateAxis.renderer.maxGridDistance = 100;
+            dateAxis.renderer.labels.template.fill = '#999';
+            dateAxis.renderer.labels.template.fontSize = 12;
+            dateAxis.renderer.grid.template.stroke = '#1da7fa';
+            dateAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+            var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+            valueAxis.renderer.labels.template.fill = '#999';
+            valueAxis.renderer.labels.template.fontSize = 12;
+            valueAxis.renderer.grid.template.stroke = '#1da7fa';
+            valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+            // Create series
+            var series = chart.series.push(new am4charts.LineSeries());
+            series.dataFields.valueY = "value1";
+            series.dataFields.dateX = "date";
+            series.strokeWidth = 2;
+            series.minBulletDistance = 10;
+            series.tensionX = 0.8;
+            var gradient = new am4core.LinearGradient();
+                gradient.addColor(am4core.color('#fff'));
+                gradient.addColor(am4core.color("#53e7f5"));
+                gradient.addColor(am4core.color("#1da7fa"));
+                gradient.addColor(am4core.color("#1da7fa"));
+                // series.stroke = '#1da7fa';
+            series.stroke = gradient;
+            series.tooltipText = "[bold]이번년도 : {date.formatDate()} {value1}[/]\n이전년도 : {previousDate.formatDate()} {value2}";
+            series.tooltip.pointerOrientation = "vertical";
+
+            // Create series
+            var series2 = chart.series.push(new am4charts.LineSeries());
+            series2.dataFields.valueY = "value2";
+            series2.dataFields.dateX = "date";
+            series2.strokeWidth = 2;
+            series2.strokeDasharray = "3,4";
+            series2.tensionX = 0.8;
+            var gradient = new am4core.LinearGradient();
+                gradient.addColor(am4core.color('#fff'));
+                gradient.addColor(am4core.color("#0735b3"));
+                gradient.addColor(am4core.color("#2B64F9"));
+                gradient.addColor(am4core.color("#713eef"));
+                // series.stroke = '#1da7fa';
+            series2.stroke = gradient;
+            // series2.stroke = series.stroke;
+            
+
+            // Add cursor
+            chart.cursor = new am4charts.XYCursor();
+            chart.cursor.xAxis = dateAxis;
+
+            });
+        </script>
+    </div>
+
+    <div class="dash_bbs">
+        <div class="popular_board" style="width:calc(100% / 5 - 15px)">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">영상교육 만족도 평점</a>
+            </h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_7" style="width: 100%; height:240px"></div>
+            </div>
+        </div>
+        <div class="popular_board" style="width:calc(100% / 5 - 15px)">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">영상교육 평균 수료율</a>
+            </h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_8" style="width: 100%; height:240px"></div>
+            </div>
+        </div>
+        <div class="popular_board" style="width: 100%; margin-right:0;">
+            <h2 class="h2_butt">
+                <a href="/admin/lms/edu/dashboard">영상교육 연간 평균 이수율</a>
+            </h2>
+            <div id="board_new" class="notice_box border_box" style="height: 100%">
+                <div id="chartdiv_9" style="width: 100%; height:calc(100% - 16px)"></div>
+            </div>
+        </div>  
+
+        <script>
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_7", am4charts.PieChart);
+
+            // Add data
+            chart.data = [ {
+            "country": "5점",
+            "litres": 98
+            }, {
+            "country": "4점",
+            "litres": 87
+            }, {
+            "country": "3점",
+            "litres": 76
+            }, {
+            "country": "2점",
+            "litres": 58
+            }, {
+            "country": "1점",
+            "litres": 97
+            }];
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "litres";
+            pieSeries.dataFields.category = "country";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 1;
+            pieSeries.slices.template.strokeOpacity = 1;
+
+            // This creates initial animation
+            pieSeries.hiddenState.properties.opacity = 1;
+            pieSeries.hiddenState.properties.endAngle = -90;
+            pieSeries.hiddenState.properties.startAngle = -90;
+
+            // Disable ticks and labels
+            pieSeries.labels.template.disabled = true;
+            pieSeries.ticks.template.disabled = true;
+            pieSeries.colors.list = [
+                am4core.color("#7760f9"),
+                am4core.color("#344678"),
+                am4core.color("#2e7df4"),
+                am4core.color("#1da7fa"),
+                am4core.color("#6af4ff"),
+            ];
+
+
+        });
+
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_8", am4charts.PieChart);
+
+            // Add data
+            chart.data = [ {
+            "country": "수료율",
+            "litres": 87
+            }, {
+            "country": "",
+            "litres": 13
+            }];
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "litres";
+            pieSeries.dataFields.category = "country";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 1;
+            pieSeries.slices.template.strokeOpacity = 1;
+
+            // This creates initial animation
+            pieSeries.hiddenState.properties.opacity = 1;
+            pieSeries.hiddenState.properties.endAngle = -90;
+            pieSeries.hiddenState.properties.startAngle = -90;
+
+            // Disable ticks and labels
+            pieSeries.labels.template.disabled = true;
+            pieSeries.ticks.template.disabled = true;
+            pieSeries.colors.list = [
+                am4core.color("#1da7fa"),
+                am4core.color("#6af4ff"),
+            ];
+
+
+        });
+
+
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_9", am4charts.XYChart);
+            chart.padding(20, 20, 20, 20);
+            // Add data
+            chart.data = [
+            {date:new Date(2023, 0,01), value1:12, value2:34, previousDate:new Date(2022, 0, 01)},
+            {date:new Date(2023, 1,01), value1:42, value2:54, previousDate:new Date(2022, 1, 01)},
+            {date:new Date(2023, 2,01), value1:32, value2:25, previousDate:new Date(2022, 2, 01)},
+            {date:new Date(2023, 3,01), value1:54, value2:53, previousDate:new Date(2022, 3, 01)},
+            {date:new Date(2023, 4,01), value1:35, value2:36, previousDate:new Date(2022, 4, 01)},
+            {date:new Date(2023, 5,01), value1:65, value2:57, previousDate:new Date(2022, 5, 01)},
+            {date:new Date(2023, 6,01), value1:67, value2:86, previousDate:new Date(2022, 6, 01)},
+            {date:new Date(2023, 7,01), value1:87, value2:55, previousDate:new Date(2022, 7, 01)},
+            {date:new Date(2023, 8,01), value1:47, value2:46, previousDate:new Date(2022, 8, 01)},
+            {date:new Date(2023, 9,01), value1:56, value2:32, previousDate:new Date(2022, 9, 01)},
+            {date:new Date(2023, 10,01), value1:62, value2:24, previousDate:new Date(2022, 10, 01)},
+            {date:new Date(2023, 11,01), value1:75, value2:43, previousDate:new Date(2022, 11, 01)}
+            // {date:new Date(2023, 12,01), value1:59, value2:55, previousDate:new Date(2022, 12, 01)}
+            ]
+
+            // Create axes
+            var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+            dateAxis.renderer.minGridDistance = 50;
+            dateAxis.renderer.maxGridDistance = 100;
+            dateAxis.renderer.labels.template.fill = '#999';
+            dateAxis.renderer.labels.template.fontSize = 12;
+            dateAxis.renderer.grid.template.stroke = '#1da7fa';
+            dateAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+            var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+            valueAxis.renderer.labels.template.fill = '#999';
+            valueAxis.renderer.labels.template.fontSize = 12;
+            valueAxis.renderer.grid.template.stroke = '#1da7fa';
+            valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+            // Create series
+            var series = chart.series.push(new am4charts.LineSeries());
+            series.dataFields.valueY = "value1";
+            series.dataFields.dateX = "date";
+            series.strokeWidth = 2;
+            series.tensionX = 0.8;
+            var gradient = new am4core.LinearGradient();
+                gradient.addColor(am4core.color('#fff'));
+                gradient.addColor(am4core.color("#53e7f5"));
+                gradient.addColor(am4core.color("#1da7fa"));
+                gradient.addColor(am4core.color("#1da7fa"));
+                // series.stroke = '#1da7fa';
+            series.stroke = gradient;
+            series.minBulletDistance = 10;
+            series.tooltipText = "[bold]이번년도 : {date.formatDate()} {value1}[/]\n이전년도 : {previousDate.formatDate()} {value2}";
+            series.tooltip.pointerOrientation = "vertical";
+
+            // Create series
+            var series2 = chart.series.push(new am4charts.LineSeries());
+            series2.dataFields.valueY = "value2";
+            series2.dataFields.dateX = "date";
+            series2.strokeWidth = 2;
+            series2.strokeDasharray = "3,4";
+            series2.tensionX = 0.8;
+            var gradient = new am4core.LinearGradient();
+                gradient.addColor(am4core.color('#fff'));
+                gradient.addColor(am4core.color("#0735b3"));
+                gradient.addColor(am4core.color("#2B64F9"));
+                gradient.addColor(am4core.color("#713eef"));
+                // series.stroke = '#1da7fa';
+                series2.stroke = gradient;
+            // series2.stroke = series.stroke;
+
+            // Add cursor
+            chart.cursor = new am4charts.XYCursor();
+            chart.cursor.xAxis = dateAxis;
+
+            });
+        </script>
+    </div>
+
+    <div class="dash_bbs">
+        <div class="popular_board" style="width: 100%;">
+            <h2 class="h2_butt">
+                <a href="/admin/ras/dashboard">연간 훈련대비 실제 작업에 대한 재해 억제율(발생율)</a>
+            </h2>
+            <div id="board_new" class="notice_box border_box" style="height: 100%">
+                <div id="chartdiv_10" style="width: 100%; height:300px"></div>
+            </div>
+        </div>  
+        <script>
+          am4core.ready(function() {
+
+          // Themes begin
+          am4core.useTheme(am4themes_animated);
+          // Themes end
+
+
+
+          var chart = am4core.create('chartdiv_10', am4charts.XYChart)
+          chart.padding(10,20,10,10);
+          chart.colors.step = 2;
+
+          chart.legend = new am4charts.Legend()
+          chart.legend.position = 'top'
+          chart.legend.paddingBottom = 20
+          chart.legend.labels.template.maxWidth = 95
+
+          var xAxis = chart.xAxes.push(new am4charts.CategoryAxis())
+          xAxis.dataFields.category = 'category'
+          xAxis.renderer.cellStartLocation = 0.1
+          xAxis.renderer.cellEndLocation = 0.9
+          xAxis.renderer.grid.template.location = 0;
+          xAxis.renderer.labels.template.fill = '#999';
+          xAxis.renderer.labels.template.fontSize = 12;
+          xAxis.renderer.grid.template.stroke = '#1da7fa';
+          xAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+          var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+          yAxis.min = 0;
+          yAxis.renderer.labels.template.fill = '#999';
+          yAxis.renderer.labels.template.fontSize = 12;
+          yAxis.renderer.grid.template.stroke = '#1da7fa';
+          yAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+
+          function createSeries(value, name) {
+              var series = chart.series.push(new am4charts.ColumnSeries())
+              series.dataFields.valueY = value;
+              series.dataFields.categoryX = 'category';
+              series.name = name;
+              
+              series.events.on("hidden", arrangeColumns);
+              series.events.on("shown", arrangeColumns);
+              
+              var bullet = series.bullets.push(new am4charts.LabelBullet())
+              bullet.interactionsEnabled = false
+              bullet.dy = 30;
+              bullet.label.text = '{valueY}'
+              bullet.label.fill = am4core.color('#ffffff')
+              
+              return series;
+          }
+
+          chart.data = [
+              {
+                  category: '1월',
+                  number: 40,
+                  rate: 55
+              },
+              {
+                  category: '2월',
+                  number: 30,
+                  rate: 78
+              },
+              {
+                  category: '3월',
+                  number: 27,
+                  rate: 40
+              },
+              {
+                  category: '4월',
+                  number: 50,
+                  rate: 33
+              },
+              {
+                  category: '5월',
+                  number: 40,
+                  rate: 55
+              },
+              {
+                  category: '6월',
+                  number: 30,
+                  rate: 78
+              },
+              {
+                  category: '7월',
+                  number: 27,
+                  rate: 40
+              },
+              {
+                  category: '8월',
+                  number: 50,
+                  rate: 33
+              },
+              {
+                  category: '9월',
+                  number: 40,
+                  rate: 55
+              },
+              {
+                  category: '10월',
+                  number: 30,
+                  rate: 78
+              },
+              {
+                  category: '11월',
+                  number: 27,
+                  rate: 40
+              },
+              {
+                  category: '12월',
+                  number: 50,
+                  rate: 33
+              }
+          ]
+
+
+          createSeries('number', '재해 수');
+          createSeries('rate', '억제율');
+
+          var series = chart.series.getIndex(0);
+          var series2 = chart.series.getIndex(1);
+
+          var gradient = new am4core.LinearGradient();
+        //   gradient.addColor(am4core.color("#53e7f5"));
+          gradient.addColor(am4core.color("#1da7fa"));
+          gradient.addColor(am4core.color("#2f7df4"));
+          gradient.rotation = -90;
+
+          series.fill = gradient;
+
+          var gradient2 = new am4core.LinearGradient();
+        //   gradient2.addColor(am4core.color("#2f7df4"));
+        //   gradient2.addColor(am4core.color("#7b4aee"));
+        //   gradient2.addColor(am4core.color("#a640e3"));
+
+          gradient2.addColor(am4core.color("#2f7df4"));
+          gradient2.addColor(am4core.color("#7b4aee"));
+
+          gradient2.rotation = -90;
+          
+          series2.fill = gradient2;
+
+          function arrangeColumns() {
+
+              var series = chart.series.getIndex(0);
+
+              var w = 1 - xAxis.renderer.cellStartLocation - (1 - xAxis.renderer.cellEndLocation);
+              if (series.dataItems.length > 1) {
+                  var x0 = xAxis.getX(series.dataItems.getIndex(0), "categoryX");
+                  var x1 = xAxis.getX(series.dataItems.getIndex(1), "categoryX");
+                  var delta = ((x1 - x0) / chart.series.length) * w;
+                  if (am4core.isNumber(delta)) {
+                      var middle = chart.series.length / 2;
+
+                      var newIndex = 0;
+                      chart.series.each(function(series) {
+                          if (!series.isHidden && !series.isHiding) {
+                              series.dummyData = newIndex;
+                              newIndex++;
+                          }
+                          else {
+                              series.dummyData = chart.series.indexOf(series);
+                          }
+                      })
+                      var visibleCount = newIndex;
+                      var newMiddle = visibleCount / 2;
+
+                      chart.series.each(function(series) {
+                          var trueIndex = chart.series.indexOf(series);
+                          var newIndex = series.dummyData;
+
+                          var dx = (newIndex - trueIndex + middle - newMiddle) * delta
+
+                          series.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+                          series.bulletsContainer.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+                      })
+                  }
+              }
+          }
+
+          }); // end am4core.ready()
+        </script>
+    </div>
+
+    
+    
+</div>
+</div>
+</th:block>

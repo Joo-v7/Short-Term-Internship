@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.result.ResultMapper">
+
+	<sql id="selectWhere">
+		<where>
+			delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND detail_idx = #{detailIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(eventIdx)">
+				AND event_idx = #{eventIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="egovmap">
+		SELECT a.*, b.process_idx, b.work_role, b.process_contents, b.task_tool,
+		c.accident_idx, c.event_location, c.accident_event, c.object_factor, c.behavior_factor, c.accident_code,
+		d.accident_content_idx, d.accident_type, d.accident_cause, d.accident_behavior
+		FROM lms_edu_event a
+		LEFT JOIN lms_edu_process b ON a.task_id = b.task_id
+		LEFT JOIN lms_edu_accident c ON a.event_id = c.event_id
+		LEFT JOIN lms_edu_accident_content d ON c.accident_code = d.accident_code
+		<include refid="selectWhere"/>
+		
+		UNION
+		
+		SELECT a.*, b.process_idx, b.work_role, b.process_contents, b.task_tool,
+				c.accident_idx, c.event_location, c.accident_event, c.object_factor, c.behavior_factor, c.accident_code,
+				d.accident_content_idx, d.accident_type, d.accident_cause, d.accident_behavior
+		FROM lms_edu_process b
+		RIGHT JOIN lms_edu_event a ON a.task_id = b.task_id
+		RIGHT JOIN lms_edu_accident c ON a.event_id = c.event_id
+		RIGHT JOIN lms_edu_accident_content d ON c.accident_code = d.accident_code
+		<include refid="selectWhere"/>
+		ORDER BY event_idx;
+	</select>
+	
+	<select id="select" parameterType="map" resultType="egovmap">
+		SELECT a.*, b.process_idx, b.work_role, b.process_contents, b.task_tool,
+		c.accident_idx, c.event_location, c.accident_event, c.object_factor, c.behavior_factor, c.accident_code,
+		d.accident_content_idx, d.accident_type, d.accident_cause, d.accident_behavior
+		FROM lms_edu_event a
+		LEFT JOIN lms_edu_process b ON a.task_id = b.task_id
+		LEFT JOIN lms_edu_accident c ON a.event_id = c.event_id
+		LEFT JOIN lms_edu_accident_content d ON c.accident_code = d.accident_code
+		<include refid="selectWhere"/>
+		
+		UNION
+		
+		SELECT a.*, b.process_idx, b.work_role, b.process_contents, b.task_tool,
+				c.accident_idx, c.event_location, c.accident_event, c.object_factor, c.behavior_factor, c.accident_code,
+				d.accident_content_idx, d.accident_type, d.accident_cause, d.accident_behavior
+		FROM lms_edu_process b
+		RIGHT JOIN lms_edu_event a ON a.task_id = b.task_id
+		RIGHT JOIN lms_edu_accident c ON a.event_id = c.event_id
+		RIGHT JOIN lms_edu_accident_content d ON c.accident_code = d.accident_code
+		<include refid="selectWhere"/>
+		ORDER BY event_idx;
+	</select>
+
+	
+	<select id="playStat" parameterType="map" resultType="egovmap">
+		<![CDATA[
+            WITH accidentTypeAndcount AS (
+                SELECT accident_type, COUNT(accident_type) AS accidentType_count
+                FROM lms_edu_event
+                WHERE member_idx = #{memberIdx}
+                AND detail_idx = #{detailIdx}
+                JOIN lms_edu_accident_content c
+				ON a.accident_code = c.accident_code
+                GROUP BY accitent_type
+                ORDER BY accidentType_count DESC
+                LIMIT 1
+            ),
+            rollAndCount AS (
+                SELECT play_role, COUNT(play_role) AS role_count
+                FROM lms_edu_event
+                WHERE member_idx = #{memberIdx}
+                AND detail_idx = #{detailIdx}
+                GROUP BY play_role
+                ORDER BY role_count DESC
+                LIMIT 1
+            )
+
+            SELECT 
+                accidentTypeAndcoun.accident_type,
+                roleAndCount.play_role
+            FROM accidentTypeAndcount, rollAndCount;
+        ]]>
+	</select>
+	
+</mapper>

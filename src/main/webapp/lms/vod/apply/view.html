@@ -1,0 +1,488 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<!-- <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" /> -->
+<!-- <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script> -->
+<link href="/assets/libs/video-js-8.9.0/video-js.css" rel="stylesheet" />
+<script src="/assets/libs/video-js-8.9.0/video.min.js"></script>
+<style>
+.intro_popup {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+	    background-color: rgba( 0, 0, 0, 0.5 );
+}
+
+.intro_popup .intro_popbox {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+    width: 100%;
+	max-width: 1200px;
+	height: 0;
+	padding-top: 35.5%;
+    margin: 0 auto;
+    color: #fff;
+    text-align: center;
+    position: relative;
+}
+/* .intro_popup .intro_popbox .intro_video {
+    width: auto;
+    height: auto;
+} */
+.intro_popup .intro_popbox .intro_video {
+    width: 100%;
+    height: 100%;
+}
+
+.vjs-poster {display: block; width: 100%; height: 100%;}
+.vjs-poster img {display: block; width: 100%; height: 100%; object-fit: cover;}
+
+.intro_popup .bg {
+    background: #000;
+    opacity: 0.6;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+}
+
+.intro_popup .close_box {
+    position: absolute;
+    top: 0;
+    right: -20px;
+	transform: translate(100%,0);
+    background-color: transparent;
+	border-radius: 50%;
+	width: 60px; height: 60px;
+	border: 1px solid #fff;
+	transition: all 0.35s ease;
+}
+
+.intro_popup .close_box a.btn_close {
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* background: url(/assets/img/popbtn_close.png) no-repeat center 14px; */
+	position: relative;
+}
+
+.intro_popup .close_box a.btn_close::before,
+.intro_popup .close_box a.btn_close::after { content: ''; display: block; width: 2px; height: 26px; background-color: #fff; position: absolute; left: 50%; top: 50%; transition: all 0.35s ease;}
+.intro_popup .close_box a.btn_close::before {transform: translate(-50%,-50%) rotate(45deg);}
+.intro_popup .close_box a.btn_close::after {transform: translate(-50%,-50%) rotate(-45deg);}
+
+.intro_popup .close_box:hover {box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);}
+.intro_popup .close_box:hover a.btn_close::before {transform: translate(-50%,-50%) rotate(225deg);}
+.intro_popup .close_box:hover a.btn_close::after {transform: translate(-50%,-50%) rotate(-225deg);}
+
+
+.my-video-dimensions {width: 100%; height: 100%;}
+.video-js {width: 100%; height: 100%; position: absolute; left: 0; top: 0;}
+/* .video-js .vjs-big-play-button {width: 80px!important; height: 80px!important; border: 0!important; background-color: transparent!important; background-image: url('../img/video_btn.png'); background-position: center; background-repeat: no-repeat; background-size: contain;} */
+.video-js .vjs-big-play-button {transition: all 0.35s ease!important;}
+.video-js .vjs-big-play-button:hover {transform: scale(1.3);}
+
+.vjs-icon-placeholder {display: none;}
+
+</style>
+
+<script th:inline="javascript">
+
+	var vodIdx = [[${param?.vodIdx}]];
+	var contentIdx = null;
+	var process = 0;
+	var openTime = null;
+	var closeTime = null;
+	var diff = 0;
+	var sec = 0;
+	var present = 0;
+	
+	var player = null;
+	var auto = null;
+	var timer = null;
+	
+	function timerr(time){
+		var tmpTime = time;
+		timer = setInterval(function() {
+			tmpTime = parseInt(tmpTime)+1;
+		  	$("#video_cnt").text(parseInt(tmpTime/60)+"분 "+parseInt(tmpTime%60)+"초");
+		}, 1000);
+	}
+	
+	function auto_save(){
+		auto = setInterval(function() {
+			if(openTime != null){
+				contentIdx = $('#contentIdx').val();
+				closeTime = Date.now();
+				diff = closeTime - openTime;
+				sec = Math.floor(diff / 1000);
+				
+				var duration = player.duration();
+				var remainingTime = player.remainingTime();
+				var presentTime = (duration - remainingTime).toString();
+				
+				$.ajax({
+					url  : '/lms/vod/learn/save',
+					type : 'get',
+					data : {
+						'vodIdx' : vodIdx[0],
+						'contentIdx' : contentIdx,
+						'learnTime' : sec,
+						'presentTime' : presentTime.substring(0,11),
+						'applyState' : $('#applyState').val(),
+						'contentTimeSum' : $('#contentTimeSum').val(),
+						'learnTimeSum' : $('#learnTimeSum').val(),
+					},
+					dataType : 'json',
+				}).done(function(data) {
+					if(data.code == 0) {
+						console.log("성공");
+					}
+					else {
+					}
+				}).fail(function() {
+				});
+			}
+		}, 180000);
+	}
+	
+	function intro_popup_open(contentIdx){
+		$('#contentIdx').val(contentIdx);
+			
+ 		player = videojs('my-video', {
+			controls: true,
+			autoplay: false,
+			preload: 'auto',
+			weith: 800,
+			height: 480,
+		});
+		player.src({ type: "video/mp4", src: "/lms/vod/content/stream?contentIdx="+contentIdx });
+		player.poster('/pages/kepco/img/sub/v-th.png');
+		player.play();
+		
+		player.on('error', () => {
+			alert('시스템 오류로 처리할 수 없습니다.');
+			$('#intro_popup').hide();
+			process = 0;
+			location.reload();
+		})
+		
+		process = 1;
+		openTime = Date.now();
+		$.ajax({
+			url  : '/lms/vod/learn/select',
+			type : 'get',
+			data : {
+				'vodIdx' : vodIdx[0],
+				'contentIdx' : contentIdx,
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			present = data.data.vo.presentTime;
+			player.ready(function() {
+				player.currentTime(present*1);
+			});
+		}).fail(function() {
+			alert('시스템 오류로 처리할 수 없습니다.');
+		});
+		
+		var title = "#title"+contentIdx;
+		var desc = "#desc"+contentIdx;
+		var time = $("#time"+contentIdx).text();
+		
+		$("#video_title").text($(title).prev().text()+'-'+$(title).text());
+		$("#video_desc").text($(desc).text());
+		$("#video_cnt").text(parseInt(time/60)+"분 "+parseInt(time%60)+"초");
+		
+		timerr(time);
+		auto_save();
+		$('#intro_popup').show();
+	}
+
+	function intro_popup_close(){
+		process = 0;
+		clearInterval(timer);
+		clearInterval(auto);
+		player.pause();
+		alert("현재 시청 지점까지 저장합니다.");
+		if(openTime != null){
+			contentIdx = $('#contentIdx').val();
+			closeTime = Date.now();
+			diff = closeTime - openTime;
+			sec = Math.floor(diff / 1000);
+			
+			var duration = player.duration();
+			var remainingTime = player.remainingTime();
+			var presentTime = (duration - remainingTime).toString();
+			
+			//영상 끝까지 시청시 0초로 저장
+			if(remainingTime == 0){
+				presentTime = "0";
+			}
+			
+			$.ajax({
+				url  : '/lms/vod/learn/save',
+				type : 'get',
+				data : {
+					'vodIdx' : vodIdx[0],
+					'contentIdx' : contentIdx,
+					'learnTime' : sec,
+					'presentTime' : presentTime.substring(0,11),
+					'applyState' : $('#applyState').val(),
+					'contentTimeSum' : $('#contentTimeSum').val(),
+					'learnTimeSum' : $('#learnTimeSum').val(),
+				},
+				dataType : 'json',
+			}).done(function(data) {
+				if(data.code == 0) {
+					$('#intro_popup').hide();
+					location.reload();
+				}
+				else {
+					alert(data.message);
+					location.reload();
+				}
+			}).fail(function() {
+				//alert('시스템 오류로 처리할 수 없습니다.');
+				location.reload();
+			});
+		}
+	}
+	
+	window.addEventListener('beforeunload', (event) => {
+		if(process != 0){
+        	process = 0;
+
+           // 명세에 따라 preventDefault는 호출해야하며, 기본 동작을 방지합니다.
+			event.preventDefault();
+           // 대표적으로 Chrome에서는 returnValue 설정이 필요합니다.
+        	event.returnValue = "현재 시청 시점까지 저장합니다.";
+
+            return intro_popup_close();
+		}
+	});
+</script>
+
+<style>
+.video_box {
+    height: 100%;
+    width: 295px;
+    display: inline-block;
+    position: absolute;
+    right: -300px;
+    top: 0;
+    padding: 5px;
+    background-color: rgba( 0, 0, 0, 0.5 );
+    }
+.video_box .video_cnt { }
+.video_box .video_cnt h4 {color: #fff;font-weight: 400;background: #2B64F9;}
+.video_box .video_exit_btn {background: #000;color: #fff;width: 100%;display: inline-block;padding: 5px 0;}
+.video_exit_btn:hover { color: #2B64F9; }
+.video_title {    background: #fff;
+    padding: 10px;}
+.video_title h3 {color: #000;font-size: 16px;line-height: 19px;text-align: left;}
+.video_title h4 {color: #000;text-align: left;font-size: 14px;}
+.video_content {
+    background: #fff;
+    height: auto;
+    overflow: auto;
+    color: #000;
+    padding: 10px 5px;
+}
+.video_content dl {text-align: left;border-bottom: 2px dotted #dfdfdf;padding: 5px 18px;}
+.video_content dl dt {color: #000;font-size: 14px;}
+.video_content dl dd {font-size: 14px;}
+.video_content dl dd a { color: #2B64F9; }
+.video_content dl dd a:hover { color: #6d55f2; }
+
+.vodeo_de {    position: absolute;
+    right: 0px;
+    top: 5px;
+    background: #000;display: block;
+    color: #fff;
+    z-index: 1000;
+    padding: 3px 17px 9px;
+    font-size: 22px; }
+@media screen and (max-width: 900px){
+.video_box {
+    height: 100%;
+    width: 295px;
+    display: inline-block;
+    position: absolute;
+    right: -130px;
+    top: 0;
+    padding: 5px;
+    background-color: rgba( 0, 0, 0, 0.5 );
+    }
+.video_box .video_cnt { }
+.video_box .video_cnt h4 {color: #fff;font-weight: 400;background: #2B64F9;}
+.video_box .video_exit_btn {background: #000;color: #fff;width: 100%;display: inline-block;padding: 5px 0;}
+.video_title {    background: #fff;
+    padding: 10px;}
+.video_title h3 {color: #000;font-size: 16px;line-height: 19px;text-align: left;}
+.video_title h4 {color: #000;text-align: left;font-size: 14px;}
+.video_content {
+    background: #fff;
+    height: auto;
+    overflow: auto;
+    color: #000;
+    padding: 10px 5px;
+}
+.video_content dl {text-align: left;border-bottom: 2px dotted #dfdfdf;padding: 5px 18px;}
+.video_content dl dt {color: #00b962;font-size: 14px;}
+.video_content dl dd {font-size: 14px;}
+.video_content dl dd a { color: #2B64F9; }
+
+.vodeo_de {        display: none;}
+}
+</style>
+
+<script>
+	function vodeo_de(){
+		vit = $('.vodeo_de').text();
+		if(vit == '>'){
+			$('.video_box').fadeIn();
+			$('.vodeo_de').css('right',0);
+			$('.vodeo_de').text('〓');
+		}else{
+			$('.video_box').fadeOut();
+			$('.vodeo_de').css('right',0);
+			$('.vodeo_de').text('>');
+		}
+	}
+</script>
+
+<div id="intro_popup" class="intro_popup" style="display: none;">
+    <div class="intro_popbox">
+        <div class="intro_video">
+			<video id="my-video" class="video-js">
+			    <source id="contentVideo" src="/pages/kepco/img/sub/v-th.png" type="video/mp4" />
+			  </video>
+        </div>
+		
+			<a href="#" onclick="vodeo_de(); return false;" class="vodeo_de">〓</a>
+
+        <div class="video_box">
+		
+			<input id="contentIdx" name="contentIdx" type="hidden" />        
+			<div class="video_cnt">
+				<h4>수강 시간 : <span id="video_cnt">0분 0초</span></h4>
+			</div>
+			<div class="video_title">
+				<h3>[[${vo?.vodTitle}]]</h3>
+				<h4 id="video_title"></h4>
+			</div>
+
+            <a href="#" onclick="intro_popup_close(); return false;" class="video_exit_btn">
+			학습종료
+			</a>
+			<div class="video_content">
+				<dl>
+					<dt>학습자료 받기</dt>
+					<dd>
+						<a th:if="${!#strings.isEmpty(vo?.vodFile)}" th:href="|/lms/vod/download?vodIdx=${vo?.vodIdx}&file=vodFile|" target="_blank" th:with="file = ${#strings.setSplit(vo?.vodFile,'_')}, dot = ${#strings.setSplit(vo?.vodFile,'.')}">
+							[[${#strings.replace(vo?.vodFile,'_'+file[#arrays.length(file)-1],'')}]][[${#strings.prepend(dot[#arrays.length(dot)-1],'.')}]]
+						</a>
+					</dd>
+				</dl>
+				<dl>
+					<dt>학습내용</dt>
+					<dd id="video_desc">
+					</dd>
+				</dl>
+			</div>
+        </div>
+        
+    </div>
+</div>
+
+<div class="sub-container">
+
+<div class="con-info">		
+	<div class="edu_detail">
+		<div class="edu_detail1">
+			<div class="edu_detail_img">
+				<img th:src="|/lms/vod/file?vodIdx=${vo?.vodIdx}|" onerror="this.src='/pages/kepco/img/sub/v-th.png'"/>
+			</div>
+			<div class="edu_detail_p">
+				<ul class="edu-list">
+					<li th:each="vodKeyword,idx : ${#strings.setSplit(vo?.vodKeyword,',')}" th:class="|ca${idx.count}|" th:text="${vodKeyword}" />
+				</ul>
+
+				<h3>[[${vo?.vodTitle}]]</h3>
+				
+				<div class="edu_detail_right">
+					<dl>
+						<dt>교육 개요</dt><dd>[[${vo?.vodSummary}]]</dd>
+					</dl>
+					<dl>
+						<dt>과정 재생시간</dt><dd>[[${#aggregates.sum(bundleList.![contentTime])}]]분</dd>
+					</dl>
+				</div>
+			</div>
+		</div>
+		
+		<div class="edu_detail_content"><!-- 탭 컨텐츠 -->
+			<ul class="con-tabs">
+				<li class="tab-link current" data-tab="tab-1">학습하기</li>
+			</ul>
+			<div id="tab-1" class="tab-content current">
+				<h2>세부과정</h2>
+				<div class="con-infobox ">	
+					<input id="applyState" name="applyState" type="hidden" th:value="${#lists.size(bundleList) <= #lists.size(learnList) ? '2':'1' }" />
+					<input id="contentTimeSum" name="contentTimeSum" type="hidden" th:value="${#aggregates.sum(bundleList.![contentTime])} * 60" />
+					<input id="learnTimeSum" name="learnTimeSum" type="hidden" th:value="${#aggregates.sum(learnList.![learnTime])}" />
+					<div class="con-infotxt">
+						<div class="listbox" th:each="bundleVo : ${bundleList}" data-aos="fade-up" th:data-aos-duration="${(bundleVoStat.index / 2) * 100 + 100}">
+								<a href="#" th:id="|content${bundleVo?.contentIdx}|" th:onclick="|intro_popup_open(${bundleVo?.contentIdx}); return false;|">
+									<div class="flexbox detail_list_box">
+										<p class="listtxt1" th:text="${bundleVoStat.count}"></p>
+										<p th:id="|title${bundleVo?.contentIdx}|" class="listtxt2 ellipsis" th:text="${bundleVo?.contentTitle}"></p>
+										<p th:id="|desc${bundleVo?.contentIdx}|" style="display: none;" th:text="${bundleVo?.contentDesc}"></p>
+										<p class="listtxt3" th:text="|${(bundleVo.contentTime * 60) / 60}분${(bundleVo.contentTime * 60) % 60}초|"></p>
+										<th:block th:each="learnVo : ${learnList}">
+										<div th:if="${bundleVo?.contentIdx} == ${learnVo?.contentIdx}" >
+										<p th:id="|time${bundleVo?.contentIdx}|" style="display: none;" th:text="${learnVo?.learnTime}"></p>
+											<p class="listtxt3">
+												[[${(learnVo.learnTime) / 60}]]분[[${(learnVo.learnTime) % 60}]]초 
+												<th:block th:with="learn = ${learnVo.learnTime + 0.0}, bundle = ${bundleVo.contentTime * 60}">
+													<th:block th:with="per = (${learn / bundle})">
+														<th:block th:if="${per * 100} >= 100">
+														(100%)
+														</th:block>
+														<th:block th:unless="${per * 100} >= 100">
+														([[${#numbers.formatDecimal(per * 100, 1 , 2)}]]%)
+														</th:block>
+													</th:block>
+												</th:block>
+											</p>	
+										</div>
+										</th:block>
+									</div>
+								</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div><!--// 탭 컨텐츠 -->
+
+		<a th:href="|/lms/vod/myList?site=${req?.site}&mn=${req?.mn}|" class="edu-list-btn">목록</a>
+	</div>
+</div>
+
+</div>
+
+</th:block>

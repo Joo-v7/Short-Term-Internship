@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.process.bundle.ProcessBundleMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(bundleIdx)">
+				bundle_idx = #{bundleIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.process.bundle.ProcessBundleVo">
+		SELECT 
+			a.*, b.process_contents
+		FROM (
+			SELECT
+				*
+			FROM lms_edu_process_bundle a
+			WHERE
+				module_idx = #{moduleIdx}
+		) a
+		JOIN lms_edu_process b
+		ON a.process_idx = b.process_idx
+		WHERE b.delete_yn = 'n'
+		ORDER BY
+		<choose>
+			<otherwise>
+				a.process_order ASC, a.insert_date ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.process.bundle.ProcessBundleVo">
+		SELECT *
+		FROM lms_edu_process_bundle
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.process.bundle.ProcessBundleVo" useGeneratedKeys="true" keyProperty="bundleIdx" keyColumn="bundleIdx">
+		<selectKey resultType="int" keyProperty="processOrder" keyColumn="processOrder" order="BEFORE">
+			SELECT IFNULL(MAX(process_order)+1,1) FROM lms_edu_process_bundle WHERE module_idx = #{moduleIdx}
+		</selectKey>
+		INSERT INTO lms_edu_process_bundle (
+			module_idx,process_idx,process_order,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{moduleIdx},#{processIdx},#{processOrder},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.process.bundle.ProcessBundleVo">
+		UPDATE lms_edu_process_bundle
+		<set>
+			process_order = #{processOrder},
+			process_role = #{processRole},
+			insert_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			bundle_idx = #{bundleIdx}
+	</update>
+	
+	<delete id="delete" parameterType="String">
+		DELETE FROM lms_edu_process_bundle
+		WHERE
+			bundle_idx = #{bundleIdx}
+	</delete>
+	
+	
+	
+</mapper>

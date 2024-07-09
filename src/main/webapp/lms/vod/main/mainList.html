@@ -1,0 +1,38 @@
+<div id="tab-2" class="tab-content3 "><!-- 탭 컨텐츠2 -->
+	<div class="more-btn">
+		<a class="link" href="/lms/vod/list/?site=kepco&mn=0102">
+			<div class="pink"></div>
+			<span>view more</span>
+			<i class="fa-solid fa-arrow-right"></i>
+		</a>
+	</div>
+	<div class="swiper_wrap">
+		<div class="swiper-container" id="edu_swiper">
+			<ul class="edu-w swiper-wrapper">
+				<li class="edu-box swiper-slide" th:each="vo : ${vodList}">
+					<div class="edu-video">
+						<img th:src="|/lms/vod/file?vodIdx=${vo?.vodIdx}|" onerror="this.src='/pages/kepco/img/sub/edu_none.jpg'"/>
+					</div>
+					<span class="bd_line01"></span>
+					<span class="bd_line02"></span>
+					<span class="bd_line03"></span>
+					<span class="bd_line04"></span>
+					<div class="edu-txt">
+						<div class="edu-txt2">
+							<ul class="edu-list">
+								<li th:each="vodKeyword,idx : ${#strings.setSplit(vo?.vodKeyword,',')}" th:class="|ca${idx.count}|" th:text="${vodKeyword}" />
+							</ul>
+							<h6>[[${vo?.vodTitle}]]</h6>
+							<div class="m-edu-info">
+								<dl>
+									<dt></dt><dd></dd>
+								</dl>									
+							</div>
+							<a th:href="|/lms/vod/view/?site=kepco&&mn=0101&vodIdx=${vo?.vodIdx}|">view more<i class="fa-solid fa-arrow-right"></i></a>
+						</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div><!--// 탭 컨텐츠1 -->

@@ -1,0 +1,103 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+		<form id="frm" name="frm" method="post" th:action="@{/cms/member/auth/login}">
+			<input type="hidden" name="site" th:value="${param?.site}"/>
+			<input type="hidden" name="mn" th:value="${param?.mn}"/>
+			<input type="hidden" name="retUrl" th:value="${param?.retUrl}"/>
+			
+			<div class="login_container_rbox">
+				<fieldset id="login_level">
+					<legend>로그인 입력폼</legend>
+					<dl>
+						<dt><label for="memberId">아이디</label></dt>
+						<dd class="uid">
+							<input type="text" name="memberId" id="memberId" title="아이디" class="input_text" placeholder="아이디" value="kepco01" />
+						</dd>
+						<dt>
+							<label for="memberPw">비밀번호</label>
+						</dt>
+						<dd class="upw">
+							<input  type="password" name="memberPw" id="memberPw" title="비밀번호" class="input_text" placeholder="패스워드" value="kepco01" />
+						</dd>
+					</dl>
+					<p class="keeping">
+						<input type="submit" value="로그인" class="submit" />
+					</p>
+					<div class="flexbox position-r">
+						<p class="idCheck">
+							<input type="checkbox" title="ID저장" id="remember_me" name="remember_me">
+							<label>ID저장</label>
+						</p>
+						<ul class="searchUl">
+							<li><a href="/cms/member/findIdPw?site=kepco&mn=1003&find=id">아이디 찾기</a></li>
+							<li><a href="/cms/member/findIdPw?site=kepco&mn=1003&find=pw">패스워드 재발급</a></li>
+							<li><a href="/cms/member/join?site=kepco&mn=1002">회원가입</a></li>
+						</ul>
+					</div>
+					<ul class="login-info">
+						<li>한국전력공사 직원(비정규직/인턴 포함)의 경우 아이디는 사번입니다.</li>
+						<li>KEPCO-EPi에서 자동으로 로그인이 안되는 경우 PC재부팅후 접속하시기 바랍니다.</li>
+					</ul>
+				</fieldset>
+				
+			</div>
+		</form>
+
+<script th:inline="javascript">
+	$(function() {
+		/*[# sec:authorize="isAuthenticated()"]*/
+		var memberId = [[${#authentication.principal.memberId}]];
+		//alert("이미 로그인 중.\nmemberId : "+memberId);
+		/*[/]*/
+		
+		/** 로그인 */
+		$("#frm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='memberId']", $frm).val() == "") {
+				alert("아이디는 필수입력 입니다.");
+				$("input[name='memberId']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				//contentType: "application/json",
+				contentType: "application/x-www-form-urlencoded",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					if($("input[name='retUrl']", $frm).val() != "") {
+						location = $("input[name='retUrl']", $frm).val();
+					}
+					else {
+						location = "/";
+					}
+				}
+				else {
+					alert(data.message);
+				}
+			}).fail(function(xhr) {
+				if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+					alert(xhr.responseJSON.message);
+				}
+// 				if(xhr.status != 200) {
+// 					alert("HTTP "+xhr.status+ " 에러 입니다.");
+// 				}
+			});
+		});
+		
+	});
+</script>
+
+</th:block>

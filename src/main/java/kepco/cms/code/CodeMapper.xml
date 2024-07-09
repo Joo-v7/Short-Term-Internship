@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.code.CodeMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(scCode)">
+			code = #{code}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND code_nm LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectCodeList" parameterType="map" resultType="kepco.cms.code.CodeVo">
+		SELECT
+			*
+		FROM cms_code
+		WHERE
+			code_parent = #{codeParent}
+			AND use_yn = 'y'
+		ORDER BY
+			code_parent, code_order, code
+	</select>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.code.CodeVo">
+		SELECT
+			*
+		FROM cms_code
+			<include refid="selectWhere"/>
+		ORDER BY
+			code_parent, code_order, code
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.code.CodeVo">
+		SELECT
+			*
+		FROM cms_code
+		WHERE
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(code)">
+				code = #{code}
+			</if>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.code.CodeVo" useGeneratedKeys="true" keyProperty="codeIdx" keyColumn="code_idx">
+		<selectKey resultType="int" keyProperty="codeOrder" keyColumn="codeOrder" order="BEFORE">
+			SELECT IFNULL(MAX(code_order)+1,1) FROM cms_code WHERE code_depth = 2
+		</selectKey>
+		INSERT INTO cms_code (
+			code,code_nm,code_parent,code_depth,code_order,use_yn
+		)
+		VALUES (
+			#{code},#{codeNm},'ROOT',2,#{codeOrder},'y'
+		)
+	</insert>
+
+	<insert id="insertCode" parameterType="kepco.cms.code.CodeVo" keyProperty="code" keyColumn="code">
+		<selectKey resultType="int" keyProperty="codeOrder" keyColumn="codeOrder" order="BEFORE">
+			SELECT IFNULL(MAX(code_order)+1,1) FROM cms_code WHERE code_parent = #{codeParent}
+		</selectKey>
+		INSERT INTO cms_code (
+			code,code_nm,code_parent,code_depth,code_order,use_yn
+		)
+		VALUES (
+			#{code},#{codeNm},#{codeParent},3,#{codeOrder},'y'
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.code.CodeVo">
+		UPDATE cms_code
+		<set>
+			<if test="code != null">
+				code = #{code},
+			</if>
+			<if test="codeNm != null">
+				code_nm = #{codeNm},
+			</if>
+			code_parent = #{codeParent},
+			code_order = #{codeOrder},
+			use_yn = #{useYn}
+		</set>
+		WHERE
+			code = #{code}
+	</update>
+	
+	<delete id="delete" parameterType="map">
+		DELETE 
+		FROM
+			cms_code
+		WHERE
+			code = #{code}
+	</delete>
+	
+</mapper>

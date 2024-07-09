@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+<script>
+
+$(function() {
+	$("select", "#frmForm").formSelect();
+	$('#main_tabs').tabs();
+	
+	if($('#vodIdx').val() != ''){
+		contentForm();
+	}
+
+	// 파일
+	var fileTarget = $('.file-upload-input');
+	fileTarget.on('change', function(){
+		if(window.FileReader){
+			var filename = $(this)[0].files[0].name;
+		} else {
+			var filename = $(this).val().split('/').pop().split('\\').pop();
+		}	
+ 		$(this).siblings('.select-file-name-box').val(filename);
+	});
+});
+	
+	function contentForm() {
+		$('#contentTable').DataTable({
+			paging: false,
+			ajax: {
+				type : 'get',
+				url : gblAdminPath + '/lms/vod/content/listJson?'+$('#frmForm').serialize(),
+					dataType: "json",
+				dataSrc : "data.list",
+			},
+			select: {
+				'style': 'multi'
+			},
+			'columnDefs': [
+				{
+				  'width': '40px',
+				  'searchable': false,
+				  'orderable': true,
+				  'targets': 0,
+				  render: function(data, type, row, meta) {
+					return meta.row + meta.settings._iDisplayStart + 1;
+				  },
+				}],
+			order: [0, 'asc'],
+// 			initComplete: dataTableInit,
+			columns : [
+				{ data : 'contentOrder', className : 'dt-body-center' },
+				{ data : 'contentTitle', className : 'dt-body-center' },
+				{ data : 'insertDate', className : 'dt-body-center' },
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `
+							<button type="button" onclick="orderChange(${row.contentIdx},'${row.contentOrder+1}');" class="waves-effect waves-light btn cyan"><i class="material-icons left">edit</i>업</button>
+							<button type="button" onclick="orderChange(${row.contentIdx},'${row.contentOrder-1}');" class="waves-effect waves-light btn cyan"><i class="material-icons left">edit</i>다운</button>	
+						`;
+					}
+				},
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `
+							<button type="button" onclick="detailDelete('${row.contentIdx}');" class="waves-effect waves-light btn red"><i class="material-icons left">edit</i>삭제</button>
+						`;
+					}
+				},
+			],
+		});
+	}
+	
+	function detailDelete(contentIdx) {
+		
+		if(confirm("콘테츠를 삭제하시겠습니까?")){
+			
+			if (!contentIdx) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url  : gblAdminPath + '/lms/vod/content/delete',
+				type : 'get',
+				data : {
+					'contentIdx' : contentIdx
+				},
+				dataType : 'json',
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#contentTable').DataTable().ajax.reload();
+					$('.sidenav').sidenav('close');
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function() {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			});
+		}
+	}
+	
+	// 삭제
+	function dataDelete() {
+		var vodIdx = $("[name='vodIdx']", '#frmForm').val();
+		
+		if (!vodIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : '콘텐츠 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/lms/vod/delete',
+						type : 'get',
+						data : {
+							'vodIdx' : vodIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							$('.sidenav').sidenav('close');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+	
+// 	function delete_file(arg){
+// 		var id = "#"+arg;
+		
+// 		if(confirm("첨부파일을 삭제하시겠습니까?\n저장시 적용됩니다.")){
+// 			$(id).siblings(".select-file-btn").removeAttr("disabled");
+// 			$(id).siblings(".select-file-name-box").val("");
+// 			$(id).siblings("a").css("display","none");
+// 			$(id).siblings("button").css("display","none");
+			
+// 			$(id).attr("type","file");
+// 		}
+// 	}
+	
+	//썸네일 삭제
+	function thumbnailDelete(vodIdx) {
+		if (!vodIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '썸네일 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/lms/vod/thumbnailDelete',
+						type: 'get',
+						data: {
+							'vodIdx': vodIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							$('.uploaded-thumbnail-text').val(null);
+							$('.uploaded-thumbnail-value').val(null);
+							$('.uploaded-thumbnail-btn').css('display', 'none');
+// 							$('.sidenav').sidenav('close');
+// 							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							toast("정상적으로 처리되었습니다.");
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function () {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+	//학습자료 삭제
+	function fileDelete(vodIdx) {
+		if (!vodIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '학습자료 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/lms/vod/fileDelete',
+						type: 'get',
+						data: {
+							'vodIdx': vodIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							$('.uploaded-file-text').val(null);
+							$('.uploaded-file-value').val(null);
+							$('.uploaded-file-btn').css('display', 'none');
+// 							$('.sidenav').sidenav('close');
+// 							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							toast("정상적으로 처리되었습니다.");
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function () {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+	function set_pol_list(){
+		$.ajax({
+			url: gblAdminPath + '/lms/vod/polList',
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var staff_modal = $("#pop_modal").modal();
+			staff_modal.modal('open');
+			$('#pop_modal').css({'height':'80%', 'width':'50%'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+	function set_ev_list(){
+		$.ajax({
+			url: gblAdminPath + '/lms/vod/evList',
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var staff_modal = $("#pop_modal").modal();
+			staff_modal.modal('open');
+			$('#pop_modal').css({'height':'80%', 'width':'50%'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+	function bundleList() {
+		$.ajax({
+			url: gblAdminPath + '/lms/vod/bundle/list?'+$('#frmForm').serialize(),
+			type: 'GET',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#contentList').html(data);
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+	
+	function set_content_list(vodIdx){
+			
+		if(vodIdx == null){
+			alert("저장 후 추가가능합니다.");
+			return false;
+		}
+			
+		$.ajax({
+			url: gblAdminPath + '/lms/vod/contentList?vodIdx='+vodIdx,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var staff_modal = $("#pop_modal").modal();
+			staff_modal.modal('open');
+			$('#pop_modal').css({'height':'80%', 'width':'50%', 'overflow-y': 'scroll'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+</script>
+
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/lms/vod/save(adminPath=${@environment.getProperty('global.admin-path')})}" enctype="multipart/form-data">
+		<input type="hidden" name="vodIdx" id="vodIdx" th:value="${vo?.vodIdx}" />
+		<div class="top pop-title">
+			<div class="top pd_box2">
+				<div class="row">
+					<div class="col s12">
+						<a onclick="side_close('#side_view');" class="btn grey lighten-1 waves-effect waves-light" name="action"><i class="material-icons">clear</i></a>
+						<div class="float_r">
+							<button class="btn waves-effect z-depth-0 red lighten-1" type="button" th:if="${!#strings.isEmpty(vo?.vodIdx)}" th:onclick="dataDelete();">삭제<i class="material-icons left">delete</i></button>
+							<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장 <i class="material-icons left">check</i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col s12">
+		  			<ul id="main_tabs" class="tabs">
+		                <li class="tab col s2"><a href="#default_info">기본정보</a></li>
+		                <li class="tab col s2"><a href="#vod_schedule">교육일정</a></li>
+		                <li class="tab col s2"><a href="#vod_contents">교육회차</a></li>
+		            </ul>
+		        </div>
+		<div class="row pd_box">
+			<div class="row">
+				<div class="input-field col s12 m8 l8 xl10">
+					<label for="vodTitle" class="req">영상교육명</label>
+					<input type="text" name="vodTitle" id="vodTitle" th:value="${vo?.vodTitle}" />
+				</div>
+				
+
+				<div class="input-field col s12 m4 l4 xl2">
+					<label for="vodState" class="req">공개상태</label>
+					<select name="vodState" id="vodState">
+						<option value="1" th:selected="${vo?.vodState} == '1'" >비공개</option>
+						<option value="2" th:selected="${vo?.vodState} == '2'" >공개</option>
+					</select>
+				</div>
+			</div>
+	    	
+	    	<div id="default_info" class="row">
+				
+				
+				<div class="row">
+					<div class="input-field col s6">
+						<label for="vodKeyword" class="">영상키워드(쉼표로 구분)</label>		
+						<input type="text" name="vodKeyword" th:value="${vo?.vodKeyword}">
+					</div>
+					<div class="input-field col s3">
+						<label for="vodAcceptAuto">수강신청방식</label>
+						<select id="vodAcceptAuto" name="vodAcceptAuto">
+							<option th:value="y" th:utext="자동승인" th:selected="y == ${vo?.vodAcceptAuto}" ></option>
+							<option th:value="n" th:utext="수동승인" th:selected="n == ${vo?.vodAcceptAuto}" ></option>
+						</select>
+					</div>
+					<div class="input-field col s3">
+						<label for="vodLimitCnt">정원(명)</label>
+						<input id="vodLimitCnt" name="vodLimitCnt" type="text" th:value="${vo?.vodLimitCnt}">
+					</div>	
+				</div>		
+				<div class="row">
+					<div class="input-field col s12">
+						<label for="vodSummary" class="">개요</label>
+						<textarea name="vodSummary" id="vodSummary" class="materialize-textarea" style="height: 72px;">[[${vo?.vodSummary}]]</textarea>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="input-field col s12">
+						<label for="vodDesc" class="">내용</label>
+						<textarea name="vodDesc" id="vodDesc" class="materialize-textarea" style="height: 72px;" th:text="${vo?.vodDesc}"></textarea>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="input-field file-upload col s12">
+						<label>대표이미지</label>
+						<label class="select-file-btn btn" for="vodImage">파일선택</label>
+						<input class="select-file-name-box uploaded-thumbnail-text" type="text" th:value="${vo?.vodImage}" disabled>
+						<input id="vodImage" name="vodImage" type="file" class="file-upload-input uploaded-thumbnail-value" th:value="${vo?.vodImage}">
+						<a class="btn uploaded-thumbnail-btn" th:if="${!#strings.isEmpty(vo?.vodImage)}" th:href="|/admin/lms/vod/download?fileOrigin=${vo?.vodImage}&fileName=${vo?.vodImage}|" style="padding: 0 5px;">다운로드</a>
+						<button th:if="${!#strings.isEmpty(vo?.vodImage)}" class="uploaded-thumbnail-btn waves-effect waves-light btn red" type="button" th:onclick="thumbnailDelete('[[${vo?.vodIdx}]]')">삭제</button>
+					</div>
+					
+					<span class="disc">
+						확장자 제한 : 이미지 확장자(gif, jpg, jpeg, png, bmp)<br>
+						용량 제한 : 10MB 이하
+					</span>
+				</div>
+				
+				<div class="row">
+					<div class="input-field file-upload col s12">
+						<label>학습자료</label>
+						<label class="select-file-btn btn" for="vodFile">파일선택</label>
+						<input class="select-file-name-box uploaded-file-text" type="text" th:value="${vo?.vodFile}" disabled>
+						<input id="vodFile" name="vodFile" type="file" class="file-upload-input uploaded-file-value" th:value="${vo?.vodFile}">
+						<a class="btn uploaded-file-btn" th:if="${!#strings.isEmpty(vo?.vodFile)}" th:href="|/admin/lms/vod/download?fileOrigin=${vo?.vodFile}&fileName=${vo?.vodFile}|" style="padding: 0 5px;">다운로드</a>
+						<button th:if="${!#strings.isEmpty(vo?.vodFile)}" class="uploaded-file-btn waves-effect waves-light btn red" type="button" th:onclick="fileDelete('[[${vo?.vodIdx}]]')">삭제</button>
+					</div>
+					<span class="disc">
+						확장자 제한 : 서식 확장자(doc, hwp, hwpx, pdf, ppt, xls, pptx, docx, xlsx, txt, psd)<br>
+						용량 제한 : 500MB 이하
+					</span>
+				</div>
+				
+<!-- 				<div class="row"> -->
+<!-- 					<div class="input-field col s11 "> -->
+<!-- 						<input type="hidden" name="evIdx" id="evIdx" th:value="${vo?.evIdx}"> -->
+<!-- 						<input type="text" name="evSubject" id="evSubject" th:value="${vo?.evSubject}"> -->
+<!-- 						<label for="evIdx">사후평가</label> -->
+<!-- 					</div> -->
+<!-- 					<div class="input-field col s1"> -->
+<!-- 						<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="set_ev_list();"><i class="material-icons">search</i></a> -->
+<!-- 					</div> -->
+<!-- 				</div> -->
+<!-- 				<div class="row"> -->
+<!-- 					<div class="input-field col s11 "> -->
+<!-- 						<label for="poIdx">만족도조사</label> -->
+<!-- 						<input type="hidden" name="poIdx" id="poIdx" th:value="${vo?.poIdx}"> -->
+<!-- 						<input type="text" name="poSubject" id="poSubject" th:value="${vo?.poSubject}"> -->
+<!-- 					</div> -->
+<!-- 					<div class="input-field col s1"> -->
+<!-- 						<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="set_pol_list();"><i class="material-icons">search</i></a> -->
+<!-- 					</div> -->
+<!-- 				</div> -->
+				
+			</div>
+			
+			<div id="vod_schedule" class="row">	
+				<div class="row">
+					<div class="input-field col s6">
+						<input id="vodAcceptBgnDate" name="vodAcceptBgnDate" type="date" th:value="${vo?.vodAcceptBgnDate}">
+						<label for="vodAcceptBgnDate" class="">신청시작일자</label>				
+					</div>
+					<div class="input-field col s6">
+						<input id="vodAcceptEndDate" name="vodAcceptEndDate" type="date" th:value="${vo?.vodAcceptEndDate}">
+						<label for="vodAcceptEndDate" class="">신청종료일자</label>				
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field col s6">
+						<input id="vodEduBgnDate" name="vodEduBgnDate" type="date" th:value="${vo?.vodEduBgnDate}">
+						<label for="vodEduBgnDate" class="">학습기간 시작</label>		
+					</div>
+					<div class="input-field col s6">
+						<input id="vodEduEndDate" name="vodEduEndDate" type="date" th:value="${vo?.vodEduEndDate}">
+						<label for="vodEduEndDate" class="">학습기간 종료</label>		
+					</div>
+				</div>
+			</div>
+			<div id="vod_contents" class="row">	
+				<div class="row input-field" style="margin-bottom: 0;">
+					<label for="">영상 회차</label>
+					<span class="text_cnt_box"><i class="material-icons small" style="margin-bottom:-2px; margin-right:10px;">info</i>과정 등록 후, 영상 회차을 등록할 수 있습니다.</span>
+				</div>
+				<div id="contentList" class="col s12">
+				</div>
+			</div>
+			
+		</div>
+	</form>
+
+<script>
+	$(function() {
+		
+		if($('#vodIdx').val() != ''){
+			contentList();
+			
+			// 설명문 제거
+			document.querySelector(".text_cnt_box").style.display = 'none';
+		
+		}
+		
+		function contentList() {
+			$.ajax({
+				url: gblAdminPath + '/lms/vod/bundle/list?'+$('#frmForm').serialize(),
+				type: 'GET',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#contentList').html(data);
+			}).fail(function () {
+				toast('네트워크 또는 시스템 장애입니다.', 4000);
+			});
+		}
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var form = $('#frmForm')[0];
+			var $formFrm = $('#frmForm');
+			var data = new FormData(form);
+			
+			if($("input[name='vodTitle']", $formFrm).val() == "") {
+				toast("과정명은 필수입력 입니다.");
+				$("input[name='vodTitle']", $formFrm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: form.action,
+				data: data,
+				contentType: false,
+				processData: false,
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $formFrm).val());
+				},
+			}).done(function(data) {
+				if(data.data.imageFail == 1) {toast("이미지 파일 확장자를 확인해주세요."); return false;}
+				if(data.data.imageFail == 2) {toast("이미지 파일 크기를 확인해주세요."); return false;}
+				if(data.data.fileFail == 1) {toast("자료 파일 확장자를 확인해주세요."); return false;}
+				if(data.data.fileFail == 2) {toast("자료 파일 크기를 확인해주세요."); return false;}
+				
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					$('.sidenav').sidenav('close');
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+		
+	});
+</script>
+</html>

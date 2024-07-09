@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+<script src="/assets/js/dropzone.js"></script>
+<script src="/assets/js/common.js"></script>
+<link rel="stylesheet" href="/assets/css/dropzone.css">
+<link rel="stylesheet" href="/assets/css/dropzone.ext.css">
+<style>
+	.nested-list-content input {
+		width: 95% !important;
+		border: 0 none !important;
+	}
+</style>
+
+<script>
+	var frmForm = "#frmForm";
+	var $frm = $(frmForm); 
+	
+	$(function () {
+	
+		$("select", frmForm).formSelect();
+		
+		if ($('#metadataIdx').val() != '') {
+			// 설명문 제거
+		}
+		
+		// 파일
+		var fileTarget = $('.file-upload-input');
+		fileTarget.on('change', function(){
+			if(window.FileReader){
+				var filename = $(this)[0].files[0].name;
+			} else {
+				var filename = $(this).val().split('/').pop().split('\\').pop();
+			}	
+			$(this).siblings('.select-file-name-box').val(filename);
+		});
+		
+		Dropzone.autoDiscover = false;
+		
+		var cf_ext_file = 'zip|rar|doc|hwp|pdf|ppt|xls|pptx|docx|xlsx|txt|psd|pptm';
+		var cf_ext_image = 'gif|jpg|jpeg|png|bmp';
+		var cf_ext_multimedia = 'asx|asf|wmv|wma|mpg|mpeg|mov|avi|swf|mp4';
+		var cf_file_cnt = '1';
+		
+		String.prototype.replaceAll = function(org, dest) {
+			return this.split(org).join(dest);
+		}
+		
+		$(".file-dropzone").on('dragover', handleDragEnter);
+		$(".file-dropzone").on('dragleave', handleDragLeave);
+		$(".file-dropzone").on('drop', handleDragLeave);
+		
+		
+		function handleDragEnter(e) {
+			this.classList.add('drag-over');
+		}
+
+		function handleDragLeave(e) {
+			this.classList.remove('drag-over');
+		}
+		
+		var c = 0; 
+		var d = 0; 
+		var e = 0;
+		
+		var previewNode = document.querySelector("#template");
+		previewNode.id = "";
+		var previewTemplate = previewNode.parentNode.innerHTML;
+		previewNode.parentNode.removeChild(previewNode);
+		
+		
+		$('#fileDropzone').dropzone({
+			url : '/admin/cms/metadata/file_save',
+			uploadMultiple : true,
+			maxFilesize : 1073741824,
+			thumbnailWidth: 180,
+		    thumbnailHeight: 120,
+			parallelUploads : 5,
+			autoProcessQueue: false,
+			paramName:"fileSaveName",
+			previewsContainer: "#previews", // Define the container to 
+			maxFiles : 1,
+			addRemoveLinks : true,
+			acceptedFiles: '.'+cf_ext_file.replaceAll("|", ",.")+',.'+cf_ext_image.replaceAll("|", ",.")+',.'+cf_ext_multimedia.replaceAll("|", ",."),
+			success: function(data, xhr) {
+				if(xhr.data.fail == 1){
+					M.toast({
+						html: '파일 확장자를 확인해주세요.',
+						classes: 'red darken-2',
+						displayLength: 2000
+					});
+					return false;
+				}else if(xhr.data.fail == 2){
+					M.toast({
+						html: '파일 크기를 확인해주세요.',
+						classes: 'red darken-2',
+						displayLength: 2000
+					});
+					return false;
+				}
+				
+				myDropzone = this;
+				c++;
+				if (c == $('#upload_count').val()) { //성공 메시지 출력 후 이동
+					c = 0;
+					M.toast({
+						html: '정상적으로 처리되었습니다2.',
+						displayLength: 2000
+					});
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+		       		$('.sidenav').sidenav('close')
+				}			
+			},
+			accept: function(file, done) {
+			    done();
+				myDropzone = this;
+				var myDropzone = this;
+				var i = 0;
+				
+				//파일 중복검사
+				for(var j = 0; j < myDropzone.files.length; j++){
+					if(file.name == myDropzone.files[j].name){
+						i++;
+						if(i > 1){
+							alert(''+myDropzone.files[j].name+'는 중복파일이름입니다. 이름을 바꿔서 등록해주시기바랍니다.');
+							myDropzone.removeFile(myDropzone.files[j]);
+							myDropzone.files.splice(j, 1);
+						}
+					}
+				}
+				//최대 갯수제한 경고창
+				if(onlyNumber(myDropzone.files.length)-1 >= onlyNumber(cf_file_cnt)){
+					d++;
+					if( d == 1){
+						alert('최대 : ' + cf_file_cnt +'개까지 업로드가 가능합니다.');
+					}
+					myDropzone.removeFile(file);
+
+				}
+			},
+			init : function() {
+				myDropzone = this;
+				_this = this;
+				//파일이 추가 될 때
+				//파일 확장자, 용량 검사
+				this.on("addedfile", function(file) {
+					var acceptCheck = 0;
+					myDropzone.options.acceptedFiles.split(',').forEach(function(idx){
+						if(file.name.indexOf(idx) > 0){
+							acceptCheck = 1;
+						}
+					});
+					if(acceptCheck == 0){
+						alert('파일 확장자를 확인해주세요.');
+						myDropzone.removeFile(file);
+					}else if(myDropzone.options.maxFilesize < file.size){
+						alert('파일 크기를 확인해주세요.');
+						myDropzone.removeFile(file);
+					}
+				});
+				var submitButton = document.querySelector('#btn-upload-file');
+					submitButton.addEventListener("click", function(){
+					$('#upload_count').val(myDropzone.files.length);
+					$(frmForm).ajaxForm({
+				        dataType: 'json',
+						success: function (data) {
+				        	$("#metadataIdx").val(data.data.metadataVo.metadataIdx);
+				        	console.log(data);
+				        	console.log(data.data.metadataVo);
+				            if (data.status == 200) { //성공 메시지 출력 후 이동
+				            	myDropzone.processQueue(); //업로드
+								myDropzone.removeAllFiles(); //업로드한 파일 목록에서 제거
+								if(0 == $('#upload_count').val()) {
+									$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+									$('.sidenav').sidenav('close');
+								}
+								M.toast({
+									html: '정상적으로 처리되었습니다1.',
+									displayLength: 2000
+								});
+							} else {
+			            	 alert('네트워크 및 시스템 에러');   
+			            	}
+						},
+						error: function (data) {
+							toast('네트워크 또는 시스템 장애입니다.', 4000);
+						}
+					});
+				});
+				var data = '';
+				//값 넘길때 form값 처리
+				this.on("sending", function(file, xhr, formData) {
+					e++; //값을 한번 처리
+					if(e == 1){
+						$.each( $(frmForm).serializeArray(), function(key, val){
+							formData.append(val['name'], val['value']);
+						});
+					}
+	              });
+
+			   //최대 갯수제한 파일제거
+			   this.on("maxfilesexceeded", function (file) {
+					myDropzone = this;
+					var myDropzone = this;
+					var count = myDropzone.options.maxFiles;
+					myDropzone.removeFile(file);
+				});
+
+				//삭제할때 처리
+				this.on("removedfile", function (file) {
+					var d = 0;
+				}); 
+				 this.on("complete", function (file) {
+					myDropzone = this;
+					var myDropzone = this;
+					myDropzone.removeFile(file);
+				});
+			  },
+		});
+		
+		
+		// 콘텐츠 파일 추가
+		var fileInput = document.getElementById("file_1");
+		
+		fileInput.onchange = () => {
+			var selectedFile = [...fileInput.files];
+/*
+			selectedFile.forEach(row => {
+				var fileLeng = row.name.length;
+				var fileDot = row.name.lastIndexOf(".");
+				var fileType = row.name.substring(fileDot+1, fileLeng);
+				
+				if(fileType != "exe"){
+					alert("exe파일만 첨부할 수 있습니다.");
+					fileInput.value = "";
+					return false;
+				}
+	
+			});
+*/					
+		}
+		
+	});
+	
+// 	function delete_attachment(arg){
+// 		var id = "#"+arg;
+		
+// 		if(confirm("첨부파일을 삭제하시겠습니까?\n저장시 적용됩니다.")){
+// 			$(".select-file-btn").removeAttr("disabled");
+// 			$(".select-file-name-box").val("");
+// 			$("#fileSaveNm").remove("#fileSaveNm");
+// 			$("#fileOriginNm").remove("#fileOriginNm");
+// 			$(id).siblings("button").css("display","none");
+// 			$(id).siblings(".btn").css("display","none");
+// 		}
+// 	}
+	//첨부파일 삭제
+	function fileDelete(metadataIdx) {
+		if (!metadataIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '첨부파일 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/cms/metadata/fileDelete',
+						type: 'get',
+						data: {
+							'metadataIdx': metadataIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							$('.uploaded-file').empty();
+// 							$('.sidenav').sidenav('close');
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							toast("정상적으로 처리되었습니다.");
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function () {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+	// 삭제
+	function dataDelete() {
+		var metadataIdx = $("[name='metadataIdx']", frmForm).val();
+
+		if (!metadataIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '콘텐츠 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/cms/metadata/delete',
+						type: 'get',
+						data: {
+							'metadataIdx': metadataIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							$('.sidenav').sidenav('close');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function () {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+</script>
+<form th:id="frmForm" method="post"
+	th:action="@{/{adminPath}/cms/metadata/save(adminPath=${@environment.getProperty('global.admin-path')})}"
+	enctype="multipart/form-data">
+	<input type="hidden" name="upload_count" id="upload_count" value="">
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="side_close('#side_view');"
+					class="btn grey lighten-1 waves-effect waves-light"><i class="material-icons">clear</i></a>
+				<div class="float_r">
+					<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button"
+						th:if="${!#strings.isEmpty(vo?.metadataIdx)}" th:onclick="dataDelete();">삭제<i
+							class="material-icons left">delete</i></button>
+					<button id="btn-upload-file" class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0">저장 <i
+							class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="row pd_box">
+		<input type="hidden" name="metadataIdx" id="metadataIdx" th:value="${vo?.metadataIdx}" />
+		<div class="row">
+			<div class="input-field col s7">
+				<input type="text" name="fileDesc" id="fileDesc" th:value="${vo?.fileDesc}" />
+				<label for="fileDesc">데이터 설명</label>
+			</div>
+		</div>
+
+		<div class="row upload_wrap" th:id="attachment_file">
+			<div class="input-field file-upload">
+				<label>파일</label>
+				
+				<div class="file_info">
+					 <div class="dropzone" id="fileDropzone">
+					</div>
+					
+					<div class="table table-striped files" id="previews">
+						<div id="template" class="file-row dz-image-preview">
+						   
+						</div>
+					</div>
+				</div>
+			</div>
+			<span class="disc f_alert">
+				업로드 용량은 최대 1GB
+				<!-- 최대 5개 파일 업로드 가능. 전체 업로드 용량은 50MB 이하<br /> -->
+				<!-- 파일설명은 웹표준 및 웹접근성에 의해 입력하는 것을 권장합니다. -->
+			</span>
+			<div class="row">
+				<div class="input-field file-upload uploaded-file">
+					<!-- <label class="select-file-btn btn" for="file_1" th:disabled="${!#strings.isEmpty(vo?.attachmentFileOrigin)}">파일선택</label> -->
+					<input class="select-file-name-box" type="text" th:value="${vo?.fileOriginNm}" disabled>
+					<input id="file_1" name="file" type="hidden" class="" value="">
+					<a class="btn" th:if="${!#strings.isEmpty(vo?.fileOriginNm)}" th:href="|/admin/cms/metadata/download?metadataIdx=${vo?.metadataIdx}|" style="padding: 0 5px;">다운로드</a>
+					<button th:if="${!#strings.isEmpty(vo?.fileOriginNm)}" class="waves-effect waves-light btn red" type="button" th:onclick="fileDelete('[[${vo?.metadataIdx}]]')">삭제</button>
+					
+					<th:block th:if="${!#strings.isEmpty(vo?.fileOriginNm)}">
+						<input type="hidden" id="fileSaveNm" name="fileSaveNm" th:value="${vo?.fileSaveNm}">
+						<input type="hidden" id="fileOriginNm" name="fileOriginNm" th:value="${vo?.fileOriginNm}">
+					</th:block>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</form>
+</html>

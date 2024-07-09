@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.module.play.ModulePlayMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(playIdx)">
+				AND a.play_idx = #{playIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(modulePlayIdx)">
+				AND a.module_play_idx = #{modulePlayIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(moduleCd)">
+				AND a.module_cd = #{moduleCd}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(attempt)">
+				AND a.attempt = #{attempt}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(playTeamIdx)">
+				AND b.play_team_idx = #{playTeamIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND b.detail_idx = #{detailIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo">
+		SELECT
+			a.* 
+		FROM lms_edu_module_play a
+		LEFT JOIN lms_edu_play b
+		ON a.play_idx = b.play_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo">
+		SELECT
+			a.* 
+		FROM lms_edu_module_play a
+		LEFT JOIN lms_edu_play b
+		ON a.play_idx = b.play_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="count" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM lms_edu_module_play a
+		WHERE play_idx = #{playIdx}
+		AND module_cd = #{moduleCd}
+	</select>
+	
+	<select id="modules" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo">
+		SELECT a.module_cd, c.module_title,
+		COUNT(DISTINCT a.module_play_idx) AS module_play_cnt,
+		COUNT(DISTINCT b.member_idx) AS module_player_cnt,
+		MAX(TIMESTAMPDIFF(MINUTE, a.module_start_time, a.module_end_time)) max_module_play_minute,
+		AVG(TIMESTAMPDIFF(MINUTE, a.module_start_time, a.module_end_time)) avg_module_play_minute,
+		MIN(TIMESTAMPDIFF(MINUTE, a.module_start_time, a.module_end_time)) min_module_play_minute,
+		
+<!-- 		COALESCE(SUM(CASE WHEN a.success_yn = 'y' AND a.delete_yn = 'n' THEN 1 ELSE 0 END), 0) module_play_success_cnt, -->
+<!-- 		COALESCE(SUM(CASE WHEN a.success_yn = 'n' AND a.delete_yn = 'n' THEN 1 ELSE 0 END), 0) module_play_fail_cnt, -->
+		(SELECT COUNT(DISTINCT emp.module_play_idx) FROM lms_edu_module_play emp LEFT JOIN lms_edu_play p ON emp.play_idx = p.play_idx WHERE emp.success_yn = 'y' AND a.delete_yn = 'n' AND p.detail_idx = b.detail_idx AND emp.module_cd = a.module_cd) module_play_success_cnt,
+		(SELECT COUNT(DISTINCT emp.module_play_idx) FROM lms_edu_module_play emp LEFT JOIN lms_edu_play p ON emp.play_idx = p.play_idx WHERE emp.success_yn != 'y' AND a.delete_yn = 'n' AND p.detail_idx = b.detail_idx AND emp.module_cd = a.module_cd) module_play_fail_cnt,
+		
+<!-- 	    COALESCE(SUM(CASE WHEN e.risk_factor = '1' AND e.delete_yn = 'n' THEN 1 ELSE 0 END), 0) es_cnt, -->
+<!-- 	    COALESCE(SUM(CASE WHEN e.risk_factor = '2' AND e.delete_yn = 'n' THEN 1 ELSE 0 END), 0) fall_cnt, -->
+<!-- 	    COALESCE(SUM(CASE WHEN e.risk_factor = '3' AND e.delete_yn = 'n' THEN 1 ELSE 0 END), 0) care_cnt, -->
+<!-- 	    COALESCE(SUM(CASE WHEN e.risk_factor = '4' AND e.delete_yn = 'n' THEN 1 ELSE 0 END), 0) load_cnt, -->
+	    (SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '1' AND d.delete_yn = 'n' AND p.detail_idx = b.detail_idx AND m.module_cd = a.module_cd) es_cnt,
+		(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '2' AND d.delete_yn = 'n' AND p.detail_idx = b.detail_idx AND m.module_cd = a.module_cd) fall_cnt,
+		(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '3' AND d.delete_yn = 'n' AND p.detail_idx = b.detail_idx AND m.module_cd = a.module_cd) care_cnt,
+		(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '4' AND d.delete_yn = 'n' AND p.detail_idx = b.detail_idx AND m.module_cd = a.module_cd) load_cnt,
+		(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.delete_yn = 'n' AND IFNULL(d.event_id, '') != '' AND p.detail_idx = b.detail_idx AND m.module_cd = a.module_cd) accident_cnt
+		
+		FROM lms_edu_module_play a
+		LEFT JOIN lms_edu_play b
+		ON a.play_idx = b.play_idx
+		LEFT JOIN lms_edu_module c
+		ON a.module_cd = c.module_cd
+		LEFT JOIN lms_edu_event e
+		ON a.module_play_idx = e.module_play_idx
+			<include refid="selectWhere"/>
+			AND c.module_Idx IS NOT NULL 
+		GROUP by a.module_cd
+	</select>
+	
+	<select id="moduleAttempts" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo">
+		SELECT DISTINCT attempt
+		FROM lms_edu_module_play a
+		LEFT JOIN lms_edu_play b
+		ON a.play_idx = b.play_idx
+		LEFT JOIN lms_edu_play_team c
+		ON b.play_team_idx = c.play_team_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+<!-- 	<select id="teamPlays" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo"> -->
+<!-- 		SELECT a.* -->
+<!-- 		FROM lms_edu_module_play a -->
+<!-- 		LEFT JOIN lms_edu_play b -->
+<!-- 		ON a.play_idx = b.play_idx -->
+<!-- 			<include refid="selectWhere"/> -->
+<!-- 		GROUP BY a.attempt	 -->
+<!-- 	</select> -->
+	
+	<insert id="moduleStart" parameterType="kepco.lms.edu.module.play.ModulePlayVo" useGeneratedKeys="true" keyProperty="modulePlayIdx" keyColumn="modulePlayIdx">
+		INSERT INTO lms_edu_module_play (
+			play_idx, play_team_idx, module_cd, attempt, work_role,
+			a1, a2, a3, a4, b1, b2, b3,
+			module_start_time
+		)
+		VALUES (
+			#{playIdx}, #{playTeamIdx}, #{moduleCd}, #{attempt}, #{workRole},
+			#{a1}, #{a2}, #{a3}, #{a4}, #{b1}, #{b2}, #{b3},
+			#{moduleStartTime}
+		)
+	</insert>
+	
+	<update id="moduleEnd" parameterType="kepco.lms.edu.module.play.ModulePlayVo">
+		UPDATE lms_edu_module_play
+		<set>
+			success_yn = #{successYn},
+			module_end_time = #{moduleEndTime}
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND module_play_idx = #{modulePlayIdx}
+	</update>
+	
+	
+	<select id="risks" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo">
+			SELECT 
+	    (
+	        SELECT risk_factor
+	        FROM lms_edu_event a
+	        LEFT JOIN lms_edu_play b ON a.play_idx = b.play_idx
+	        LEFT JOIN lms_edu_module_play c ON a.play_idx = c.play_idx
+	        WHERE a.delete_yn = 'n' 
+	        <if test="playTeamIdx != null">
+	            AND b.play_team_idx = #{playTeamIdx} 
+	        </if>
+	        <if test="moduleCd != null">
+	            AND c.module_cd = #{moduleCd} 
+	        </if>
+	        GROUP BY risk_factor 
+	        ORDER BY COUNT(*) DESC 
+	        LIMIT 1
+	    ) AS most_risk,
+	    (
+	        SELECT COUNT(DISTINCT a.event_idx)
+	        FROM lms_edu_event a
+	        LEFT JOIN lms_edu_play b ON a.play_idx = b.play_idx
+	        LEFT JOIN lms_edu_module_play c ON a.play_idx = c.play_idx
+	        WHERE a.risk_factor = '1' AND a.delete_yn = 'n' 
+	        <if test="playTeamIdx != null">
+	            AND b.play_team_idx = #{playTeamIdx} 
+	        </if>
+	        <if test="moduleCd != null">
+	            AND c.module_cd = #{moduleCd} 
+	        </if>
+	    ) AS esCnt,
+	    (
+	        SELECT COUNT(DISTINCT a.event_idx)
+	        FROM lms_edu_event a
+	        LEFT JOIN lms_edu_play b ON a.play_idx = b.play_idx
+	        LEFT JOIN lms_edu_module_play c ON a.play_idx = c.play_idx
+	        WHERE a.risk_factor = '2' AND a.delete_yn = 'n' 
+	        <if test="playTeamIdx != null">
+	            AND b.play_team_idx = #{playTeamIdx} 
+	        </if>
+	        <if test="moduleCd != null">
+	            AND c.module_cd = #{moduleCd} 
+	        </if>
+	    ) AS fallCnt,
+	    (
+	        SELECT COUNT(DISTINCT a.event_idx)
+	        FROM lms_edu_event a
+	        LEFT JOIN lms_edu_play b ON a.play_idx = b.play_idx
+	        LEFT JOIN lms_edu_module_play c ON a.play_idx = c.play_idx
+	        WHERE a.risk_factor = '3' AND a.delete_yn = 'n' 
+	        <if test="playTeamIdx != null">
+	            AND b.play_team_idx = #{playTeamIdx} 
+	        </if>
+	        <if test="moduleCd != null">
+	            AND c.module_cd = #{moduleCd} 
+	        </if>
+	    ) AS careCnt,
+	    (
+	        SELECT COUNT(DISTINCT a.event_idx) 
+	        FROM lms_edu_event a
+	        LEFT JOIN lms_edu_play b ON a.play_idx = b.play_idx
+	        LEFT JOIN lms_edu_module_play c ON a.play_idx = c.play_idx
+	        WHERE a.risk_factor = '4' AND a.delete_yn = 'n' 
+	        <if test="playTeamIdx != null">
+	            AND b.play_team_idx = #{playTeamIdx} 
+	        </if>
+	        <if test="moduleCd != null">
+	            AND c.module_cd = #{moduleCd} 
+	        </if>
+	    ) AS loadCnt;
+
+	</select>
+	
+	<select id="modulePlayList" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo">
+		SELECT
+		a.module_play_idx, a.module_cd, a.attempt, e.accident_behavior, c.event_idx, c.play_idx,
+        (SELECT COUNT(distinct m.module_play_idx) FROM lms_edu_module_play m WHERE m.play_team_idx = b.play_team_idx AND m.module_cd = a.module_cd AND m.attempt = a.attempt AND m.success_yn = 'n') AS module_fail_cnt
+		FROM lms_edu_module_play a
+        LEFT JOIN lms_edu_play b ON a.play_team_idx = b.play_team_idx
+		LEFT JOIN lms_edu_event c ON a.module_play_idx = c.module_play_idx AND c.delete_yn = 'n' AND IFNULL(c.event_id, '') != ''
+		LEFT JOIN lms_edu_accident d ON c.event_id = d.event_id
+		LEFT JOIN lms_edu_accident_content e ON d.accident_code = e.accident_code
+		
+			<include refid="selectWhere"/>
+		GROUP BY a.attempt	
+			
+	</select>
+	
+	<select id="modulePlayHistory" parameterType="map" resultType="kepco.lms.edu.module.play.ModulePlayVo">
+		SELECT
+		a.module_play_idx, a.module_cd, a.attempt, e.accident_behavior, c.event_idx, c.play_idx,
+        (SELECT COUNT(distinct m.module_play_idx) FROM lms_edu_module_play m WHERE m.play_team_idx = b.play_team_idx AND m.module_cd = a.module_cd AND m.attempt = a.attempt AND m.success_yn = 'n') AS module_fail_cnt,
+        TIMESTAMPDIFF(SECOND, a.module_start_time, a.module_end_time) AS module_elapsed_time
+		FROM lms_edu_module_play a
+        LEFT JOIN lms_edu_play b ON a.play_team_idx = b.play_team_idx
+		LEFT JOIN lms_edu_event c ON a.module_play_idx = c.module_play_idx AND c.delete_yn = 'n' AND IFNULL(c.event_id, '') != ''
+		LEFT JOIN lms_edu_accident d ON c.event_id = d.event_id
+		LEFT JOIN lms_edu_accident_content e ON d.accident_code = e.accident_code
+		
+			<include refid="selectWhere"/>
+		GROUP BY a.module_play_idx	
+	</select>
+</mapper>

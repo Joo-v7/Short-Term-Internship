@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.team.TeamMapper">
+
+	<sql id="selectWhere">
+		<where>
+			1=1
+			<if test="!@kepco.util.StrUtil@isBlank(eduIdx)">
+				AND edu_idx = #{eduIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND detail_idx = #{detailIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(teamIdx)">
+				AND team_idx = #{teamIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.team.TeamVo">
+		SELECT
+			@RNUM := @RNUM + 1 AS rn, a.*,
+			(SELECT edu_title FROM lms_edu b WHERE b.edu_idx = a.edu_idx) eduTitle,
+			(SELECT edu_numeral FROM lms_edu_detail b WHERE  b.detail_idx = a.detail_idx) eduNumeral,
+			(SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND a.team_idx = b.team_idx AND b.regist_state != '4') teamCnt 
+		FROM lms_edu_team a, (select @RNUM := 0) tmp
+		<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				team_idx ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.team.TeamVo">
+		SELECT *,
+			(SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND a.team_idx = b.team_idx AND b.regist_state != '4') teamCnt
+		FROM lms_edu_team a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.team.TeamVo" useGeneratedKeys="true" keyProperty="teamIdx" keyColumn="teamIdx">
+		INSERT INTO lms_edu_team (
+			edu_idx,detail_idx,team_max,team_nm,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{eduIdx},#{detailIdx},#{teamMax},#{teamNm},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.team.TeamVo">
+		UPDATE lms_edu_team
+		<set>
+			team_max = #{teamMax},
+			team_nm = #{teamNm}
+		</set>
+		WHERE
+			team_idx = #{teamIdx}
+	</update>
+	
+	<delete id="delete" parameterType="map">
+		DELETE 
+		FROM 
+			lms_edu_team
+		WHERE
+			team_idx = #{teamIdx}
+	</delete>
+	
+	
+	
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.menu.MenuMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			AND delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(site)">
+				AND site = #{site}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND menu_nm LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scMn)">
+			AND mn = #{scMn}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scExceptMenuIdx)">
+			AND menu_idx != #{scExceptMenuIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.menu.MenuVo">
+		SELECT
+			*
+		FROM cms_menu
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 개수 -->
+	<select id="selectCnt" parameterType="map" resultType="int">
+		SELECT
+			COUNT(1)
+		FROM cms_menu
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.menu.MenuVo">
+		SELECT
+			a.*,
+			(SELECT menu_nm FROM cms_menu b WHERE a.parent_menu_idx = b.menu_idx) parent_menu_nm,
+			(SELECT layout_nm FROM cms_layout b WHERE a.layout_idx = b.layout_idx) layout_nm,
+			(SELECT page_nm FROM cms_page b WHERE a.page_idx = b.page_idx) page_nm
+		FROM cms_menu a
+		WHERE
+			delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(menuIdx)">
+				AND menu_idx = #{menuIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scSite)">
+				AND site = #{scSite}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scMn)">
+				AND mn = #{scMn}
+			</if>
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="kepco.cms.menu.MenuVo" useGeneratedKeys="true" keyProperty="menuIdx" keyColumn="menu_idx">
+		INSERT INTO cms_menu
+		(
+		menu_idx, site, parent_menu_idx, menu_depth, menu_order, mn, menu_nm, menu_url, menu_type, use_yn, layout_idx, menu_head_html, menu_tail_html, page_idx,
+		insert_idx, insert_ip, insert_date
+		)
+		VALUES
+		(
+		#{menuIdx}, #{site}, #{parentMenuIdx}, #{menuDepth}, #{menuOrder}, #{mn}, #{menuNm}, #{menuUrl}, #{menuType}, #{useYn}, #{layoutIdx}, #{menuHeadHtml}, #{menuTailHtml}, #{pageIdx},
+		#{insertIdx}, #{insertIp}, CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="kepco.cms.menu.MenuVo">
+		UPDATE cms_menu
+		<set>
+			site = #{site}, 
+			parent_menu_idx = #{parentMenuIdx}, 
+			mn = #{mn}, 
+			menu_nm = #{menuNm}, 
+			menu_url = #{menuUrl}, 
+			menu_type = #{menuType}, 
+			use_yn = #{useYn}, 
+			menu_order = #{menuOrder},
+			layout_idx = #{layoutIdx}, 
+			menu_head_html = #{menuHeadHtml}, 
+			menu_tail_html = #{menuTailHtml}, 
+			page_idx = #{pageIdx}, 
+			update_idx = #{updateIdx}, 
+			update_ip = #{updateIp}, 
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND menu_idx = #{menuIdx}
+	</update>
+	
+	<!-- 삭제 -->
+	<update id="delete" parameterType="map">
+		UPDATE cms_menu
+		<set>
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND menu_idx = #{menuIdx}
+	</update>
+	
+	
+	
+</mapper>

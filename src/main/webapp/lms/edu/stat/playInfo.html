@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+   <!-- AM 차트 4 -->
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<script src="/assets/libs/amchart4/themes/animated.js"></script>
+<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+
+<script>
+	
+	function start_viewer() {
+		return start_viewer_switch = true;
+	}
+
+	$(function () {
+		var playIdx = `[[${playVo.playIdx}]]`;
+		var moduleCd = `[[${moduleCd}]]`;
+		var attempt = `[[${attempt}]]`;
+		var modulePlayIdx = `[[${modulePlayIdx}]]`;
+		var divCd = "play_info_" + moduleCd;
+		var divElement = document.getElementById(divCd);
+		divElement.setAttribute('data-value', modulePlayIdx);
+
+		playGraph(playIdx, moduleCd, attempt);
+
+
+
+		// start_viewer();
+
+		// 초기화
+		viewer_init();
+
+		// 3D뷰 버튼 이벤트 초기화
+		if (document.querySelector('.view_controller')) {
+			const view_btns = document.querySelectorAll('.view_controller > li button');
+			view_btns.forEach(element => {
+				element.addEventListener('click', function () {
+					view_btns.forEach(element => {
+						// 버튼 비활성화(전체)
+						element.classList.remove('act');
+					});
+					// 활성화(클릭요소만)
+					this.classList.add('act');
+					// 뷰 변경
+					viewer_cam = this.getAttribute('data-view');
+					// 뷰 갱신
+					// view_controlling();
+					view_controlling_2();
+				});
+			});
+		}
+
+
+		// 위험요인상세 열기
+		if ($('.trainging_result_info_wrap')) {
+			$('.trainging_result_info_wrap .danger_btn').click(function () {
+				if (!is_viewer()) {
+					alert("잠시 후에 다시 시도해주십시오.");
+					return;
+				}
+				$('.result_3d_view_wrap').fadeIn();
+				// 정보 구분
+				let info_num = $(this).attr('data-info');
+				// 정보 창 비활성화
+				$('.view_info_wrap .view_info_box').removeClass('act');
+				// 정보 창 활성화
+				$('.view_info_wrap .view_info_box[data-info-box=' + info_num + ']').addClass('act');
+
+				// html 스크롤 비활성화
+				$('html').addClass('scroll-disabled');
+			});
+		};
+
+		// 위험요인상세 닫기
+		if ($('.result_3d_view_wrap')) {
+			$('.result_3d_view_wrap .re_3d_view_close_btn').click(function () {
+				$('.result_3d_view_wrap').fadeOut();
+				playcanvas_bloom_set(false);
+				// html 스크롤 활성화
+				$('html').removeClass('scroll-disabled');
+			});
+		};
+
+		// 로그 버튼 이벤트 초기화
+		if (document.querySelector('.danger_btn')) {
+			const log_btns = document.querySelectorAll('.danger_btn');
+			log_btns.forEach(element => {
+				element.addEventListener('click', function () {
+
+					log_btns.forEach(element => {
+						// 버튼 비활성화(전체)
+						element.classList.remove('act');
+					});
+					// 버튼 활성화(클릭요소만)
+					this.classList.add('act');
+
+					playcanvas_bloom_set(true);
+					// 로그 코드가 있다면 뷰 갱신
+					if (this.getAttribute('data-posture')) {
+						// 근육표시 전부 비활성화
+						muscle_all_kill();
+						// 설정값 대입
+						viewer_risk_info = this.getAttribute('data-risk-factor');
+						viewer_risk_level = this.getAttribute('data-risk-level');
+						viewer_val_1 = this.getAttribute('data-val-1');
+						viewer_val_2 = this.getAttribute('data-val-2');
+						viewer_posture = '0' + this.getAttribute('data-posture');
+						viewer_bucket = this.getAttribute('data-bucket') == 1 ? true : false;
+						viewer_stick = this.getAttribute('data-stick') == 1 ? true : false;
+						// viewer_muscle = [];
+						// viewer_muscle = this.getAttribute('data-muscle') ? this.getAttribute(
+						// 	'data-muscle').split(',') : [];
+						viewer_point = this.getAttribute('data-point') == 1 ? true : false;
+						viewer_point_pose = this.getAttribute('data-point-pose') ? this
+							.getAttribute('data-point-pose').split(',') : [];
+						// 1 : 주의
+						// 2 : 경고
+						// 3 : 위험
+						// 4 : 사고 X(eventId 가 존재하고 있는 경우로 대체)
+						// 5 : 작업부하
+						// 6 : 부주의
+						
+						if(viewer_risk_info == 2){
+							// 추락 위험도 식별
+							switch (viewer_risk_level) {
+								case '1':
+									viewer_risk_level = "주의";
+									break;
+								case '2':
+									viewer_risk_level = "위험";
+									break;
+								default:
+									viewer_risk_level = "없음";
+									break;
+							}
+						}else{
+							// 추락 외 위험도 식별
+							switch (viewer_risk_level) {
+								case '1':
+									viewer_risk_level = "주의";
+									break;
+								case '2':
+									viewer_risk_level = "경고";
+									break;
+								case '3':
+									viewer_risk_level = "위험";
+									break;
+								case '4':
+									viewer_risk_level = "사고";
+									break;
+//	 							case '5':
+//	 								viewer_risk_level = "작업부하";
+//	 								break;
+//	 							case '6':
+//	 								viewer_risk_level = "부주의";
+									break;
+
+								default:
+									viewer_risk_level = "없음";
+									break;
+							}
+						}
+						
+
+						// riskFactor 위험요인
+						// 1 : 감전
+						// 2 : 추락
+						// 3 : 부주의
+						// 4 : 작업부하
+
+
+						// 위험요인 상세 정보 랩
+						const info_wrap = document.querySelectorAll(
+							'.result_3d_view_wrap .view_info_box');
+						info_wrap.forEach(el => {
+							let el_risk_factor = el.getAttribute('data-risk-factor-box');
+							// 위험요인에 따른 정보 창 활성화
+							if (viewer_risk_info == el_risk_factor) {
+								el.classList.add('act');
+							}
+						});
+
+						// 1 : 특고압선(22.9kV)
+						// 2 : COS/1차 측위/애자류 등
+						// 3 : 3상 인입선/인하선(380V)
+						// 4 : 저압인입선(220B)
+
+						// 감전 내용 변경 - 충전부 및 내용
+						if (viewer_risk_info == 1) {
+							let parts;
+							switch (viewer_val_1) {
+								case '1':
+									parts = "특고압선";
+									break;
+								case '2':
+									parts = "COS/1차 측위/애자류 등";
+									break;
+								case '3':
+									parts = "3상 인입선/인하선(380V)";
+									break;
+								case '4':
+									parts = "저압인입선(220V)";
+									break;
+
+								default:
+									parts = "지정된 충전부 명칭이 없음";
+									break;
+							}
+							document.getElementById('view_risk_el_1_1').innerText = parts;
+							// document.getElementById('view_risk_el_1_2').innerText = viewer_val_2 + 'cm';
+							// document.getElementById('view_risk_el_1_3').innerText = viewer_risk_level;
+						}
+
+						// 추락 내용 변경 - 추락
+						if (viewer_risk_info == 2) {
+							document.getElementById('view_risk_el_2_1').innerText =
+								viewer_risk_level;
+							if (viewer_risk_level == "주의") {
+								document.getElementById('view_risk_el_2_1').classList.add(
+									'score_2');
+								document.getElementById('view_risk_el_2_2').classList.add(
+									'score_2');
+								document.getElementById('view_risk_el_2_3').classList.add(
+									'score_2');
+								document.getElementById('view_risk_el_2_4').classList.add(
+									'score_2');
+								document.getElementById('view_risk_el_2_5').classList.add(
+									'score_2');
+							}
+							if (viewer_risk_level == "위험") {
+								document.getElementById('view_risk_el_2_1').classList.add(
+									'score_3');
+								document.getElementById('view_risk_el_2_2').classList.add(
+									'score_3');
+								document.getElementById('view_risk_el_2_3').classList.add(
+									'score_3');
+								document.getElementById('view_risk_el_2_4').classList.add(
+									'score_3');
+								document.getElementById('view_risk_el_2_5').classList.add(
+									'score_3');
+							}
+							if (viewer_risk_level == "사고") {
+								document.getElementById('view_risk_el_2_1').classList.add(
+									'score_4');
+								document.getElementById('view_risk_el_2_2').classList.add(
+									'score_4');
+								document.getElementById('view_risk_el_2_3').classList.add(
+									'score_4');
+								document.getElementById('view_risk_el_2_4').classList.add(
+									'score_4');
+								document.getElementById('view_risk_el_2_5').classList.add(
+									'score_4');
+							}
+							document.getElementById('view_risk_el_2_2').innerText = '위치 점수 : ' +
+								viewer_val_1;
+							document.getElementById('view_risk_el_2_3').innerText = '높이 점수 : ' +
+								viewer_val_2;
+							document.getElementById('view_risk_el_2_4').innerText =
+								viewer_risk_level;
+							// 결과 내용
+							let result_cont;
+							if (viewer_risk_level == "주의" || viewer_risk_level == "위험") {
+								result_cont = "안정적인 위치에서 작업해야 합니다.";
+							}
+							if (viewer_risk_level == "사고") {
+								result_cont = "추락하였습니다.";
+							}
+							document.getElementById('view_risk_el_2_5').innerText = result_cont;
+						}
+
+						// 부주의 내용 변경 - 응시 시간
+						if (viewer_risk_info == 3) {
+							document.getElementById('view_risk_el_3_1').innerText = viewer_val_1 +
+								'초간 응시';
+						}
+
+						// 부하자세 내용 변경 - 근육 부하
+						if (viewer_risk_info == 4) {
+							const point_list = viewer_val_1.split(',');
+
+							let point_cont;
+							let text_cont;
+							let res_text_cont;
+							// 부하 점수
+							switch (point_list[0]) {
+								case '0':
+									point_cont = "양호(0점)";
+									document.getElementById('view_risk_el_4_1').classList.add(
+										'score_1');
+									document.getElementById('view_risk_el_4_3').classList.add(
+										'score_1');
+									document.getElementById('view_risk_el_4_4').classList.add(
+										'score_1');
+									text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지했습니다.";
+									res_text_cont = "'필요없음'";
+									break;
+								case '1':
+									point_cont = "주의(1점)";
+									document.getElementById('view_risk_el_4_1').classList.add(
+										'score_2');
+									document.getElementById('view_risk_el_4_3').classList.add(
+										'score_2');
+									document.getElementById('view_risk_el_4_4').classList.add(
+										'score_2');
+									text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지해야 합니다.";
+									res_text_cont = "'조치권고'";
+									break;
+								case '2':
+									point_cont = "높음(2점)";
+									document.getElementById('view_risk_el_4_1').classList.add(
+										'score_2');
+									document.getElementById('view_risk_el_4_3').classList.add(
+										'score_2');
+									document.getElementById('view_risk_el_4_4').classList.add(
+										'score_2');
+									text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지해야 합니다.";
+									res_text_cont = "'조치필요'";
+									break;
+								case '3':
+									point_cont = "높음(3점)";
+									document.getElementById('view_risk_el_4_1').classList.add(
+										'score_2');
+									document.getElementById('view_risk_el_4_3').classList.add(
+										'score_2');
+									document.getElementById('view_risk_el_4_4').classList.add(
+										'score_2');
+									text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지해야 합니다.";
+									res_text_cont = "'조치필요'";
+									break;
+								case '4':
+									point_cont = "위험(4점)";
+									document.getElementById('view_risk_el_4_1').classList.add(
+										'score_3');
+									document.getElementById('view_risk_el_4_3').classList.add(
+										'score_3');
+									document.getElementById('view_risk_el_4_4').classList.add(
+										'score_3');
+									text_cont = "안정적인 자세와 근골격계에 부담이 되며, 적절한 자세에 대한 학습이 필요합니다.";
+									res_text_cont = "'즉각조치'";
+									break;
+								case '5':
+									point_cont = "위험(5점)";
+									document.getElementById('view_risk_el_4_1').classList.add(
+										'score_3');
+									document.getElementById('view_risk_el_4_3').classList.add(
+										'score_3');
+									document.getElementById('view_risk_el_4_4').classList.add(
+										'score_3');
+									text_cont = "안정적인 자세와 근골격계에 부담이 되며, 적절한 자세에 대한 학습이 필요합니다.";
+									res_text_cont = "'즉각조치'";
+									break;
+								default:
+									point_cont = "고위험(" + point_list[0] + ")";
+									document.getElementById('view_risk_el_4_1').classList.add(
+										'score_4');
+									document.getElementById('view_risk_el_4_3').classList.add(
+										'score_4');
+									document.getElementById('view_risk_el_4_4').classList.add(
+										'score_4');
+									text_cont = "사고가 우려됩니다.";
+									res_text_cont = "'즉각조치'";
+									break;
+							}
+
+
+							// 근육부하 점수 적용 함수
+							function muscle_point_apply(el, point) {
+								switch (point) {
+									case '1':
+										document.getElementById(el).classList.add('muscle_score_1');
+										break;
+									case '2':
+										document.getElementById(el).classList.add('muscle_score_2');
+										break;
+									case '3':
+										document.getElementById(el).classList.add('muscle_score_3');
+										break;
+									case '4':
+										document.getElementById(el).classList.add('muscle_score_4');
+										break;
+									case '5':
+										document.getElementById(el).classList.add('muscle_score_5');
+										break;
+
+									default:
+										break;
+								}
+
+								return;
+							}
+
+							document.getElementById('view_risk_el_4_1').innerText = point_cont;
+							document.getElementById('view_risk_el_4_2').innerText = text_cont;
+							document.getElementById('view_risk_el_4_3').innerText = point_cont;
+							document.getElementById('view_risk_el_4_4').innerText = res_text_cont;
+
+							// 근육부하 점수 적용
+							muscle_point_apply('view_muscle_1', point_list[2]);
+							muscle_point_apply('view_muscle_2', point_list[3]);
+							muscle_point_apply('view_muscle_3', point_list[4]);
+							muscle_point_apply('view_muscle_4', point_list[5]);
+							muscle_point_apply('view_muscle_5', point_list[6]);
+							muscle_point_apply('view_muscle_6', point_list[7]);
+							muscle_point_apply('view_muscle_7', point_list[8]);
+							muscle_point_apply('view_muscle_8', point_list[9]);
+							muscle_point_apply('view_muscle_9', point_list[10]);
+
+
+							// 근육 점수 적용치(3D 뷰어)
+							// if (viewer_muscle.length === 0) {
+							// 	viewer_muscle = [point_list[2], point_list[3], point_list[4], point_list[5], point_list[6], point_list[7], point_list[8], point_list[9], point_list[10]];
+							// }
+							// 근육 부하 여부
+							if (this.getAttribute('data-val-1').split(',').length > 0) {
+								let muscle_list_init = this.getAttribute('data-val-1').split(',');
+								viewer_muscle = [];
+								muscle_list_init.forEach((val, index) => {
+									if (index > 0) {
+										viewer_muscle.push(val);
+									}
+								});
+							} else {
+								viewer_muscle = [];
+							}
+						}
+						// 뷰 갱신
+						view_controlling_2();
+					}
+				});
+			});
+		}
+
+
+		// 부하자세 내용 출력 함수
+		function muscle_point_cont(viewer_val_1) {
+			const point_lists = viewer_val_1.split(',');
+			let point_content;
+			switch (point_lists[0]) {
+				case '0':
+					point_content = "안정적인 자세";
+					break;
+				case '1':
+					point_content = "불안정한 자세";
+					break;
+				case '2':
+					point_content = "작업 자세가 근육 부담";
+					break;
+				case '3':
+					point_content = "작업 자세가 근육 과부화";
+					break;
+				case '4':
+					point_content = "작업 자세가 근육 손상우려";
+					break;
+
+				default:
+					point_content = "";
+					break;
+			}
+			return this.innerText = point_content;
+		}
+
+		// 3D 뷰 컨트롤링
+		function view_controlling_2() {
+			// 자세 및 카메라
+			call3DModelEvent(viewer_posture + '_' + viewer_cam);
+			// 근육 바인딩
+			if (viewer_muscle.length > 0) {
+				// 캐릭터 색상 변환 ( 캐릭터 색상 적용 여부(true = 적용 , false = 미적용) *boolean값 대신 색상값 입력시 그 색상으로 변환 , 색상값 )
+				character_color_setting(true, '#666666');
+				viewer_bucket = false;
+				viewer_point = false;
+				// divElement.setAttribute('data-value', modulePlayIdx);
+
+				// 근육부하 3D뷰어 적용
+				// enabled_muscle_texture(근육이름 or false , 활성화 여부[boolean] , 색상 [ 1 ~ 5] )
+				const muscle_list = [
+
+					// 근육 이름
+					"L5-Sacrum_joint", 	// L5 - Sacrum 요추관절
+					"QL", 			// 요방형근
+					"EOA", 			// 내복사근
+					// "Multifidus", 	// 다열근
+					"SC_joint", 	// 흉쇄관절
+					"Deltoid", 		// 삼각근
+					"Trapezius", 	// 승모근
+					// "ES", 			// 척추세움근
+					"AC_joint", 	// 견쇄관절
+					"ECRB",			// 단요측수근신근
+					"Supinator", 	// 회외근
+				];
+				console.log(viewer_muscle);
+				// 근육 데이터 병합
+				const muscleData = muscle_list.map((name, index) => ({
+					name: name,
+					point: viewer_muscle[index]
+				}));
+				// 근육 데이터 적용
+				muscleData.forEach(ms => {
+					ms.point > 0 ? enabled_muscle_texture(ms.name, true, ms.point) : false;
+				});
+			} else {
+				// 캐릭터 색상 변환 ( 캐릭터 색상 적용 여부(true = 적용 , false = 미적용) *boolean값 대신 색상값 입력시 그 색상으로 변환 , 색상값 )
+				character_color_setting(false);
+			}
+
+			// 중심점 바인딩
+			enabled_center_point(viewer_point ? true : false);
+			// console.log(viewer_point);
+			// 중심점 위치 초기화
+			add_point_position("reset");
+			add_point_position("reset");
+
+			// 중심점 포인트 위치 조절 [x("reset"), y, z]
+			if (typeof viewer_point_pose == Object && viewer_point_pose.length > 0) add_point_position(Number(viewer_point_pose[0]), Number(viewer_point_pose[1]), Number(viewer_point_pose[2]));
+			// 버켓 바인딩
+			enabled_bucket(viewer_bucket);
+			enabled_stick(viewer_stick);
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+	function formatTime(totalSeconds) {
+		var minutes = Math.floor(totalSeconds / 60); // 분 계산
+		var remainingSeconds = totalSeconds % 60; // 초 계산
+
+		return minutes + ':' + ('0' + remainingSeconds).slice(-2);
+	}
+
+	function formatTimeMinute(totalSeconds) {
+		var minutes = Math.floor(totalSeconds / 60); // 분 계산
+
+		return minutes;
+	}
+
+	function formatTimeSecond(totalSeconds) {
+		var remainingSeconds = totalSeconds % 60; // 초 계산
+		return remainingSeconds;
+	}
+
+	function playGraph(playIdx, moduleCd, attempt) {
+
+		$.ajax({
+			url: '/lms/edu/stat/playGraph?playIdx=' + playIdx + '&moduleCd=' + moduleCd + '&attempt=' + attempt,
+			type: 'GET',
+			dataType: 'json',
+		}).done(function (data) {
+			// console.log("모듈=" + moduleCd)
+			// console.log("감전=" + data.data.eletricShockEventList);
+			// console.log("추락=" + data.data.downFallEventList);
+			// console.log("부주의=" + data.data.carelessEventList);
+			// console.log("작업부하=" + data.data.workloadEventList);
+			//				modulePlayVo 설명
+			//				학습자가 수행한 모듈 내용
+			//				moduleStartTime 과 moduleEndTime 으로 수행시간 구하기
+
+			//				data.data.eventList 설명	
+			//				발생한 이벤트들의 나열 
+			// 				riskFactor 위험요인
+			// 				1 : 감전
+			// 				2 : 추락
+			// 				3 : 부주의
+			// 				4 : 작업부하
+
+			// 				riskLevel 위험수준
+			// 				1 : 주의
+			// 				2 : 경고
+			// 				3 : 위험
+			// 				4 : 사고 X	(eventId 가 존재하고 있는 경우로 대체)	
+			// 5작업부하 6부주의
+
+			// 				riskValue1 위험 요인의 값1
+			// 				riskFactor 가 감전인 경우 : 충전부 종류(감전원인 대상)
+			// 				1 : 특고압선(22.9kV)
+			// 				2 : COS/1차 측위/애자류 등
+			// 				3 : 3상 인입선/인하선(380V)
+			// 				4 : 저압인입선(220B)
+			// 				또는 기타원인 텍스트
+			// 				예) 1
+
+			// 				riskFactor 가 추락인 경우 : 위치점수 1 ~ 3
+			// 				예) 3
+
+			// 				riskFactor 가 작업부하인 경우 : 작업부하 값
+			// 				예) 2,2,2,1,1,1,1,5,4,4,2
+
+			// 				riskFactor 가 부주의인 경우 : 부주의시간 (단위: 초)
+			// 				예) 7				
+
+			// 				riskValue2 위험 요인의 값2
+			// 				riskFactor 가 감전인 경우 : 접근거리
+
+			// 				예)88 (단위: cm)
+
+			// 				eventType이 추락인 경우 : 높이점수 1 ~ 3
+			// 				예) 3
+
+			//processPlayIdx 이벤트가 발생한 작업 IDX
+			//eventTime 이벤트 발생 시각
+
+			// data.data.processPlayList가 null이 아닌 경우에만 실행
+
+			am4core.ready(function () {
+				chart = am4core.create("chartdiv_time_1_1_" + moduleCd, am4charts.XYChart);
+				
+				// 카테고리 순서 고정 목적
+				chart.data.push({"category": "작업부하",});
+				chart.data.push({"category": "부주의",});
+				chart.data.push({"category": "추락",});
+				chart.data.push({"category": "감전",});
+				chart.data.push({"category": "",}); //절차
+				
+				if (data.data.processPlayList) {
+					data.data.processPlayList.forEach(function (process) {
+						chart.data.push({
+							"category": "",
+							"start": formatTime(process.processElapsedStartTime),
+							"end": formatTime(process.processElapsedEndTime),
+							"color": '#54b096',
+							"text": "절차",
+							"step": process.step,
+							"textDisabled": true,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": true,
+							"flagStepDisabled" : false,
+							"processPlayIdx" : process.processPlayIdx,
+						});
+						
+						// 감전, 추락, 부하, 부주의 에 대해서도 선(라인) 넣을 목적
+						chart.data.push({
+							"category": "감전",
+							"start": formatTime(process.processElapsedStartTime),
+							"end": formatTime(process.processElapsedEndTime),
+							"color": '#ccc',
+							"text": "",
+							"textDisabled": true,
+							"step" : process.step,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": true,
+						});
+						chart.data.push({
+							"category": "추락",
+							"start": formatTime(process.processElapsedStartTime),
+							"end": formatTime(process.processElapsedEndTime),
+							"color": '#ccc',
+							"text": "",
+							"textDisabled": true,
+							"step" : process.step,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": true,
+						});
+						chart.data.push({
+							"category": "부주의",
+							"start": formatTime(process.processElapsedStartTime),
+							"end": formatTime(process.processElapsedEndTime),
+							"color": '#ccc',
+							"text": "",
+							"textDisabled": true,
+							"step" : process.step,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": true,
+						});
+						chart.data.push({
+							"category": "작업부하",
+							"start": formatTime(process.processElapsedStartTime),
+							"end": formatTime(process.processElapsedEndTime),
+							"color": '#ccc',
+							"text": "",
+							"textDisabled": true,
+							"step" : process.step,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": true,
+						});
+					});
+				}
+				
+				if (data.data.eletricShockEventList) {
+					data.data.eletricShockEventList.forEach(function (event) {
+						chart.data.push({
+							"category": "감전",
+							"start": formatTime(event.eventElapsedStartTime),
+							"end": formatTime(event.eventElapsedEndTime),
+							"color": '#ffff00',
+							"text": "감전",
+							"textDisabled": true,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": false,
+							"eventIdx": event.eventIdx,
+						});
+					});
+				}
+				
+				if (data.data.downFallEventList) {
+					data.data.downFallEventList.forEach(function (event) {
+						chart.data.push({
+							"category": "추락",
+							"start": formatTime(event.eventElapsedStartTime),
+							"end": formatTime(event.eventElapsedEndTime),
+							"color": '#ffc74d',
+							"text": "추락",
+							"textDisabled": true,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": false,
+							"eventIdx": event.eventIdx,
+						});
+					});
+				}
+				
+				if (data.data.carelessEventList) {
+					data.data.carelessEventList.forEach(function (event) {
+						chart.data.push({
+							"category": "부주의",
+							"start": formatTime(event.eventElapsedStartTime),
+							"end": formatTime(event.eventElapsedEndTime),
+							"color": '#9a60f2',
+							"text": "부주의",
+							"textDisabled": true,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": false,
+							"eventIdx": event.eventIdx,
+						});
+					});
+				}
+				
+				if (data.data.workloadEventList) {
+					data.data.workloadEventList.forEach(function (event) {
+						chart.data.push({
+							"category": "작업부하",
+							"start": formatTime(event.eventElapsedStartTime),
+							"end": formatTime(event.eventElapsedEndTime),
+							"color": '#ffff00',
+							"text": "작업부하",
+							"textDisabled": true,
+							"icon": "/pages/kepco/img/timeline_icon_1.png",
+							"markerDisabled": false,
+							"eventIdx": event.eventIdx,
+						});
+					});
+				}
+
+				chart_1_option();
+			});
+
+			function chart_1_option() {
+
+				am4core.useTheme(am4themes_animated);
+
+				var colorSet = new am4core.ColorSet();
+				chart.dateFormatter.inputDateFormat = "mm:ss";
+
+				chart.fontSize = 12;
+				chart.tooltipContainer.fontSize = 12;
+				
+				chart.padding(0, 0, 0, 0);
+				// 절차에 대해 FlagBullet을 적용하므로 상단 여백 적용
+				chart.plotContainer.padding(20, 0, 0, 0);
+
+				var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+				categoryAxis.dataFields.category = "category";
+				categoryAxis.renderer.minGridDistance = 5;
+				categoryAxis.renderer.labels.template.fill = am4core.color("#ccc");
+				categoryAxis.cursorTooltipEnabled = false;
+
+				// X축 데이터 표출
+				var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+				dateAxis.renderer.minGridDistance = 30;
+				dateAxis.baseInterval = {
+					count: 1,
+					timeUnit: "second"
+				};
+				dateAxis.gridIntervals.setAll([
+					{ timeUnit: "second", count: 1 },
+					{ timeUnit: "second", count: 30 }
+				]);
+				dateAxis.dateFormats.setKey("second", "mm:ss"); // 초 단위 포맷 설정
+				dateAxis.dateFormats.setKey("minute", "mm:ss"); // 분 단위 포맷 설정
+				
+				dateAxis.renderer.tooltipLocation = 0;
+				dateAxis.renderer.line.stroke = new am4core.color("#aaa");
+				dateAxis.renderer.line.strokeDasharray = "1,4";
+				dateAxis.renderer.line.strokeOpacity = 1;
+				
+				dateAxis.renderer.grid.template.location = 0;
+				dateAxis.renderer.labels.template.location = 0;
+				dateAxis.startLocation = -0.5;
+				dateAxis.endLocation = 1.5;
+				
+				dateAxis.renderer.labels.template.adapter.add("text", function (text, target) {
+					if(!text) return;
+					
+					// HH:mm:ss 인 경우 mm:ss 만 리턴
+					if( text.length == 8) {
+						return text.substring(3);
+					}
+					
+					return text;
+				});
+				
+				// 툴팁 - 마우스호버
+				dateAxis.tooltip.background.stroke = new am4core.color("#008eff"); // 테두리 색상 설정
+				dateAxis.tooltip.background.strokeWidth = 0.8; // 테두리 두께 설정
+				dateAxis.tooltip.background.strokeOpacity = 1; // 테두리 투명도 설정
+				dateAxis.tooltip.background.fill = new am4core.color("#030e18");
+				dateAxis.tooltip.background.fillOpacity = 0.7;
+				dateAxis.tooltip.background.cornerRadius = 5;
+				dateAxis.tooltip.label.fill = new am4core.color("#fff");
+				dateAxis.tooltip.pointerOrientation = "up";
+				//dateAxis.tooltip.dy = -35;
+				dateAxis.tooltip.label.paddingTop = 7;
+
+				// 단위 (분) 표시
+				var labelTemplate = dateAxis.renderer.labels.template;
+				labelTemplate.verticalCenter = "top";
+				labelTemplate.horizontalCenter = "middle";
+				labelTemplate.fill = new am4core.color("#aaa"); // 글자 색
+				labelTemplate.fillOpacity = 1;
+				labelTemplate.background.fillOpacity = 0;
+				labelTemplate.dateFormatter.dateFormat = "mm:ss"; // 분과 초로만 설정
+
+				// 타임라인의 길목
+				var series = chart.series.push(new am4charts.ColumnSeries());
+				series.columns.template.height = am4core.percent(2);
+				series.dataFields.openDateX = "start";
+				series.dataFields.dateX = "end";
+				series.dataFields.categoryY = "category";
+				series.baseAxis = categoryAxis;
+
+				// NOTE: 이게 도대체 무슨 의미인지?
+				/*
+				// 시간 데이터를 분과 초 형태로 표시
+				series.columns.template.adapter.add("tooltipText", function (text, target) {
+					var start = target.dataItem.openDateX;
+					var end = target.dataItem.dateX;
+
+					// 시작 시간을 'mm:ss' 형태로 변환
+					var startDate = am4core.time.getRoundDate(start, "second");
+					var startTime = chart.dateFormatter.format(startDate, "mm:ss");
+
+					// 종료 시간을 'mm:ss' 형태로 변환
+					var endDate = am4core.time.getRoundDate(end, "second");
+					var endTime = chart.dateFormatter.format(endDate, "mm:ss");
+
+					// 툴팁 텍스트 생성
+					return startTime + " - " + endTime;
+				});
+				*/
+				
+				series.columns.template.fill = new am4core.color("#aaa");
+				series.columns.template.strokeOpacity = 0;
+				series.columns.template.fillOpacity = 1;
+				
+				// 절차의 FlagBullet 표시
+				var flagBullet1 = new am4plugins_bullets.FlagBullet();
+				series.bullets.push(flagBullet1);
+				flagBullet1.disabled = true;
+				flagBullet1.propertyFields.disabled = "flagStepDisabled";
+				flagBullet1.locationX = 1;
+				flagBullet1.label.text = "{step}";
+				flagBullet1.stroke = am4core.color("#ccc");
+				flagBullet1.background.fill = am4core.color("#ccc");
+				flagBullet1.events.on("hit", function(event) {
+					var scrollPos = $("#tr_processPlayIdx_"+event.target.dataItem.dataContext.processPlayIdx).position().top;
+					$("div.t_list_table").animate({scrollTop: scrollPos - 40}, 200);
+				});
+
+				// 이벤트 포인터(마커)
+				var imageBullet1 = series.bullets.push(new am4plugins_bullets.PinBullet());
+				imageBullet1.locationX = 1;
+				imageBullet1.propertyFields.disabled = "markerDisabled";
+				imageBullet1.propertyFields.stroke = "color";
+				imageBullet1.background.propertyFields.fill = "color";
+				imageBullet1.image = new am4core.Image();
+				imageBullet1.image.propertyFields.href = "icon";
+				imageBullet1.image.scale = 0.8;
+				imageBullet1.propertyFields.opacity = "opacity";
+				imageBullet1.scale = 0.4;
+				imageBullet1.circle.radius = am4core.percent(100);
+				imageBullet1.tooltipText = "{start} : {text}";
+
+				imageBullet1.dx = 0;
+				imageBullet1.dy = 0;
+				
+				imageBullet1.events.on("hit", function(event) {
+					var scrollPos = $("#tr_eventIdx_"+event.target.dataItem.dataContext.eventIdx).position().top;
+					$("div.t_list_table").animate({scrollTop: scrollPos - 40}, 200);
+				});
+
+				// 텍스트 표시
+				var textBullet = series.bullets.push(new am4charts.LabelBullet());
+				// textBullet.label.text = "{text}";
+				textBullet.label.propertyFields.text = "text";
+				textBullet.label.fill = am4core.color("#fff");
+				// textBullet.disabled = true;
+				textBullet.propertyFields.disabled = "textDisabled";
+				textBullet.fontSize = 12;
+				textBullet.label.strokeOpacity = 1;
+				textBullet.locationX = 1;
+				textBullet.dy = -50;
+				textBullet.label.textAlign = "middle";
+				textBullet.label.strokeOpacity = 0;
+
+				// 차트 스크롤
+				chart.scrollbarX = new am4core.Scrollbar();
+				chart.scrollbarX.align = "center"
+//				chart.scrollbarX.width = am4core.percent(75);
+//				chart.scrollbarX.opacity = 0.5;
+//				chart.scrollbarX.disabled = true;
+
+				// 커서
+				var cursor = new am4charts.XYCursor();
+				chart.cursor = cursor;
+				cursor.xAxis = dateAxis;
+				cursor.yAxis = categoryAxis;
+				cursor.lineY.disabled = true;
+				cursor.lineX.strokeDasharray = "1,2";
+				cursor.lineX.stroke = am4core.color("#fff");
+				cursor.lineX.strokeOpacity = 1;
+
+				dateAxis.renderer.tooltipLocation2 = 0;
+				chart.logo.disabled = true;
+
+			}
+
+		}).fail(function () {
+			alert('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+
+
+
+
+	}
+</script>
+
+
+<div class="trainging_result_info_box act" data-info-box="1">
+	<div class="t_chart_box">
+		<dl>
+			<dt>상황</dt>
+			<dd class="situation_list">
+				<ul>
+					<th:block th:each="situation : ${modulePlayVo}">
+						<li th:if="${situation.a1} == Y">받침목 제거</li>
+						<li th:if="${situation.a2} == Y">벌집</li>
+						<li th:if="${situation.a3} == Y">정리된 야적물품</li>
+						<li th:if="${situation.a4} == Y">정리되지 않은 야적물품</li>
+						<li th:if="${situation.b1} == Y">후크 파손</li>
+						<li th:if="${situation.b2} == Y">브라켓 불량</li>
+						<li th:if="${situation.b3} == Y">하네스 파손</li>
+					</th:block>
+				</ul>
+			</dd>
+		</dl>
+
+		<div th:id="chartdiv_time_1_1_+${moduleCd}" class="chartbox" style="height: 260px"></div>
+	</div>
+	<div class="t_list_table">
+		<table class="new_table">
+			<colgroup>
+				<col width="90px">
+				<col width="100px">
+				<col width="100px">
+				<col width="auto">
+				<col width="180px">
+				<col width="180px">
+			</colgroup>
+			<thead>
+				<tr>
+					<th>구분</th>
+					<th>발생시점</th>
+					<th>역할</th>
+					<th>내용</th>
+					<th>공구</th>
+					<th>비고</th>
+				</tr>
+			</thead>
+			<tbody>
+
+				<th:block th:each="processPlayAndEvent, stat : ${processPlayAndEventList}">
+					<th:block th:if="${#strings.isEmpty(processPlayAndEvent.eventIdx)}">
+						<tr class="work_wrap" th:id="|tr_processPlayIdx_${processPlayAndEvent.processPlayIdx}|">
+							<td th:if="${stat.index} == 0 OR (${processPlayAndEventList[stat.index - 1].step} != ${processPlayAndEvent.step}) OR (${processPlayAndEventList[stat.index - 1].eventIdx} != null)"
+								th:attr="rowspan=${processPlayAndEvent.processCount}">
+								<span class="step_number"
+									th:classappend="${#strings.equals(processPlayAndEvent.successYn, 'Y')}? 'success' : 'fail'">[[${processPlayAndEvent.step}]]</span>
+							</td>
+
+							<td th:if="${stat.index} == 0 OR (${processPlayAndEventList[stat.index - 1].step} != ${processPlayAndEvent.step}) OR (${processPlayAndEventList[stat.index - 1].eventIdx} != null)"
+								th:attr="rowspan=${processPlayAndEvent.processCount}"
+								th:with="totalSeconds=${processPlayAndEvent.processTiming},
+						             hours=${T(java.lang.Math).floorDiv(totalSeconds, 3600)},
+						             minutes=${T(java.lang.Math).floorDiv(totalSeconds % 3600, 60)},
+						             seconds=${totalSeconds % 60}"
+								>
+								<span th:if="${hours > 0}" th:text="${hours} + '시간 '"></span>
+					            <span th:if="${minutes > 0}" th:text="${minutes} + '분 '"></span>
+					            <span th:text="${seconds} + '초'"></span>
+<!-- 								[[${processPlayAndEvent.processElapsedMinute}]]분[[${processPlayAndEvent.processElapsedSecond}]]초 -->
+							</td>
+							<td>
+								<span th:if="${#strings.equals(processPlayAndEvent.workRole, '1')}"
+									th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : 'another_tr'}">주작업자</span>
+								<span th:if="${#strings.equals(processPlayAndEvent.workRole, '2')}"
+									th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : 'another_tr'}">보조작업자</span>
+								<span th:if="${#strings.equals(processPlayAndEvent.workRole, '3')}"
+									th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : 'another_tr'}">지상작업자</span>
+								<span th:if="${#strings.equals(processPlayAndEvent.workRole, '4')}"
+									th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : 'another_tr'}">작업책임자</span>
+							</td>
+							<td class="t_left">
+								<strong
+									th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my_content' : 'tr_content'}">[[${processPlayAndEvent.processContents}]]</strong>
+							</td>
+							<td>
+								[[${processPlayAndEvent.taskTool}]]
+							</td>
+							<td th:if="${stat.index} == 0 OR (${processPlayAndEventList[stat.index - 1].step} != ${processPlayAndEvent.step}) OR (${processPlayAndEventList[stat.index - 1].eventIdx} != null)"
+								th:attr="rowspan=${processPlayAndEvent.processCount}">
+								<!-- <span class="live_option_title">작업 상황</span> -->
+								<div class="live_option_wrap">
+									<ul>
+										<li class="weather" th:if="${processPlayAndEvent.weather} == 1">맑음</li>
+										<li class="weather" th:if="${processPlayAndEvent.weather} == 2">폭염</li>
+										<li class="weather" th:if="${processPlayAndEvent.weather} == 3">소나기</li>
+										<li th:if="${#strings.equals(processPlayAndEvent.c1, 'Y')}">일반차량 충돌</li>
+										<li th:if="${#strings.equals(processPlayAndEvent.c2, 'Y')}">물웅덩이 생성</li>
+										<li th:if="${#strings.equals(processPlayAndEvent.c3, 'Y')}">통신기기 무단 발전</li>
+										<li th:if="${#strings.equals(processPlayAndEvent.c4, 'Y')}">가스관 파열</li>
+										<li th:if="${#strings.equals(processPlayAndEvent.c5, 'Y')}">CB 착오 투입</li>
+									</ul>
+								</div>
+							</td>
+						</tr>
+					</th:block>
+					<th:block th:if="${!#strings.isEmpty(processPlayAndEvent.eventIdx)}">
+						<th:block th:if="${#strings.equals(processPlayAndEvent.accidentYn, 'Y')}">
+							<tr class="e_accident">
+								<td th:if="${!#strings.isEmpty(processPlayAndEvent.eventIdx)}">
+									사고
+								</td>
+
+								<td th:with="totalSeconds=${processPlayAndEvent.eventTiming},
+						             hours=${T(java.lang.Math).floorDiv(totalSeconds, 3600)},
+						             minutes=${T(java.lang.Math).floorDiv(totalSeconds % 3600, 60)},
+						             seconds=${totalSeconds % 60}"
+								>
+									<span th:if="${hours > 0}" th:text="${hours} + '시간 '"></span>
+						            <span th:if="${minutes > 0}" th:text="${minutes} + '분 '"></span>
+						            <span th:text="${seconds} + '초'"></span>
+<!-- 									[[${processPlayAndEvent.eventElapsedMinute}]]분[[${processPlayAndEvent.eventElapsedSecond}]]초 -->
+								</td>
+
+								<td>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '1')}"
+										th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : ''}">주작업자</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '2')}"
+										th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : ''}">보조작업자</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '3')}"
+										th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : ''}">지상작업자</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '4')}"
+										th:class="${playVo.playIdx == processPlayAndEvent.playIdx? 'my' : ''}">작업책임자</span>
+								</td>
+
+								<td class="t_left">
+									<span class="suc_cate accident">
+										<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '1')}"
+											class="">감전</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '2')}"
+											class="">추락</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '3')}"
+											class="">부주의</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '4')}"
+											class="">작업부하</span>
+										<span th:if="${#strings.isEmpty(processPlayAndEvent.riskFactor)}"
+											class="">[[${processPlayAndEvent.accidentType}]]</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '1')}"
+											class="suc_cate caution">주의</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '2') && !#strings.equals(processPlayAndEvent.riskFactor, '2')}"
+											class="suc_cate danger">경고</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '2') && #strings.equals(processPlayAndEvent.riskFactor, '2')}"
+											class="suc_cate danger">위험</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '3')}"
+											class="suc_cate danger">위험</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '3')}"
+											class="suc_cate carelessness">부주의</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '4')}"
+											class="suc_cate workload">작업부하</span>
+									</span>
+									<strong>[[${processPlayAndEvent.accidentBehavior}]]</strong>
+								</td>
+								<td>
+									[[${processPlayAndEvent.taskTool}]]
+								</td>
+								<td>
+									<dl class="info_text">
+										<dt>위치</dt>
+										<dd>[[${processPlayAndEvent.eventLocation}]]</dd>
+									</dl>
+									<dl class="info_text">
+										<dt>상황</dt>
+										<dd>[[${processPlayAndEvent.accidentCause}]]</dd>
+									</dl>
+								</td>
+							</tr>
+						</th:block>
+						<th:block
+							th:if="${playVo.playIdx == processPlayAndEvent.playIdx} AND ${#strings.equals(processPlayAndEvent.accidentYn, 'N')}">
+							<tr th:id="|tr_eventIdx_${processPlayAndEvent.eventIdx}|">
+								<td th:if="${!#strings.isEmpty(processPlayAndEvent.eventIdx)}">
+									위험요인
+								</td>
+
+								<td th:with="totalSeconds=${processPlayAndEvent.eventTiming},
+						             hours=${T(java.lang.Math).floorDiv(totalSeconds, 3600)},
+						             minutes=${T(java.lang.Math).floorDiv(totalSeconds % 3600, 60)},
+						             seconds=${totalSeconds % 60}"
+								>
+									<span th:if="${hours > 0}" th:text="${hours} + '시간 '"></span>
+						            <span th:if="${minutes > 0}" th:text="${minutes} + '분 '"></span>
+						            <span th:text="${seconds} + '초'"></span>
+<!-- 									[[${processPlayAndEvent.eventElapsedMinute}]]분[[${processPlayAndEvent.eventElapsedSecond}]]초 -->
+								</td>
+
+								<td>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '1')}">주작업자</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '2')}">보조작업자</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '3')}">지상작업자</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.workRole, '4')}">작업책임자</span>
+								</td>
+
+								<td class="t_left" colspan="2">
+									<span th:if="${#strings.isEmpty(processPlayAndEvent.riskFactor)}"
+										class="">[[${processPlayAndEvent.accidentType}]]</span>
+										
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '1')}"
+										class="">
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '1')}"
+											class="suc_cate caution">감전 주의</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '2')}"
+											class="suc_cate danger">감전 경고</span>
+									</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '2')}"
+										class="">
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '1')}"
+											class="suc_cate caution">추락 주의</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '2')}"
+											class="suc_cate danger">추락 위험</span>
+									</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '3')}"
+										class="suc_cate carelessness">부주의</span>
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '4')}"
+										class="">
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '1')}"
+											class="suc_cate caution">작업부하 주의</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '2') || #strings.equals(processPlayAndEvent.riskLevel, '3')}"
+											class="suc_cate danger">작업부하 높음</span>
+										<span th:if="${#strings.equals(processPlayAndEvent.riskLevel, '4') || #strings.equals(processPlayAndEvent.riskLevel, '5')}"
+											class="suc_cate danger">작업부하 위험</span>
+									</span>
+											
+									<span th:if="${!#strings.isEmpty(processPlayAndEvent.eventIdx)}" class="">
+										<strong>[[${processPlayAndEvent.accidentBehavior}]]</strong>
+									</span>
+
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '1')}" class="">
+										<th:block th:if="${#strings.equals(processPlayAndEvent.riskValue1, '1')}">
+											특고압선(22.9kV)
+										</th:block>
+										<th:block th:if="${#strings.equals(processPlayAndEvent.riskValue1, '2')}">
+											COS/1차 측위/애자류 등
+										</th:block>
+										<th:block th:if="${#strings.equals(processPlayAndEvent.riskValue1, '3')}">
+											3상 인입선/인하선(380V)
+										</th:block>
+										<th:block th:if="${#strings.equals(processPlayAndEvent.riskValue1, '4')}">
+											저압인입선(220B)
+										</th:block>
+										<!-- <span
+											th:class="${#strings.equals(processPlayAndEvent.riskLevel, '1')? 'caution' : 'danger'}">
+											접근거리 : [[${processPlayAndEvent.riskValue2}]] cm
+										</span> -->
+										<span>근접</span>
+
+									</span>
+
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '2')}">
+										<th:block th:if="!${#strings.isEmpty(processPlayAndEvent.riskValue1)}">
+											<span
+												th:class="${#strings.equals(processPlayAndEvent.riskLevel, '1')? 'caution' : 'danger'}">
+												불안정한
+												<!-- 위치점수 : [[${processPlayAndEvent.riskValue1}]]
+												높이점수 : [[${processPlayAndEvent.riskValue2}]] -->
+											</span>작업 위치
+										</th:block>
+									</span>
+
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '3')}">
+										<th:block th:if="!${#strings.isEmpty(processPlayAndEvent.riskValue1)}">
+											작업 방향과 다른 곳을 <span
+												class="carelessness">[[${processPlayAndEvent.riskValue1}]]</span> 초간 응시
+										</th:block>
+									</span>
+
+									<span th:if="${#strings.equals(processPlayAndEvent.riskFactor, '4')}">
+										<th:block th:if="!${#strings.isEmpty(processPlayAndEvent.riskValue1)}"
+											th:with="pointList=${#strings.arraySplit(processPlayAndEvent.riskValue1, ',')}">
+											<span th:if="${#strings.equals(pointList[0], '0')}">
+												안정적인 자세
+											</span>
+											<span th:if="${#strings.equals(pointList[0], '1')}">
+												불안정한 자세
+											</span>
+											<span th:if="${#strings.equals(pointList[0], '2')}">
+												작업 자세가 근육에 부담
+											</span>
+											<span th:if="${#strings.equals(pointList[0], '3')}">
+												작업 자세가 근육에 과부화
+											</span>
+											<span th:if="${#strings.equals(pointList[0], '4')}">
+												작업 자세가 근육에 손상우려
+											</span>
+										</th:block>
+									</span>
+								</td>
+								<td>
+									<button class="danger_btn" type="button" th:attr="data-posture=${processPlayAndEvent.riskFactor},
+										data-risk-level=${processPlayAndEvent.riskLevel},
+										data-risk-factor=${processPlayAndEvent.riskFactor},
+										data-val-1=${processPlayAndEvent.riskValue1},
+										data-val-2=${processPlayAndEvent.riskValue2},
+										data-stick=${#strings.equals(processPlayAndEvent.riskFactor, '2')? 1 : 0},
+										data-bucket=${#strings.equals(processPlayAndEvent.riskFactor, '2')? 1 : 0}
+										">상세보기</button>
+								</td>
+							</tr>
+						</th:block>
+
+					</th:block>
+				</th:block>
+			</tbody>
+		</table>
+	</div>
+</div>
+
+
+
+
+
+
+</html>

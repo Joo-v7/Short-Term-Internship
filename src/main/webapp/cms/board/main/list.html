@@ -1,0 +1,9 @@
+
+<div class="notice-box" th:each="vo : ${postList}">
+	<a th:href="|/cms/board/post/view/?site=kepco&&mn=0301&boardId=notice&postIdx=${vo?.postIdx}|">
+		<div class="category">공지사항</div>
+		<div class="subject" th:utext="${#strings.replace(#strings.escapeXml(vo?.postTitle),'&#10;','&lt;br&gt;')}"/>
+		<div class="content" th:utext="${#strings.replace(#strings.escapeXml(vo?.postContent),'&#10;','&lt;br&gt;')}"/>
+		<div class="date" th:text="${#dates.format(vo?.insertDate, 'yyyy-MM-dd')}"/>
+	</a>
+</div>

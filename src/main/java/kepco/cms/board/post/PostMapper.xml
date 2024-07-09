@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.board.post.PostMapper">
+
+	<sql id="selectWhere">
+		<where>
+			delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				<choose>
+					<when test="scKey == 'title'">
+						AND (
+							post_title LIKE CONCAT ('%',#{scWord},'%') 
+						) 
+					</when>
+					<when test="scKey == 'content'">
+						AND (
+							post_content LIKE CONCAT ('%',#{scWord},'%')
+						) 
+					</when>
+					<when test="scKey == 'name'">
+						AND (
+							post_name LIKE CONCAT ('%',#{scWord},'%')
+						) 
+					</when>
+				</choose>
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scBoardIdx)">
+				AND board_idx = #{scBoardIdx}
+			</if>
+			
+			<if test="!@kepco.util.StrUtil@isBlank(scCategory)">
+				AND post_category = #{scPostCategory}
+			</if>
+			
+			<!-- 답변글 제외 여부 -->
+			<if test="@kepco.util.StrUtil@toBool(scIsPostOriginal)">
+				AND post_original_idx = 0
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.board.post.PostVo">
+		SELECT
+			a.*,
+			(SELECT board_name FROM cms_board b WHERE delete_yn = 'n' and b.board_idx = a.board_idx) boardNm,
+			(SELECT COUNT(1) FROM cms_board_post_comment b WHERE delete_yn = 'n' and b.post_idx = a.post_idx) commentCnt
+		FROM cms_board_post a
+			<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+if(post_notice > 0, if(post_notice_edate >= date_format(now(), '%Y-%m-%d'), post_notice, 0), 0) desc,
+post_group_id desc,
+post_group_order asc
+			</otherwise>
+		</choose>
+		<if test="!@kepco.util.StrUtil@isBlank(main)">
+		Limit 4
+		</if>
+		<if test="!@kepco.util.StrUtil@isBlank(limit)">
+		LIMIT #{limit}
+		</if>
+		
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.board.post.PostVo">
+		SELECT 
+			a.*,
+			(SELECT board_name FROM cms_board b WHERE delete_yn = 'n' and b.board_idx = a.board_idx) boardNm,
+			(SELECT board_id FROM cms_board b WHERE delete_yn = 'n' and b.board_idx = a.board_idx) boardId
+		FROM cms_board_post a
+		WHERE
+			delete_yn = 'n'
+			AND post_idx = #{postIdx}
+	</select>
+	
+	<select id="selectTotal" parameterType="map" resultType="kepco.cms.board.post.PostVo">
+		SELECT
+			@RNUM := @RNUM + 1 AS rn, count(1) post_total
+		FROM cms_board_post a, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				post_notice asc,
+				rn DESC,
+				post_date_time DESC,
+                post_idx DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.board.post.PostVo" useGeneratedKeys="true" keyProperty="postIdx" keyColumn="post_idx">
+		INSERT INTO cms_board_post
+		(
+		board_idx, 
+		post_group_id, post_group_order, post_group_depth, 
+		post_title, post_content, post_category, 
+		post_password, post_comment_count, 
+		post_reply_count, post_secret, post_html, 
+		post_notice, post_receive_email, post_hit, 
+		post_file, post_image, post_parent_idx,
+		post_notice_sdate, post_notice_edate, post_tel, 
+		post_post, post_addr, post_addr2, post_thumb, 
+		post_original_idx, post_name, post_date, 
+		insert_idx, insert_ip, insert_date, 
+		update_idx, update_ip, update_date, 
+		delete_idx, delete_ip, delete_date, delete_yn
+		)
+		VALUES
+		(
+		#{boardIdx}, 
+		#{postGroupId}, #{postGroupOrder}, #{postGroupDepth}, 
+		#{postTitle}, #{postContent}, #{postCategory}, 
+		#{postPassword}, #{postCommentCount}, 
+		#{postReplyCount}, #{postSecret}, #{postHtml}, 
+		#{postNotice}, #{postReceiveEmail}, #{postHit}, 
+		#{postFile}, #{postImage}, #{postParentIdx}, 
+		#{postNoticeSdate}, #{postNoticeEdate}, #{postTel}, 
+		#{postPost}, #{postAddr}, #{postAddr2}, #{postThumb}, 
+		#{postOriginalIdx}, #{postName}, #{postDate}, 
+		#{insertIdx}, #{insertIp}, CURRENT_TIMESTAMP, 
+		#{insertIdx}, #{insertIp}, CURRENT_TIMESTAMP, 
+		null, null, null, 'n'
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post
+		<set>
+			<if test="!@kepco.util.StrUtil@isBlank(boardIdx)">
+			board_idx = #{boardIdx}, 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(postGroupId)">
+			post_group_id = #{postGroupId},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postGroupOrder)">
+			post_group_order = #{postGroupOrder},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postGroupDepth)">
+			post_group_depth = #{postGroupDepth},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postReply)">
+			post_reply = #{postReply},
+			</if> 
+			post_title = #{postTitle}, 
+			post_content = #{postContent}, 
+			post_category = #{postCategory}, 
+			<if test="!@kepco.util.StrUtil@isBlank(postPassword)">
+			post_password = #{postPassword},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postSecret)">
+			post_secret = #{postSecret}, 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(postHtml)">
+			post_html = #{postHtml}, 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(postNotice)">
+			post_notice = #{postNotice},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postReceiveEmail)">
+			post_receive_email = #{postReceiveEmail},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postFile)">
+			post_file = #{postFile},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postImage)">
+			post_image = #{postImage},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postParentIdx)">
+			post_parent_idx = #{postParentIdx},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postNoticeSdate)">
+			post_notice_sdate = #{postNoticeSdate},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postNoticeEdate)">
+			post_notice_edate = #{postNoticeEdate},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postTel)">
+			post_tel = #{postTel},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postPost)">
+			post_post = #{postPost},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postAddr)">
+			post_addr = #{postAddr},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postAddr2)">
+			post_addr2 = #{postAddr2},
+			</if>  
+			<if test="!@kepco.util.StrUtil@isBlank(postThumb)">
+			post_thumb = #{postThumb},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postOriginalIdx)">
+			post_original_idx = #{postOriginalIdx},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postName)">
+			post_name = #{postName},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postDate)">
+			post_date = #{postDate},
+			</if>
+			update_idx = #{updateIdx}, 
+			update_ip = #{updateIp}, 
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE 1=1
+			AND delete_yn = 'n'
+			AND post_idx = #{postIdx}
+	</update>
+	
+	<!-- 게시물 수정 전용 -->
+	<update id="updateModify" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post
+		SET
+			post_title = #{postTitle}, 
+			post_content = #{postContent}, 
+			post_category = #{postCategory}, 
+			<if test="!@kepco.util.StrUtil@isBlank(postSecret)">
+			post_secret = #{postSecret}, 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(postHtml)">
+			post_html = #{postHtml}, 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(postNotice)">
+			post_notice = #{postNotice},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postNoticeSdate)">
+			post_notice_sdate = #{postNoticeSdate},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postNoticeEdate)">
+			post_notice_edate = #{postNoticeEdate},
+			</if> 
+			post_tel = #{postTel},
+			post_post = #{postPost},
+			post_addr = #{postAddr},
+			post_addr2 = #{postAddr2},  
+			<if test="!@kepco.util.StrUtil@isBlank(postThumb)">
+			post_thumb = #{postThumb},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postName)">
+			post_name = #{postName},
+			</if> 
+			<if test="!@kepco.util.StrUtil@isBlank(postDate)">
+			post_date = #{postDate},
+			</if>
+			update_idx = #{updateIdx}, 
+			update_ip = #{updateIp}, 
+			update_date = CURRENT_TIMESTAMP
+		WHERE 1=1
+			AND delete_yn = 'n'
+			AND post_idx = #{postIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND post_idx = #{postIdx}
+	</update>
+	
+	<update id="deleteFile" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post_file
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND post_idx = #{postIdx}
+	</update>
+	
+</mapper>

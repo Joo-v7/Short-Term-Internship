@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+
+<script>
+	var depth = $("input[name='depth']").val();
+	var frmForm = "#frmForm" + depth;
+	var $frm = $(frmForm); 
+// 	var main_tabs = "#main_tabs" + depth;
+	
+	$(function () {
+	
+		$("select", frmForm).formSelect();
+// 		$(main_tabs).tabs();
+		
+	});
+
+	// 삭제
+	function dataDelete() {
+		var accidentIdx = $("[name='accidentIdx']", frmForm).val();
+
+		if (!accidentIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '사고 이벤트 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/ras/accident/delete',
+						type: 'get',
+						data: {
+							'accidentIdx': accidentIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$("#pop_modal6").modal('close');
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function (xhr) {
+						if(typeof xhr.responseJSON.message != "undefined") {
+							toast(xhr.responseJSON.message);
+						}else{
+							toast('시스템 오류로 처리할 수 없습니다.');
+						}
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+	function save() {
+		if ($("input[name='eventId']", $frm).val() == "") {
+			toast("작업ID는 필수입력 입니다.");
+			$("input[name='eventId']", $frm).focus();
+			return;
+		}
+		if ($("input[name='accidentCode']", $frm).val() == "") {
+			toast("사고 코드는 필수입력 입니다.");
+			$("input[name='accidentCode']", $frm).focus();
+			return;
+		}
+		if ($("input[name='accidentEvent']", $frm).val() == "") {
+			toast("사고 결과는 필수입력 입니다.");
+			$("input[name='accidentEvent']", $frm).focus();
+			return;
+		}
+		if ($("input[name='objectFactor']", $frm).val() == "") {
+			toast("오브젝트 요인은 필수입력 입니다.");
+			$("input[name='objectFactor']", $frm).focus();
+			return;
+		}
+		if ($("input[name='eventLocation']", $frm).val() == "") {
+			toast("사고 위치는 필수입력 입니다.");
+			$("input[name='eventLocation']", $frm).focus();
+			return;
+		}
+		$.ajax({
+			type: "post",
+			url: $frm.attr("action"),
+			data: $frm.serialize(),
+			contentType: "application/x-www-form-urlencoded",
+			dataType: "json",
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				$("#pop_modal6").modal('close');
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				toast("정상적으로 처리되었습니다.");
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(data) {
+			if(typeof data.responseJSON.message != "undefined") {
+				toast(data.responseJSON.message);
+			}
+		});	
+	}
+</script>
+<form th:id="frmForm+${depth}" method="post"
+	th:action="@{/{adminPath}/ras/accident/save(adminPath=${@environment.getProperty('global.admin-path')})}"
+	enctype="multipart/form-data" onsubmit="return false">
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal6');" class="btn grey lighten-1 waves-effect waves-light">
+					<i class="material-icons">clear</i></a>
+				<div class="float_r">
+					<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button"
+						th:if="${!#strings.isEmpty(vo?.accidentIdx)}" th:onclick="dataDelete();">삭제<i
+							class="material-icons left">delete</i></button>
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" onclick="save()">저장
+						<i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<input type="hidden" name="accidentIdx" id="accidentIdx" th:value="${vo?.accidentIdx}" />
+	<input type="hidden" name="depth" id="depth" th:value="${depth}" />
+	<div class="row mt20 pd_box">
+	
+		<div class="input-field col s7">
+			<input type="text" name="eventId" th:value="${vo?.eventId}" />
+			<label for="eventId" class="req">이벤트 ID</label>
+		</div>
+		<div class="input-field col s5">
+			<input type="text" name="accidentCode" th:value="${vo?.accidentCode}" />
+			<label for="accidentCode" class="req">사고 코드</label>
+		</div>
+		<div class="input-field col s7">
+			<input type="text" name="accidentEvent" th:value="${vo?.accidentEvent}" />
+			<label for="accidentEvent" class="req">사고 결과</label>
+		</div>
+		<div class="input-field col s5">
+			<input type="text" name="eventLocation" th:value="${vo?.eventLocation}" />
+			<label for="eventLocation" class="req">사고 위치</label>
+		</div>
+		<div class="input-field col s12">
+			<input type="text" name="objectFactor" th:value="${vo?.objectFactor}" />
+			<label for="objectFactor" class="req">오브젝트 요인</label>
+		</div>
+	</div>
+</form>
+</html>

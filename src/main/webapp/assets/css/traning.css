@@ -1,0 +1,166 @@
+
+
+
+/* 훈련결과 테이블 */
+.training_result_table {display: block; width: 100%; height: auto; overflow-x: auto;}
+.training_result_table table {width: 100%; min-width: 1000px; height: auto; border-top: 2px solid #ccc; border-bottom: 1px solid #aaa;}
+.training_result_table table thead tr {background: linear-gradient(to right, transparent, rgba(5, 22, 56, 0.5) 1% 99%, transparent);}
+.training_result_table table tr {border-top: 1px solid #aaa;}
+
+.training_result_table table thead th,
+.training_result_table table thead td {padding: 20px; font-size: 18px; font-weight: bold; text-align: center; color: #eee;}
+.training_result_table table tbody th,
+.training_result_table table tbody td {padding: 16px; font-size: 16px; font-weight: 500; text-align: center; color: #eaeaea;}
+
+.training_result_table .left {text-align: left;}
+.training_result_table .success {color: #2deb66;}
+.training_result_table .fail {color: #ff3131;}
+.training_result_table .caution {color: #cfd823;}
+.training_result_table .danger {color: #f18f1e;}
+.training_result_table .warning {color: #ff3131;}
+.training_result_table .carelessness {color: #8c33ff;}
+
+/* 훈련 정보 */
+.traning_info_wrap {display: flex; width: 100%; height: auto; flex-wrap: wrap; gap: 15px; justify-content: flex-start;}
+.traning_info_wrap .info_box {flex: 1 1 260px; display: flex; width: auto; height: auto; border-radius: 10px; background-color: #030e18; color: #fff; padding: 26px;}
+.traning_info_wrap .info_box.chart {flex: 1 1 360px; width: auto; height: auto; flex-wrap: wrap; align-items: center;}
+.traning_info_wrap .info_box .chartbox {width: 100%; height: 320px; padding: 0; margin-bottom: 0;}
+
+/* chartbox */
+
+/* .traning_info_wrap .info_box:not(:first-child) {margin-left: 15px;} */
+.traning_info_wrap .info_box dt,
+.traning_info_wrap .info_box dd {display: flex; align-items: center; justify-content: center;}
+.traning_info_wrap .info_box dt {width: 100px; font-size: 16px; font-weight: 500; flex-direction: column; color: rgba(255,255,255,.7);}
+.traning_info_wrap .info_box dd {flex: 1; font-size: 42px; font-weight: bold;}
+.traning_info_wrap .info_box dt::before {content: ''; display: flex; justify-content: center; align-items: center; width: 40px; height: 40px; background-color: #ccc; color: #fff; font-family: "Font Awesome 6 Free"; font-weight: 900; border-radius: 12px; margin-bottom: 13px;}
+#chartdiv_s {position: relative; overflow: hidden;}
+#chartdiv_s::before {content: ''; display: block; width: 480px; height: 480px; background-color: transparent; border: 1px solid transparent; border-radius: 50%; position: absolute; z-index: 0; left: 50%; bottom: 14%; transform: translate(-50%,50%);background-image: linear-gradient(#030e18, #030e18), linear-gradient(#12c5a0 0% 3%, #008eff 10%, transparent 40% 100%); background-origin: border-box; background-clip: content-box, border-box; animation: in_rotate 6s linear infinite forwards; opacity: 0.8;}
+#chartdiv_s::after {content: ''; display: block; width: 290px; height: 290px; background-color: transparent; border-top: 1px solid #00b3bd; border-radius: 50%; position: absolute; left: 50%; bottom: 14%; transform: translate(-50%,50%); animation: in_rotate 8s linear infinite forwards; opacity: 0.5;}
+
+@keyframes in_rotate {
+    0% {transform: translate(-50%,50%) rotate(0);}
+    25% {transform: translate(-50%,50%) rotate(30deg);}
+    50% {transform: translate(-50%,50%) rotate(0deg);}
+    75% {transform: translate(-50%,50%) rotate(-30deg);}
+    100% {transform: translate(-50%,50%) rotate(0);}
+}
+@keyframes in_rotate2 {
+    0% {transform: translate(-50%,50%) rotate(0);}
+    25% {transform: translate(-50%,50%) rotate(15deg);}
+    50% {transform: translate(-50%,50%) rotate(0deg);}
+    75% {transform: translate(-50%,50%) rotate(-15deg);}
+    100% {transform: translate(-50%,50%) rotate(0);}
+}
+
+#chartdiv_d {position: relative; overflow: hidden;}
+#chartdiv_d::before {content: ''; display: block; width: 270px; height: 270px; background-color: transparent; border: 1px solid transparent; border-radius: 50%; position: absolute; z-index: 0; left: 50%; top: 50%; transform: translate(-50%,-50%);background-image: linear-gradient(#030e18, #030e18), linear-gradient(#ec4279 0% 3%, #2cdb5b 10%, transparent 40% 86%,#ec4279 97% 100%); background-origin: border-box; background-clip: content-box, border-box; animation: in_rotate_0 3s linear infinite forwards; opacity: 0.8;}
+#chartdiv_d::after {content: ''; display: block; width: 160px; height: 160px; background-color: transparent; border-top: 1px solid #ec4279; border-radius: 50%; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); animation: in_rotate_0 8s linear infinite forwards; opacity: 0.8;}
+@keyframes in_rotate_0 {
+    0% {transform: translate(-50%,-50%) rotate(0);}
+    100% {transform: translate(-50%,-50%) rotate(360deg);}
+}
+@keyframes in_rotate_02 {
+    0% {transform: translate(-50%,-50%) rotate(0);}
+    100% {transform: translate(-50%,-50%) rotate(360deg);}
+}
+
+.info_box dd span {font-size: 0.4em; margin-left: 10px; opacity: 0.5;}
+.edu-state2 h6 span{font-size: 0.4em; margin-left: 10px; opacity: 0.5;}
+.traning_info_wrap .info_box.time dt::before {content: "\f252"; background-color: #008eff;}
+.traning_info_wrap .info_box.comp_time dt::before {content: "\f017"; background-color: #12c5a0;}
+.traning_info_wrap .info_box.position dt::before {content: "\f62a"; background-color: #713eef;}
+.traning_info_wrap .info_box.start_count dt::before {content: "\f2f1"; background-color: #2cdb5b;}
+.traning_info_wrap .info_box.fail dt::before {content: "\f057"; background-color: #ec4279;}
+
+
+
+/* .training_result_table table tr */
+.training_result_table table .cursor_line {cursor: pointer;}
+.training_result_table table .in_data_table_box {border: 0;}
+/* 닫힘 */
+.toggle_icon {transform: rotate(-180deg); transition: all 0.35s 0.35s ease;}
+.training_result_table table .in_data_table_box .in_table_for_data_wrap {width:0; height: 0;  max-height: 310px; padding: 0; transition: height 0.35s 0.35s ease, padding 0.35s 0.6s ease, width 0.35s 0.05s ease, opacity 0.35s 0.25s ease; overflow: hidden; opacity: 0; position: relative;}
+/* 열림 */
+.toggle_icon.on {transform: rotate(0); transition: all 0.35s ease;}
+.training_result_table table .in_data_table_box.on .in_table_for_data_wrap {width: 100%; height: 310px; padding: 16px 16px 16px 70px; transition: height 0.35s ease, padding 0.35s ease, width 0.35s 0.35s ease, opacity 0.35s 0.25s ease; opacity: 1; overflow: auto;}
+
+.training_result_table table .in_data_table_box .in_table_for_data_wrap::after {content: ''; display: block; width: 100%; height: 60px; background: linear-gradient(to bottom,  transparent, #000); position: sticky; left: 0; bottom: -16px;}
+
+/* 스크롤 */
+.training_result_table table .in_data_table_box .in_table_for_data_wrap::-webkit-scrollbar {width: 4px; height: 4px; padding: 4px 2px;}
+.training_result_table table .in_data_table_box .in_table_for_data_wrap::-webkit-scrollbar-thumb {width: 3px; height: 3px; background: #333; border-radius: 2px;}
+.training_result_table table .in_data_table_box .in_table_for_data_wrap::-webkit-scrollbar-track {width: 3px; height: 3px; background-color: rgba(0, 0, 0, 0.1);}
+
+.training_result_table table .in_data_table_box > td {padding: 0;}
+
+/* in_table_for_data = table */
+.training_result_table .in_table_for_data {border-top: 1px; border-bottom: 1px; color: #ddd; position: relative; background: linear-gradient(to right, transparent, rgba(40, 60, 99, 0.2) 1% 99%, transparent);}
+.training_result_table .in_table_for_data thead {position: sticky;}
+.training_result_table .in_table_for_data thead tr {background: linear-gradient(to right, transparent, rgba(38, 63, 99, 0.5) 1% 99%, transparent);}
+.training_result_table .in_table_for_data thead th,
+.training_result_table .in_table_for_data thead td {padding: 12px;}
+.training_result_table .in_table_for_data tbody th,
+.training_result_table .in_table_for_data tbody td {padding: 12px;}
+
+
+
+
+/* 훈련 타임라인 */
+/* .timeline_wrap {display: flex; width: 100%; height: auto; flex-direction: column;}
+.timeline_wrap > ul {display: block; width: 100%; height: 30px; position: relative; padding: 0; margin: 0;}
+.timeline_wrap > ul > li {display: block; width: auto; height: auto;}
+
+.timeline_wrap .time_grid::before {content: ''; display: block; width: 100%; height: inherit; background-color: transparent;  border-left: 2px solid #aaa; border-right: 2px solid #aaa; position: absolute; left: 0; top: 0; z-index: 0;}
+.timeline_wrap .time_grid::after {content: ''; display: block; width: 100%; height: 2px; background-color: #aaa; position: absolute; left: 0; top: 50%; transform: translate(0,-50%); z-index: 0;}
+.timeline_wrap .time_grid .time_grid_point {display: flex; justify-content: center; align-items: center; width: 1px; height: 50%; background-color: #666; position: absolute; left: 0; top: 50%; transform: translate(-50%,-50%); z-index: 2;}
+.timeline_wrap .time_grid .time_grid_point:first-child {height: inherit; left: 0;}
+.timeline_wrap .time_grid .time_grid_point:last-child {height: inherit; left: 100%;}
+.timeline_wrap .time_grid .time_grid_point > span {display: flex; width: auto; height: auto; font-size: 12px; font-weight: 400; color: #ccc; white-space: nowrap; line-height: 1; position: absolute; left: 50%; bottom: -10px; transform: translate(-50%,100%);}
+
+
+.timeline_wrap .timeline_point {display: flex; width: 14px; height: 14px; background-color: #ddd; border-radius: 50%; position: absolute; left: 0; top: 50%; transform: translate(-50%,-50%); z-index: 10;}
+
+ */
+
+
+
+ .timeline_list_wrap {display: flex; width: 100%; height: auto; flex-direction: column;}
+ .timeline_list_wrap .timeline_list_box {display: flex; width: 100%; height: auto; justify-content: flex-start; flex-direction: column;}
+ .timeline_list_wrap .timeline_list_box > dt {display: flex; width: 100%; height: auto; align-items: center; justify-content: flex-start;}
+ .timeline_list_wrap .timeline_list_box > dd {display: flex; width: 100%; height: auto; flex-direction: column;}
+ 
+ .timeline_list_wrap .timeline_list_box .step_tit {display: flex; width: 100%; height: auto; align-items: center; font-size: 20px; font-weight: bold;}
+
+ .timeline_list_wrap .timeline_list_box .chart_tit {display: flex; width: 100%; height: auto; align-items: center; font-size: 16px;}
+ .timeline_list_wrap .timeline_list_box .chart_wrap {display: block; width: 100%; height: 0; padding-top: 15%; position: relative;}
+ .timeline_list_wrap .timeline_list_box .timeline {height: 100%; position: absolute; left: 0; top: 0;}
+ 
+ .data_comp_btn {display: flex; justify-content: center; align-items: center; width: auto; height: 52px; padding: 10px 20px; font-size: 16px; font-weight: bold; color: #fff; background-color: #20232a; white-space: nowrap; border-radius: 4px;}
+
+
+
+
+
+@media screen and (max-width:1300px){
+    .training_result_table table thead th, .training_result_table table thead td,
+    .training_result_table table tbody th, .training_result_table table tbody td {font-size: 16px;}
+}
+
+@media screen and (max-width:1300px){
+    .training_result_table::after {content: '테이블을 밀어 더 많은 정보를 확인할 수 있습니다.'; display: block; width: 100%; height: auto; font-size: 14px; color: #ffea31; padding: 4px 0; position: sticky; left: 0; bottom: 0;}
+}
+
+@media screen and (max-width:1000px){
+    .training_result_table table thead th, .training_result_table table thead td,
+    .training_result_table table tbody th, .training_result_table table tbody td {padding: 10px;}
+}
+@media screen and (max-width:900px){
+    .timeline_list_wrap .timeline_list_box > dd {padding-top: 112px;}
+    .timeline_list_wrap .timeline_list_box > dd > .timeline {height: 110%;}
+}
+
+@media screen and (max-width:800px){
+    .training_result_table table thead th, .training_result_table table thead td,
+    .training_result_table table tbody th, .training_result_table table tbody td {font-size: 14px;}
+}

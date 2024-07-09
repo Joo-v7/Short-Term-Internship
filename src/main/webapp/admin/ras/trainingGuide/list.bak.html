@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+	
+<th:block layout:fragment="content">
+
+
+<style>
+	.view_wrap {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		height: auto;
+		gap: 15px;
+		padding: 20px;
+		background-color: #000;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.view_box {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		height: calc(100vh - 348px);
+		position: relative;
+	}
+
+	.view_box canvas {
+		cursor: move;
+	}
+
+	.view_box::after {
+		content: '';
+		display: none;
+		width: 100%;
+		height: 100%;
+		background: radial-gradient(circle at center, transparent 0 58%, #000 70%);
+		position: absolute;
+		left: 0;
+		top: 0;
+	}
+
+	.view_box img {
+		display: block;
+		width: 100%;
+		height: auto;
+		object-fit: cover;
+	}
+
+
+	.playcanvas_ui {
+		display: flex;
+		gap: 10px;
+		align-items: center;
+		position: absolute;
+		left: 0;
+		top: 0;
+	}
+
+	.cam_init_btn {
+		display: inline-block;
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		background-color: #333;
+		color: #aaa;
+		border: none;
+		rotate: 25deg;
+		font-size: 20px;
+		font-weight: bold;
+	}
+
+	.cam_init_btn:focus,
+	.cam_init_btn:hover {
+		background-color: #666;
+		color: #eee;
+	}
+
+	/* .cam_init_btn:active {background-color: #777;} */
+	.help_text {
+		display: inline-block;
+		font-size: 12px;
+		opacity: 0.5;
+		color: #fff;
+		margin: 0;
+	}
+
+
+	.view_helper {
+		display: flex;
+		align-items: center;
+		width: auto;
+		height: auto;
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: 10;
+		gap: 10px;
+	}
+
+	.view_helper dl {
+		display: flex;
+		width: auto;
+		height: auto;
+		gap: 4px;
+		align-items: center;
+	}
+
+	.view_helper dl dt {
+		font-size: 12px;
+		font-weight: 400;
+	}
+
+	.view_helper .center_dot {
+		display: block;
+		width: 10px;
+		height: 10px;
+		border-radius: 2px;
+		background-color: #e60000;
+		rotate: 45deg;
+		position: relative;
+	}
+
+	.view_helper .center_dot::before,
+	.view_helper .center_dot::after {
+		content: '';
+		display: block;
+		width: 1px;
+		height: 6px;
+		background-color: #fff;
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%) rotate(45deg);
+	}
+
+	.view_helper .center_dot::after {
+		transform: translate(-50%, -50%) rotate(135deg);
+	}
+
+	.view_helper .level_box {
+		display: block;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background-color: #ccc;
+	}
+
+	.view_helper .level_3 {
+		background-color: #fec134;
+	}
+
+	.view_helper .level_4 {
+		background-color: #f88830;
+	}
+
+	.view_helper .level_5 {
+		background-color: #ea514a;
+	}
+
+	.view_controller_wrap {
+		flex: 1 1 auto;
+		display: flex;
+		width: 100%;
+		max-width: 1500px;
+		height: auto;
+		flex-direction: column;
+		color: #fff;
+	}
+
+	.view_controller_wrap button {
+		background-color: transparent;
+		color: inherit;
+		border: 0;
+	}
+
+	.log_table_box>ul::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+		padding: 4px 2px;
+	}
+
+	.log_table_box>ul::-webkit-scrollbar-thumb {
+		width: 6px;
+		height: 6px;
+		background: #333;
+		border-radius: 2px;
+	}
+
+	.log_table_box>ul::-webkit-scrollbar-track {
+		width: 6px;
+		height: 6px;
+		background-color: rgba(0, 0, 0, 0.1);
+	}
+
+	.view_controller {
+		display: flex;
+		width: 100%;
+		height: auto;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-start;
+	}
+
+	.view_controller>li {
+		flex: 1 1 80px;
+		display: flex;
+		width: auto;
+		height: auto;
+		align-items: center;
+		justify-content: center;
+		font-size: 18px;
+		font-weight: 500;
+		border: 1px solid #aaa;
+	}
+
+	.view_controller>li:not(:first-child) {
+		border-left: 0;
+	}
+
+	.view_controller>li button {
+		display: flex;
+		width: 100%;
+		height: auto;
+		background-color: transparent;
+		padding: 8px 14px;
+		font-size: inherit;
+		font-weight: inherit;
+		color: inherit;
+		justify-content: center;
+		align-items: center;
+		transition: all 0.25s ease;
+	}
+
+	.view_controller>li button.act {
+		background-color: #7537d0;
+		border-color: #7537d0;
+		color: #fff;
+	}
+
+	.view_controller>li button:active,
+	.view_controller>li button:hover {
+		background-color: #7537d0;
+		border-color: #7537d0;
+		color: #fff;
+	}
+
+	.log_table_box {
+		display: none;
+	}
+
+	.log_table_box.act {
+		display: block;
+	}
+
+	.log_table_box>ul {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		width: 100%;
+		height: auto;
+		gap: 15px;
+		margin-top: 15px;
+	}
+
+	.log_table_box>ul>li {
+		flex: 1 1 100px;
+		width: 100%;
+		height: auto;
+	}
+
+	/* .log_table_box > ul > li:not(:first-child) {border-top: 1px solid #aaa; padding-top: 15px;} */
+	.log_table_box .log_btn {
+		display: block;
+		padding: 10px;
+		transition: all 0.35s ease;
+		width: 100%;
+		height: auto;
+		background-color: transparent;
+		color: #fff;
+		border: 1px solid #aaa;
+	}
+
+	.log_table_box .log_btn.act,
+	.log_table_box .log_btn:active,
+	.log_table_box .log_btn:hover {
+		background-color: #2B64F9;
+	}
+
+	.log_table_box .log_btn.def.act,
+	.log_table_box .log_btn.def:active,
+	.log_table_box .log_btn.def:hover {
+		background-color: #2cdb5b
+	}
+
+	.log_table_box .log_btn .icon {
+		grid-area: d_icon;
+		display: flex;
+		justify-content: center;
+		width: 60px;
+		height: 60px;
+		align-items: center;
+		border-radius: 50%;
+		background-color: #2B64F9;
+		font-size: 24px;
+	}
+
+	.log_table_box .log_btn.act .icon,
+	.log_table_box .log_btn:active .icon,
+	.log_table_box .log_btn:hover .icon {
+		font-size: 32px;
+	}
+
+	.log_table_box .log_btn .data {
+		grid-area: d_data;
+		display: flex;
+		width: 100%;
+		height: auto;
+		align-items: center;
+		gap: 15px;
+	}
+
+	.log_table_box .log_btn .caution_text {
+		text-align: left;
+		font-size: 18px;
+		font-weight: 500;
+	}
+
+	.log_table_box .log_btn .caution_data {
+		text-align: left;
+		font-size: 18px;
+		font-weight: 500;
+	}
+
+	.log_table_box .log_btn .title {
+		flex: 0 1 auto;
+		text-align: left;
+		font-size: 18px;
+		font-weight: 500;
+	}
+
+	.log_table_box .log_btn .content {
+		flex: 0 1 auto;
+		text-align: left;
+		font-size: 14px;
+		font-weight: 400;
+		color: #aaa;
+	}
+
+	.log_table_box .log_btn .data_cont {
+		grid-area: data_cont;
+		text-align: left;
+		font-size: 16px;
+		font-weight: 400;
+	}
+
+	.log_table_box .log_btn.level_0 {
+		background-color: #00000000;
+	}
+
+	.log_table_box .log_btn.level_0:hover {
+		background-color: #00C10A;
+	}
+
+	.log_table_box .log_btn.level_1 {
+		background-color: #00C10A;
+	}
+
+	.log_table_box .log_btn.level_1:hover {
+		background-color: #399700;
+	}
+
+	.log_table_box .log_btn.level_2 {
+		background-color: #399700;
+	}
+
+	.log_table_box .log_btn.level_2:hover {
+		background-color: #FFFF00;
+	}
+
+	.log_table_box .log_btn.level_3 {
+		background-color: #FFFF00;
+	}
+
+	.log_table_box .log_btn.level_3:hover {
+		background-color: #FF4B00;
+	}
+
+	.log_table_box .log_btn.level_4 {
+		background-color: #FF4B00;
+	}
+
+	.log_table_box .log_btn.level_4:hover {
+		background-color: #FF0000;
+	}
+
+	.log_table_box .log_btn.level_5 {
+		background-color: #FF0000;
+	}
+
+	.log_table_box .log_btn.level_5:hover {
+		background-color: #00000000;
+	}
+
+	.safety {
+		color: #00bd42;
+	}
+
+	.caution {
+		color: #ffc219;
+	}
+
+	.danger {
+		color: #e77638;
+	}
+
+	.accident {
+		color: #e62727;
+	}
+
+	.carelessness {
+		color: #9136f7;
+	}
+
+	.carelessness_work {
+		color: #9136f7;
+	}
+
+	.carelessness_walking {
+		color: #9136f7;
+	}
+
+	.success {
+		color: #2cdb5b;
+	}
+
+	.fail {
+		color: #ec4279;
+	}
+
+	.cont_title {
+		display: flex;
+		width: 100%;
+		height: auto;
+		align-items: center;
+		font-size: 20px;
+		font-weight: 500;
+		color: #fff;
+	}
+
+	.cont_title>p {
+		display: inline;
+		width: auto;
+		height: auto;
+		font-size: 0.8em;
+		font-weight: 400;
+		color: #aaa;
+		margin-left: 15px;
+	}
+
+	.t_chart_box {
+		display: block;
+		width: 100%;
+		height: auto;
+		padding: 20px;
+		position: relative;
+	}
+
+	.t_chart_box .timeline {
+		margin: 0;
+	}
+
+	.data_comp_btn {
+		position: absolute;
+		right: 10px;
+		bottom: 0;
+		z-index: 10;
+		font-size: 12px !important;
+		font-weight: 500 !important;
+		padding: 4px 12px !important;
+		height: 40px !important;
+		transition: all 0.25s ease;
+	}
+
+	.data_comp_btn.on,
+	.data_comp_btn:active,
+	.data_comp_btn:hover {
+		background-color: #2B64F9;
+	}
+</style>
+
+
+<script>
+
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+	});
+	
+	// 목록
+	function dataList() {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		var dataT = $('#dataTable').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : false,
+			paging : true,
+			pageLength : 10,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/ras/trainingGuide/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'memberId', className : 'dt-body-center' },
+				{ data : 'memberNm', className : 'dt-body-center' },
+				{ data : 'playCount', className : 'dt-body-center' },
+			],
+			createdRow: function (row, data, dataIndex) {
+		        // 각 행에 대한 이벤트를 여기서 추가
+		        $(row).on('click', function () {
+		            // 클릭 이벤트에 대한 동작을 여기에 추가
+		            playList(data.memberIdx);
+		        });
+		    },
+		});
+	}
+	
+	function playList(memberIdx) {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		var dataT = $('#dataTable2').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : true,
+			paging : false,
+			scrollCollapse: true,
+   			scrollY: '200px',
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/ras/trainingGuide/playList?memberIdx='+memberIdx,
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit2,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'trainTitle', className : 'dt-body-center' },
+				{ data : 'team', className : 'dt-body-center' },
+				{ data : 'role', className : 'dt-body-center' },
+				{ data : 'teacherNm', className : 'dt-body-center' },
+				{ data : 'startTime', className : 'dt-body-center' },
+			],
+			createdRow: function (row, data, dataIndex) {
+		        // 각 행에 대한 이벤트를 여기서 추가
+		        $(row).on('click', function () {
+		            // 클릭 이벤트에 대한 동작을 여기에 추가
+		            trainingGuideList(data.playIdx);
+		        });
+		    },
+		});
+	}
+	
+	function trainingGuideList(playIdx) {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		var dataT = $('#dataTable3').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : true,
+			paging : false,
+			scrollCollapse: true,
+   			scrollY: '400px',
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/ras/trainingGuide/trainingGuideList?playIdx='+playIdx,
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+
+			initComplete : dataTableInit3,
+			columns : [
+				{ data : 'taskId', className : 'dt-body-center' },
+				{ data : 'workRole', className : 'dt-body-center' },
+				{ data : 'processContents', className : 'dt-body-center' },
+				{ data : 'accidentCause', className : 'dt-body-center' },
+				{ data : 'accidentBehavior', className : 'dt-body-center' },
+				{ data : 'accidentType', className : 'dt-body-center' },
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count()+'건');
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		if (!$('#dataTable').DataTable().data().count() > 0) {
+			playList(); //수행내역이 없으면 빈 테이블로 초기화
+		}
+		// 마지막 행의 데이터 가져오기
+	    var lastRowData = $('#dataTable').DataTable().row(':first').data();
+	    if (lastRowData) {
+	        // 마지막 행의 memberIdx 가져오기
+	        var memberIdx = lastRowData.memberIdx;
+	        // 마지막 행의 modulePlayIdx를 사용하여 함수 실행
+	        playList(memberIdx);
+		}
+	}
+
+	// 데이터테이블 initComplete
+	function dataTableInit2(settings, json) {
+		if ($('#dataTable2').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		
+		if (!$('#dataTable2').DataTable().data().count() > 0) {
+			trainingGuideList(); //수행내역이 없으면 빈 테이블로 초기화
+		}
+		// 마지막 행의 데이터 가져오기
+	    var lastRowData = $('#dataTable2').DataTable().row(':first').data();
+	    if (lastRowData) {
+	        // 마지막 행의 playIdx 가져오기
+	        var playIdx = lastRowData.playIdx;
+	        // 마지막 행의 playIdx를 사용하여 함수 실행
+	        trainingGuideList(playIdx);
+		}
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit3(settings, json) {
+		if ($('#dataTable3').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+</script>
+
+<div id="def_wrap" class="row mb0">
+	<div class="col s12 m12 l6 xl4 sideline pd_box mb0">
+		<div class="basic">
+			<div class="basic_top_searchbox left">
+				<div class="row">
+					<form id="frmList" method="get">
+						<!-- 검색창 -->
+						<div class="col s12 m12 l12 xl10 search_bar">
+							<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+							
+							<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+									<i class="material-icons md-18 left">search</i> 검색
+							</button>
+							<div class="title left">
+								전체 : <b id="dataTableTotCnt">0건</b>
+							</div>
+						</div>
+						<button id="detail_viewer" class="waves-effect waves-light btn cyan right" type="button">3D 상세뷰어</button>
+					</form>
+				</div>
+			</div>
+			
+			<div class="table_type3">
+				<table id="dataTable" class="striped centered highlight" style="min-width: 400px">
+					<colgroup>
+						<col width="80px">
+						<col width="140px">
+						<col width="140px">
+						<col width="100px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>번호</th>
+							<th>아이디</th>
+							<th>성명</th>
+							<th>훈련 수</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+                    <div id="playList" class="col s12 m12 l6 xl8 scroll_defalt pd_box pt40">
+                        <div class="row">
+                            <h2 class="h2_butt mb10">수행 훈련 목록</h2>
+                            <div class="table_type3">
+                                <table id="dataTable2" class="striped centered highlight" style="min-width:800px">
+                                    <colgroup>
+                                        <col width="60px">
+                                        <col width="auto">
+                                        <col width="40px">
+                                        <col width="80px">
+                                        <col width="100px">
+                                        <col width="150px">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>NO</th>
+                                            <th>수행한 훈련명</th>
+                                            <th>팀</th>
+                                            <th>역할</th>
+                                            <th>교수자</th>
+                                            <th>훈련일</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <h2 class="h2_butt mb10">훈련 교정 목록</h2>
+                            <div class="table_type3">
+                                <table id="dataTable3" class="striped centered highlight" style="min-width:800px">
+                                    <colgroup>
+                                        <col width="100px">
+                                        <col width="100px">
+                                        <col width="auto">
+                                        <col width="250px">
+                                        <col width="250px">
+                                        <col width="100px">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>작업 ID</th>
+                                            <th>역할</th>
+                                            <th>작업 내용</th>
+                                            <th>사고 원인</th>
+                                            <th>사고 행동</th>
+                                            <th>사고 결과</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row">
+
+                        </div>
+                    </div>
+                </div>
+
+                <div id="detail_wrap" class="row pd_box mb0" style="display: none">
+                    <!--
+                    <div class="row">
+                        <h2 class="input-field col select_m0 h2_butt">3D 상세 뷰어</span></h2>
+                        <div class="right">
+                            <button id="training_guide" type="button"
+                                class="waves-effect waves-light btn cyan right">훈련가이드</button>
+                        </div>
+                    </div>
+                    -->
+                    <button id="training_guide" type="button" class="waves-effect waves-light btn cyan right" style="position: absolute;right: 30px;top: 70px;">훈련가이드</button>
+                    
+                    <div class="scon-wrap">
+                        <div class="view_wrap">
+                            <div id="test_viewbox" class="view_box">
+                                <script src="/assets/playcanvas/playcanvas-stable.min.js" defer></script>
+                                <script src="/assets/playcanvas/__settings__.js" defer></script>
+                                <script src="/assets/playcanvas/__modules__.js" defer></script>
+                                <script src="/assets/playcanvas/__start__.js" defer></script>
+                                <script src="/assets/playcanvas/__loading__.js" defer></script>
+                            </div>
+                            <div class="view_controller_wrap">
+                                <ul class="view_controller">
+                                    <li><button data-view="front" class="act" type="button">정면</button></li>
+                                    <li><button data-view="back" type="button">후면</button></li>
+                                    <li><button data-view="side" type="button">측면</button></li>
+                                    <li><button data-view="top" type="button">평면</button></li>
+                                </ul>
+                                <div class="log_table_box act" data-info-box="1">
+                                    <ul>
+                                        <li>
+                                            <button class="log_btn act" type="button" data-posture="00">자세 1</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="02">자세 2</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="03">자세 3</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="04">자세 4</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="05">자세 5</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="06">자세 6</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="07">자세 7</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="08">자세 8</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-posture="09">자세 9</button>
+                                        </li>
+                                    </ul>
+                                    <ul>
+                                        <li>
+                                            <button class="log_btn" type="button" data-bucket="1">버켓</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-stick="1">스틱</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn" type="button" data-point="1">중심점</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn def act" type="button"
+                                                data-char-color="1">복장</button>
+                                        </li>
+
+
+                                        <!-- <li>
+                                <button class="log_btn" type="button" data-posture="02" data-point="0" data-bucket="0" data-stick="0" data-muscle='{"muscle_data":[{"muscle":"shoulder_front_left","level":4},{"muscle":"shoulder_front_right","level":4},le":"lumbar_spine","level":4},{"muscle":"lumbar_left","level":4},{"muscle":"lumbar_right","level":4},{"muscle":"hip_joint_left","level":3},{"muscle":"hip_joint_right","level":3}]}'>span class="icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+                                    <span class="data">
+                                        <span class="title">작업 부하 자세</span>
+                                        <span class="caution_data danger">근육활성도(위험)</span>
+                                        <p class="content">작업부하자세 평가에 의한 근육활성도</p>
+                                    </span>
+                                    <span class="data_cont">본 작업의 작업 부하 평가 결과 <strong class="danger">위험</strong> 단계이며, 작업 부하 자세에 대한 조치가 필요합니다.</span>
+                                </button>
+                            </li> -->
+                                    </ul>
+                                    <ul>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="QL">요방형근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="EOA">내복사근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="ES">척추세움근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="Multifidus">다열근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="Deltoid">삼각근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="Trapezius">승모근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="ECRB">단요측수근신근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="Supinator">회외근</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="L5-Sacrum_joint">L5-Sacrum 관절</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level="0"
+                                                data-muscle="SC_joint">흉쇄관절</button>
+                                        </li>
+                                        <li>
+                                            <button class="log_btn level_0" type="button" data-muscle-level=0
+                                                data-muscle="AC_joint">견쇄관절</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <script>
+
+                                window.onload = function () {
+                                    viewer_init();
+                                };
+                                // /
+                                // * muscle : 활성화/비활성화할 근육 이름
+                                // * enabled : 활성화 여부(boolean)
+                                // * color : 색상 ( 1 : "초록" 2 : "연두" 3 : "노랑" 4 : "주황" 5 : "빨강" ) 
+                                // /
+                                // enabled_muscle(muscle , enabled , color)
+
+                                // ex) enabled_muscle("in_upper_arm_left" , true , 4) // 왼쪽 안쪽 상완을 주황색으로 활성화
+                                // ex) enabled_muscle("in_upper_arm_left" , false) // 왼쪽 안쪽 상완을 주황색으로 활성화
+
+                                // /*---- 근육 명칭 ----*/
+
+                                // /* 근육 이름 */
+                                // 'QL',                           // : 요방형근
+                                // 'EOA',                          // : 내복사근
+                                // 'ES',                           // : 척추세움근
+                                // 'Multifidus',                   // : 다열근
+                                // 'Deltoid',                      // : 삼각근
+                                // 'Trapezius',                    // : 승모근
+                                // 'ECRB',                         // : 단요측수근신근
+                                // 'Supinator',                    // : 회외근
+                                // 'L5-Sacrum_joint',              // : L5-Sacrum 관절
+                                // 'SC_joint',                     // : 흉쇄관절
+                                // 'AC_joint',                     // : 견쇄관절
+
+                                // /* 색상 관련 */
+                                // 1 : "초록"
+                                // 2 : "연두"
+                                // 3 : "노랑"
+                                // 4 : "주황"
+                                // 5 : "빨강"
+
+                                //자세 , 시점 전환용 함수 ##_@@@@ 형태 ( ## : 자세 번호 / @@@@ : 시점  ex) 03_front 3자세의 정면)
+                                // 지금 00번 자세가 직립 02번이 앞으로 굽히기 03번
+                                // call3DModelEvent(target)
+
+
+                                // // 자세 번호
+                                // 00 : 직립
+                                // 02 : 앞으로 굽히기
+                                // 03 : 뒤로 굽히기
+                                // // 시점
+                                // front   : 정면
+                                // back    : 후방
+                                // side    : 옆면
+                                // top     : 탑뷰
+                                // call3DModelEvent('00_front')
+
+                                // 버켓, 스틱 활성/비활성
+                                // enabled_bucket(true/false)
+                                // enabled_stick(true/false)
+
+
+                                // 캐릭터 색상 변환 ( 캐릭터 색상 적용 여부(true = 적용 , false = 미적용) *boolean값 대신 색상값 입력시 그 색상으로 변환 , 색상값 )
+                                // character_color_setting(true, '#eeeeee');
+
+                                // // 중심점 포인트 크기 조절 [폭 , 높이]
+                                // set_point_size(width, height)
+                                // // 중심점 포인트 위치 조절 [x("reset"), y, z]
+                                // add_point_position(x, y, z)
+
+                                // var textarea = document.querySelector("iframe").contentWindow.document.querySelector("iframe").contentWindow.document.querySelector(".se2_inputarea");
+
+                                function start_viewer() {
+                                    return start_viewer_switch = true;
+                                }
+
+                                // 초기값
+                                // let viewer_posture = '00';
+                                // let viewer_cam = 'front';
+                                // let viewer_bucket = false;
+                                // let viewer_stick = false;
+                                // let viewer_point = false;
+                                // let viewer_point_pose = [];
+                                // let viewer_muscle = {};
+                                // let viewer_char_color = true;
+                                // 뷰어 초기화
+                                function viewer_init() {
+                                    viewer_posture = '00';
+                                    viewer_cam = 'front';
+                                    viewer_bucket = false;
+                                    viewer_stick = false;
+                                    viewer_point = false;
+                                    viewer_point_pose = [];
+                                    viewer_muscle = {};
+                                    viewer_char_color = true;
+
+                                    // 뷰 갱신
+                                    view_controlling();
+
+                                }
+
+                                window.addEventListener('load', function () {
+
+                                    // 중심점 크기 초기화
+                                    // set_point_size(20, 20);
+
+                                    // 뷰
+                                    const view_box = document.querySelector('.view_wrap .view_box img');
+
+
+                                    // 3D뷰 버튼 이벤트 초기화
+                                    const view_btns = document.querySelectorAll('.view_controller > li button');
+                                    view_btns.forEach(element => {
+                                        element.addEventListener('click', function () {
+                                            view_btns.forEach(element => {
+                                                // 버튼 비활성화(전체)
+                                                element.classList.remove('act');
+                                            });
+                                            // 활성화(클릭요소만)
+                                            this.classList.add('act');
+                                            // 뷰 변경
+                                            viewer_cam = this.getAttribute('data-view');
+                                            // 뷰 갱신
+                                            view_controlling();
+                                        });
+                                    });
+
+                                    // 로그 버튼 이벤트 초기화
+                                    const log_btns = document.querySelectorAll('.log_table_box .log_btn');
+                                    log_btns.forEach(element => {
+                                        element.addEventListener('click', function () {
+
+                                            // 자세만 전체 토클 적용
+                                            log_btns.forEach(element => {
+                                                // 버튼 비활성화(전체)
+                                                if (element.getAttribute('data-posture') && this.getAttribute('data-posture')) {
+                                                    // console.log(element);
+                                                    element.classList.remove('act');
+                                                }
+                                            });
+
+                                            // 버튼 활성화(클릭요소만)
+                                            if (!this.getAttribute('data-posture')) {
+                                                this.classList.toggle('act');
+                                            } else {
+                                                this.classList.add('act');
+                                            }
+
+                                            // 로그 코드가 있다면 뷰 갱신
+                                            if (true) {
+                                                // 근육표시 전부 비활성화
+                                                // muscle_all_kill();
+
+                                                // 설정값 대입
+                                                viewer_posture = this.getAttribute('data-posture') ? this.getAttribute('data-posture') : viewer_posture;
+                                                viewer_bucket = this.getAttribute('data-bucket') ? this.getAttribute('data-bucket') == 1 ? viewer_bucket ? false : true : false : viewer_bucket;
+                                                viewer_stick = this.getAttribute('data-stick') ? this.getAttribute('data-stick') == 1 ? viewer_stick ? false : true : false : viewer_stick;
+                                                viewer_point = this.getAttribute('data-point') ? this.getAttribute('data-point') == 1 ? viewer_point ? false : true : false : viewer_point;
+                                                viewer_char_color = this.getAttribute('data-char-color') ? this.getAttribute('data-char-color') == 1 ? viewer_char_color ? false : true : false : viewer_char_color;
+
+                                                if (this.getAttribute('data-muscle')) {
+                                                    let level = Number(this.getAttribute('data-muscle-level')) + 1;
+                                                    if (level > 5) level = 0;
+                                                    this.setAttribute('data-muscle-level', level);
+                                                    viewer_muscle[this.getAttribute('data-muscle')] = level;
+                                                    this.classList.add('level_' + level);
+                                                    this.classList.remove('level_' + (level ? (level - 1) : 5));
+                                                }
+
+                                                // viewer_point_pose = this.getAttribute('data-point-pose')? viewer_point_pose? [] : this.getAttribute('data-point-pose').split(',') : [] : viewer_point_pose;
+
+                                                // console.log('viewer_point_pose: ', viewer_point_pose);
+                                                // 뷰 갱신
+                                                view_controlling();
+                                            }
+                                        });
+                                    });
+                                });
+
+
+                                // 3D 뷰 컨트롤링
+                                function view_controlling() {
+                                    // console.log(viewer_point);
+                                    // console.log(viewer_cam);
+                                    // console.log(viewer_bucket);
+                                    // console.log(viewer_stick);
+                                    // console.log(viewer_muscle);
+
+                                    // 자세 및 카메라
+                                    call3DModelEvent(viewer_posture + '_' + viewer_cam);
+                                    // 캐릭터 색상 변환 ( 캐릭터 색상 적용 여부(true = 적용 , false = 미적용) *boolean값 대신 색상값 입력시 그 색상으로 변환 , 색상값 )
+                                    character_color_setting(false);
+
+                                    // 근육 바인딩
+                                    if (viewer_muscle) {
+                                        // 캐릭터 색상 변환 ( 캐릭터 색상 적용 여부(true = 적용 , false = 미적용) *boolean값 대신 색상값 입력시 그 색상으로 변환 , 색상값 )
+                                        // character_color_setting(true, '#aaaaaa');
+                                        Object.keys(viewer_muscle).forEach(m_data => {
+                                            enabled_muscle_texture(m_data, !!viewer_muscle[m_data], viewer_muscle[m_data]);
+                                        });
+                                    }
+                                    // 매핑
+                                    if (!viewer_char_color) {
+                                        character_color_setting(true, '#aaaaaa');
+                                    } else {
+                                        character_color_setting(false);
+                                    }
+
+                                    // 중심점 바인딩
+                                    enabled_center_point(viewer_point ? true : false);
+                                    console.log(viewer_point);
+                                    // 중심점 위치 초기화
+                                    // add_point_position("reset");
+                                    // add_point_position("reset");
+
+                                    // 중심점 포인트 위치 조절 [x("reset"), y, z]
+                                    if (viewer_point_pose.length) add_point_position(Number(viewer_point_pose[0]), Number(viewer_point_pose[1]), Number(viewer_point_pose[2]));
+
+                                    // 버켓 바인딩
+                                    enabled_bucket(viewer_bucket ? true : false);
+                                    enabled_stick(viewer_stick ? true : false);
+                                }
+
+                                // 모든 근육 비활성화 및 근육 표시값 초기화
+                                function muscle_all_kill() {
+                                    const muscle_name_list = [
+                                        // /* 어깨 */
+                                        // "shoulder_front_left",   	// : 왼쪽 앞 어깨
+                                        // "shoulder_back_left",    	// : 왼쪽 뒤 어깨
+                                        // "shoulder_front_right",  	// : 오른쪽 앞 어깨
+                                        // "shoulder_back_right",   	// : 오른쪽 앞 어깨
+
+                                        // /* 팔 */
+                                        // "in_upper_arm_left",		// : 왼쪽 안쪽 상완
+                                        // "out_upper_arm_left",    	// : 왼쪽 바깥쪽 상완
+                                        // "in_upper_arm_right",    	// : 오른쪽 안쪽 상완
+                                        // "out_upper_arm_right",   	// : 오른쪽 바깥쪽 상완
+
+                                        // "in_fore_arm_left",     	// : 왼쪽 안쪽 전완
+                                        // "out_fore_arm_left",    	// : 왼쪽 바깥쪽 전완
+                                        // "in_fore_arm_right",    	// : 오른쪽 안쪽 전완
+                                        // "out_fore_arm_right",   	// : 오른쪽 바깥쪽 전완
+
+                                        // /* 목 등 허리 관련 */
+                                        // "trapezius",         		// : 등 세모근
+                                        // "lateral_left",      		// : 왼쪽 옆구리
+                                        // "lateral_right",     		// : 오른쪽 옆구리
+                                        // "sternoclavicular_joint_left",   	// : 왼쪽 복장빗장 관절 (쇄골뼈?)
+                                        // "sternoclavicular_joint_right",  	// : 오른쪽 복장빗장 관절 (쇄골뼈?)
+                                        // "lumbar_spine",      		// : 요추
+                                        // "lumbar_left",       		// : 왼쪽 허리
+                                        // "lumbar_right",      		// : 오른쪽 허리
+                                        // "hip_joint_left",    		// : 왼쪽 고관절
+                                        // "hip_joint_right",   		// : 오른쪽 고관절
+
+                                        // /* 허벅지 관련 */
+                                        // "in_thigh_left",     		// : 왼쪽 안쪽 허벅지
+                                        // "out_thigh_left",    		// : 왼쪽 바깥쪽 허벅지
+                                        // "in_thigh_right",    		// : 오른쪽 안쪽 허벅지
+                                        // "out_thigh_right",   		// : 오른쪽 바깥쪽 허벅지
+
+                                        // /* 종아리 관련 */
+                                        // "in_calf_left",      		// : 왼쪽 안쪽 종아리
+                                        // "out_calf_left",     		// : 왼쪽 바깥쪽 종아리
+                                        // "in_calf_right",     		// : 오른쪽 안쪽 종아리
+                                        // "out_calf_right",    		// : 오른쪽 바깥쪽 종아리
+
+                                        // /* 근육 이름 */
+                                        'QL',                           // : 요방형근
+                                        'EOA',                          // : 내복사근
+                                        'ES',                           // : 척추세움근
+                                        'Multifidus',                   // : 다열근
+                                        'Deltoid',                      // : 삼각근
+                                        'Trapezius',                    // : 승모근
+                                        'ECRB',                         // : 단요측수근신근
+                                        'Supinator',                    // : 회외근
+                                        'L5-Sacrum_joint',              // : L5-Sacrum 관절
+                                        'SC_joint',                     // : 흉쇄관절
+                                        'AC_joint',                     // : 견쇄관절
+                                    ];
+
+                                    // 모든 근육 비활성화
+                                    muscle_name_list.forEach(muscle_name => {
+                                        enabled_muscle_texture(muscle_name, false);
+                                    });
+                                    // 초기화
+                                    viewer_muscle = {};
+                                }
+
+
+                                // 수행결과 목록 - 세부 수행 내역
+                                if ($('.training_result_box')) {
+                                    $('.training_result_box .list > dl').click(function () {
+                                        $('.training_result_box .list > dl').removeClass('on');
+                                        $(this).addClass('on');
+
+                                        let info_num = $(this).attr('data-info');
+                                        $('.trainging_result_info_wrap .trainging_result_info_box').removeClass('act');
+                                        $('.trainging_result_info_wrap .trainging_result_info_box[data-info-box=' + info_num + ']').addClass('act');
+                                        $('.view_wrap .view_controller_wrap .log_table_box').removeClass('act');
+                                        $('.view_wrap .view_controller_wrap .log_table_box[data-info-box=' + info_num + ']').addClass('act');
+                                        viewer_init();
+                                    });
+                                };
+                            </script>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <script>
+                    // 3D 상세뷰어 버튼
+                    document.getElementById('detail_viewer').addEventListener('click', () => {
+                        document.getElementById('def_wrap').style.cssText = 'display:none';
+                        start_viewer();
+                        document.getElementById('detail_wrap').style.cssText = 'display:block';
+                    });
+                    // 훈련가이드 버튼
+                    document.getElementById('training_guide').addEventListener('click', () => {
+                        document.getElementById('def_wrap').style.cssText = 'display:block';
+                        document.getElementById('detail_wrap').style.cssText = 'display:none';
+                    });
+
+                </script>
+
+</body>
+</html>

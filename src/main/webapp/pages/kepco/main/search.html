@@ -1,0 +1,637 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}"
+	>
+	
+<th:block layout:fragment="content">
+
+<script>
+$(document).ready(function() {
+	// 검색유형 활성화
+	var scType = `[[${param?.scType}]]`;
+	$('.menu_list').removeClass('current');
+	if(scType == "menu"){
+		$('.menu').addClass('current');
+	}else if(scType == "post"){
+		$('.post').addClass('current');
+	}else if(scType == "edu"){
+		$('.edu').addClass('current');
+	}else if(scType == "vod"){
+		$('.vod').addClass('current');
+	}else if(scType == "file"){
+		$('.file').addClass('current');
+	}else{
+		$('.all').addClass('current');
+	}
+	
+	// 인기검색어
+	var weekButton = $('#weekButton');
+	var dayButton = $('#dayButton');
+	var weekHistory = $('#weekHistory');
+	var dayHistory = $('#dayHistory');
+	
+	// 인기검색어 주간
+	weekButton.on('click', function() {
+		weekButton.addClass('current');
+		dayButton.removeClass('current');
+		weekHistory.css('display', 'flex');
+		dayHistory.css('display', 'none');
+	});
+	
+	// 인기검색어 일간
+	dayButton.on('click', function() {
+		dayButton.addClass('current');
+		weekButton.removeClass('current');
+		weekHistory.css('display', 'none');
+		dayHistory.css('display', 'flex');
+	});
+});
+
+// 검색유형 변경
+function doSearch(scType, pageNum, scWord, scOrder){
+	// 값이 비어있는 경우 기존값(폼) 유지
+	if (typeof scWord === 'undefined' || scWord === null || scWord === '') {
+		scWord = $("#scWord").val();
+	}
+	if (typeof pageNum === 'undefined' || pageNum === null || pageNum === '') {
+		pageNum = $("#pageNum").val();
+	}
+	if (typeof scType === 'undefined' || scType === null || scType === '') {
+		scType = $("#scType").val();
+	}
+	if (typeof scOrder === 'undefined' || scOrder === null || scOrder === '') {
+		scOrder = $("#scOrder").val();
+	}
+	location.href = "/search?scWord="+scWord+"&scType="+scType+"&pageNum="+pageNum+"&scOrder="+scOrder;
+}
+
+// 페이징
+function page(scType, i){
+	if(i == null){ i = 1;}
+	$("#pageNum").val(i);
+	doSearch(scType, i);
+}
+
+// 정렬방식 변경. 3:정확도, 2:과거순, 1:최신순(기본값)
+function searchOrder(scOrder){
+	$("#scOrder").val(scOrder);
+	var scType = $("#scType").val();
+	var pageNum = $("#pageNum").val();
+	doSearch(scType, pageNum);
+	
+}
+</script>
+<div id="search_p_header_wrap">
+	<div class="header_wrap">
+		<div class="site_logo">
+			<a href="/" title="홈으로"></a>
+			<h2>통합검색</h2>
+		</div>
+		<form id="search_form" method="GET" action="/search" class="search_form">
+			 <select class="select_box_search" name="scType" title="검색조건 선택" id="scType">
+			 	<option value="all" th:selected="${req?.scType} == 'all'">전체</option>
+				<option value="menu" th:selected="${req?.scType} == 'menu'">메뉴</option>
+				<option value="post" th:selected="${req?.scType} == 'post'">게시판</option>
+				<option value="edu" th:selected="${req?.scType} == 'edu'">실감훈련</option>
+				<option value="vod" th:selected="${req?.scType} == 'vod'">영상교육</option>
+				<option value="file" th:selected="${req?.scType} == 'file'">첨부파일</option>
+			 </select>
+			<input class="search_input" id="scWord" type="text" th:value="${param?.scWord}" name="scWord" placeholder="검색어를 입력해주세요">
+			<input id="pageNum" type="hidden" th:value="${param?.pageNum}" name="pageNum">
+			<input id="scOrder" type="hidden" th:value="${req?.scOrder}" name="scOrder">
+			<button class="search_btn" type="submit" title="검색">
+				<i class="fa-solid fa-magnifying-glass"></i>
+			</button>
+		</form>
+	</div>
+</div>
+
+
+<div class="serach_first_ctrl_box">
+	<div class="serach_tab_wrap">
+		<ul>
+			<li>
+				<a href="javascript:doSearch('all', 1);" class="menu_list all current">전체</a>
+			</li>
+			<li>
+				<a href="javascript:doSearch('menu', 1);" class="menu_list menu">메뉴</a>
+			</li>
+			<li>
+				<a href="javascript:doSearch('post', 1);" class="menu_list post">게시판</a>
+			</li>
+			<li>
+				<a href="javascript:doSearch('edu', 1);" class="menu_list edu">실감훈련</a>
+			</li>
+			<li>
+				<a href="javascript:doSearch('vod', 1);" class="menu_list vod">영상교육</a>
+			</li>
+			<li>
+				<a href="javascript:doSearch('file', 1);" class="menu_list file">첨부파일</a>
+			</li>
+		</ul>
+	</div>
+	
+	<div class="serach_sort_wrap">
+		<ul>
+			<li>
+				<label class="radio_btn" for="search_sort_type_1">
+					<span class="radio_tit">정확도</span>
+					<input type="radio" id="search_sort_type_1" name="search_sort_type" onclick="searchOrder('3')" th:checked="${req?.scOrder == '3'}">
+					<span class="radio_design"></span>
+				</label>
+			</li>
+			<li>
+				<label class="radio_btn" for="search_sort_type_2">
+					<span class="radio_tit">과거순</span>
+					<input type="radio" id="search_sort_type_2" name="search_sort_type" onclick="searchOrder('2')" th:checked="${req?.scOrder == '2'}">
+					<span class="radio_design"></span>
+				</label>
+			</li>
+			<li>
+				<label class="radio_btn" for="search_sort_type_3">
+					<span class="radio_tit">최신순</span>
+					<input type="radio" id="search_sort_type_3" name="search_sort_type" onclick="searchOrder('1')" th:checked="${req?.scOrder == '1'}">
+					<span class="radio_design"></span>
+				</label>
+			</li>
+		</ul>
+	</div>
+</div>
+
+<!-- 검색 결과 -->
+<div class="search_result">
+
+	<div class="search_result_split_wrap">
+		<div th:if="${#strings.isEmpty(param?.scType) or not #strings.equals(param?.scType, 'edu') and not #strings.equals(param?.scType, 'menu') and not #strings.equals(param?.scType, 'post') and not #strings.equals(param?.scType, 'vod') and not #strings.equals(param?.scType, 'file') and not #strings.equals(param?.scType, 'all')}">
+			<p class="null_data">유효하지 않은 검색유형입니다.</p>
+		</div>
+		<div class="menu_box" th:if="${#strings.equals(param?.scType, 'menu') or #strings.equals(param?.scType, 'all')}">
+			<h3>메뉴 <span class="result_count" th:text="'총 ' + (${menuPageInfo?.total} ?: 0)"></span></h3>
+			<div class="search_result_box">
+				<ul>
+					<li th:if="${#strings.isEmpty(menuList)}">
+						<p class="null_data">검색된 결과가 없습니다</p>
+					</li>
+					<li th:if="${!#strings.isEmpty(menuList)}" th:each="item : ${menuList}" >
+						<th:block th:with="highlightText=${#strings.replace(item.menuNm, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<a th:href="|${item.menuUrl}|" th:utext="${highlightText}"></a>
+					</li>
+				</ul>
+				<button class="more_list_btn" th:if="${(menuPageInfo?.total > 4) and !#strings.equals(param?.scType, 'menu')}" onclick="doSearch('menu', 1)">더보기</button>
+			</div>
+			<!--메뉴페이징-->
+			<div class="mt20 clear paging" th:if="${!#strings.isEmpty(menuPageInfo) and !#strings.equals(param?.scType, 'all') and menuPageInfo?.total > menuPageInfo?.pageSize}"> 
+				<p class="btn_page ">
+					<a th:class="${menuPageInfo?.isFirstPage} ? 'paginate_button first_back disabled' : 'paginate_button first_back'" th:onclick="${menuPageInfo?.isFirstPage} ? 'return false;' : ''"
+						th:href="|javascript:page('menu', 1);|">
+						<i class="material-icons">
+<!--							keyboard_double_arrow_left-->
+						</i>
+						<span class="hidden">처음페이지</span>
+					</a>
+					<a th:class="${menuPageInfo?.hasPreviousPage} ? 'paginate_button first_back' : 'paginate_button first_back disabled'" th:onclick="${menuPageInfo?.hasPreviousPage} ? '' : 'return false; '"
+						th:href="|javascript:page('menu', ${menuPageInfo?.pageNum-1});|">
+						<i class="material-icons">
+<!--							navigate_before-->
+						</i>
+						<span class="hidden">이전페이지</span>
+					</a>
+					<a th:each="n : ${menuPageInfo.navigatepageNums}" th:class=" ${menuPageInfo.pageNum} == ${n} ? 'paginate_button on current' : 'paginate_button'"
+						th:href="|javascript:page('menu', ${n});|" th:text="${n}"></a>
+					<a th:class="${menuPageInfo?.hasNextPage} ? 'paginate_button next_back' : 'paginate_button last_back disabled' " th:onclick="${menuPageInfo?.hasNextPage} ? '' : 'return false;'"
+						th:href="|javascript:page('menu', ${menuPageInfo?.pageNum+1});|">
+						<i class="material-icons">
+<!--							navigate_next-->
+						</i>
+						<span class="hidden">다음페이지</span>
+					</a>
+					<a th:class="${menuPageInfo?.isLastPage} ? 'paginate_button last_back disabled' : 'paginate_button last_back' " th:onclick="${menuPageInfo?.isLastPage} ? 'return false;' : ''"
+						th:href="|javascript:page('menu', ${menuPageInfo?.pages});|">
+						<i class="material-icons">
+<!--							keyboard_double_arrow_right-->
+						</i>
+						<span class="hidden">마지막페이지</span>
+					</a>
+				</p>
+			</div>
+		</div>
+		<div class="post_box" th:if="${#strings.equals(param?.scType, 'post') or #strings.equals(param?.scType, 'all')}">
+			<h3>게시판<span class="result_count" th:text="'총 ' + (${postPageInfo?.total} ?: 0)"></span></h3>
+			<div class="search_result_box">
+				<ul>
+					<li th:if="${#strings.isEmpty(postList)}">
+						<p class="null_data">검색된 결과가 없습니다</p>
+					</li>
+					<li th:if="${!#strings.isEmpty(postList)}" th:each="item : ${postList}">
+						<span class="cate" th:text="${item.boardNm}"></span>
+						<th:block th:with="highlightText=${#strings.replace(item.postTitle, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<a class="tit" th:unless="${#strings.equals(item.boardId, 'faq')}" th:href="|/cms/board/post/view/?site=kepco&mn=${item.mn}&boardId=${item.boardId}&postIdx=${item.postIdx}|" target="_blank" th:utext="${highlightText}"></a>
+						<a class="tit" th:if="${#strings.equals(item.boardId, 'faq')}" th:href="|/cms/board/post/list/?site=kepco&mn=${item.mn}&boardId=${item.boardId}|" target="_blank" th:utext="${highlightText}"></a>
+						<th:block th:with="highlightText=${#strings.replace(item.postContent, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<p class="cont" th:utext="${highlightText}"></p>
+						<span class="">등록일자</span>
+						<span class="inline_date" th:text="${#dates.format(item?.insertDate, 'yyyy-MM-dd')}"></span>
+					</li>
+				</ul>
+				<button class="more_list_btn" th:if="${(postPageInfo?.total > 4) and !#strings.equals(param?.scType, 'post')}" onclick="doSearch('post', 1)">더보기</button>
+			</div>
+			<!--게시물페이징-->
+			<div class="mt20 clear paging" th:if="${!#strings.isEmpty(postPageInfo) and !#strings.equals(param?.scType, 'all') and postPageInfo?.total > postPageInfo?.pageSize}"> 
+				<p class="btn_page ">
+					<a th:class="${postPageInfo?.isFirstPage} ? 'paginate_button first_back disabled' : 'paginate_button first_back'" th:onclick="${postPageInfo?.isFirstPage} ? 'return false;' : ''"
+						th:href="|javascript:page('post', 1);|">
+						<i class="material-icons">
+			<!--							keyboard_double_arrow_left-->
+						</i>
+						<span class="hidden">처음페이지</span>
+					</a>
+					<a th:class="${postPageInfo?.hasPreviousPage} ? 'paginate_button first_back' : 'paginate_button first_back disabled'" th:onclick="${postPageInfo?.hasPreviousPage} ? '' : 'return false; '"
+						th:href="|javascript:page('post', ${postPageInfo?.pageNum-1});|">
+						<i class="material-icons">
+			<!--							navigate_before-->
+						</i>
+						<span class="hidden">이전페이지</span>
+					</a>
+					<a th:each="n : ${postPageInfo.navigatepageNums}" th:class=" ${postPageInfo.pageNum} == ${n} ? 'paginate_button on current' : 'paginate_button'"
+						th:href="|javascript:page('post', ${n});|" th:text="${n}"></a>
+					<a th:class="${postPageInfo?.hasNextPage} ? 'paginate_button next_back' : 'paginate_button last_back disabled' " th:onclick="${postPageInfo?.hasNextPage} ? '' : 'return false;'"
+						th:href="|javascript:page('post',${postPageInfo?.pageNum+1});|">
+						<i class="material-icons">
+			<!--							navigate_next-->
+						</i>
+						<span class="hidden">다음페이지</span>
+					</a>
+					<a th:class="${postPageInfo?.isLastPage} ? 'paginate_button last_back disabled' : 'paginate_button last_back' " th:onclick="${postPageInfo?.isLastPage} ? 'return false;' : ''"
+						th:href="|javascript:page('post', ${postPageInfo?.pages});|">
+						<i class="material-icons">
+			<!--							keyboard_double_arrow_right-->
+						</i>
+						<span class="hidden">마지막페이지</span>
+					</a>
+				</p>
+			</div>
+		</div>
+		<div class="edu_box" th:if="${#strings.equals(param?.scType, 'edu') or #strings.equals(param?.scType, 'all')}">
+			<h3>실감훈련 <span class="result_count" th:text="'총 ' + (${detailPageInfo?.total} ?: 0)"></span></h3>
+			<div class="search_result_box">
+				<ul>
+					<li th:if="${#strings.isEmpty(detailList)}">
+						<p class="null_data">검색된 결과가 없습니다.</p>
+					</li>
+					<li th:if="${!#strings.isEmpty(detailList)}" th:each="item : ${detailList}">
+						<span class="cate">실감훈련</span>
+						<th:block th:with="highlightText=${#strings.replace(item.trainTitle, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<a class="tit" th:href="|/lms/edu/view/?site=kepco&mn=0101&detailIdx=${item.detailIdx}|" target="_blank" th:utext="${highlightText}"></a>
+						<th:block th:with="highlightText=${#strings.replace(item.eduDesc, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<p class="cont" th:utext="${highlightText}"></p>
+						<span class="">신청기간</span>
+						<span class="inline_date" th:text="|${item?.eduAcceptBgnDate}~${item?.eduAcceptEndDate}|"></span>
+					</li>
+				</ul>
+				<button class="more_list_btn" th:if="${(detailPageInfo?.total > 4) and !#strings.equals(param?.scType, 'edu')}" onclick="doSearch('edu', 1)">더보기</button>
+			</div>
+			<!--실감훈련페이징-->
+			<div class="mt20 clear paging" th:if="${!#strings.isEmpty(detailPageInfo) and !#strings.equals(param?.scType, 'all') and detailPageInfo?.total > detailPageInfo?.pageSize}"> 
+				<p class="btn_page ">
+					<a th:class="${detailPageInfo?.isFirstPage} ? 'paginate_button first_back disabled' : 'paginate_button first_back'" th:onclick="${detailPageInfo?.isFirstPage} ? 'return false;' : ''"
+						th:href="|javascript:page('edu', 1);|">
+						<i class="material-icons">
+			<!--							keyboard_double_arrow_left-->
+						</i>
+						<span class="hidden">처음페이지</span>
+					</a>
+					<a th:class="${detailPageInfo?.hasPreviousPage} ? 'paginate_button first_back' : 'paginate_button first_back disabled'" th:onclick="${detailPageInfo?.hasPreviousPage} ? '' : 'return false; '"
+						th:href="|javascript:page('edu', ${detailPageInfo?.pageNum-1});|">
+						<i class="material-icons">
+			<!--							navigate_before-->
+						</i>
+						<span class="hidden">이전페이지</span>
+					</a>
+					<a th:each="n : ${detailPageInfo.navigatepageNums}" th:class=" ${detailPageInfo.pageNum} == ${n} ? 'paginate_button on current' : 'paginate_button'"
+						th:href="|javascript:page('edu', ${n});|" th:text="${n}"></a>
+					<a th:class="${detailPageInfo?.hasNextPage} ? 'paginate_button next_back' : 'paginate_button last_back disabled' " th:onclick="${detailPageInfo?.hasNextPage} ? '' : 'return false;'"
+						th:href="|javascript:page('edu', ${detailPageInfo?.pageNum+1});|">
+						<i class="material-icons">
+			<!--							navigate_next-->
+						</i>
+						<span class="hidden">다음페이지</span>
+					</a>
+					<a th:class="${detailPageInfo?.isLastPage} ? 'paginate_button last_back disabled' : 'paginate_button last_back' " th:onclick="${detailPageInfo?.isLastPage} ? 'return false;' : ''"
+						th:href="|javascript:page('edu', ${detailPageInfo?.pages});|">
+						<i class="material-icons">
+			<!--							keyboard_double_arrow_right-->
+						</i>
+						<span class="hidden">마지막페이지</span>
+					</a>
+				</p>
+			</div>
+		</div>	
+		<div class="vod_box" th:if="${#strings.equals(param?.scType, 'vod') or #strings.equals(param?.scType, 'all')}">
+			<h3>영상교육 <span class="result_count" th:text="'총 ' + (${vodPageInfo?.total} ?: 0)"></span></h3>
+			<div class="search_result_box">
+				<ul>
+					<li th:if="${#strings.isEmpty(vodList)}">
+						<p class="null_data">검색된 결과가 없습니다</p>
+					</li>
+					<li th:if="${!#strings.isEmpty(vodList)}" th:each="item : ${vodList}">
+						<span class="cate">영상교육</span>
+						<th:block th:with="highlightText=${#strings.replace(item.vodTitle, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<a class="tit" th:href="|/lms/vod/view/?site=kepco&mn=0102&vodIdx=${item.vodIdx}|" target="_blank" th:utext="${highlightText}"></a>
+						<th:block th:with="highlightText=${#strings.replace(item.vodDesc, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<p class="cont" th:utext="${highlightText}"></p>
+						<span class="">등록일자</span>
+						<span class="inline_date" th:text="${#dates.format(item?.insertDate, 'yyyy-MM-dd')}"></span>
+					<li>
+				</ul>
+				<button class="more_list_btn" th:if="${(vodPageInfo?.total > 4) and !#strings.equals(param?.scType, 'vod')}" onclick="doSearch('vod', 1)">더보기</button>
+			</div>
+			<!--영상교육페이징-->
+			<div class="mt20 clear paging" th:if="${!#strings.isEmpty(vodPageInfo) and !#strings.equals(param?.scType, 'all') and vodPageInfo?.total > vodPageInfo?.pageSize}"> 
+				<p class="btn_page ">
+					<a th:class="${vodPageInfo?.isFirstPage} ? 'paginate_button first_back disabled' : 'paginate_button first_back'" th:onclick="${vodPageInfo?.isFirstPage} ? 'return false;' : ''"
+						th:href="|javascript:page('vod', 1);|">
+						<i class="material-icons">
+			<!--							keyboard_double_arrow_left-->
+						</i>
+						<span class="hidden">처음페이지</span>
+					</a>
+					<a th:class="${vodPageInfo?.hasPreviousPage} ? 'paginate_button first_back' : 'paginate_button first_back disabled'" th:onclick="${vodPageInfo?.hasPreviousPage} ? '' : 'return false; '"
+						th:href="|javascript:page('vod', ${vodPageInfo?.pageNum-1});|">
+						<i class="material-icons">
+			<!--							navigate_before-->
+						</i>
+						<span class="hidden">이전페이지</span>
+					</a>
+					<a th:each="n : ${vodPageInfo.navigatepageNums}" th:class=" ${vodPageInfo.pageNum} == ${n} ? 'paginate_button on current' : 'paginate_button'"
+						th:href="|javascript:page('vod', ${n});|" th:text="${n}"></a>
+					<a th:class="${vodPageInfo?.hasNextPage} ? 'paginate_button next_back' : 'paginate_button last_back disabled' " th:onclick="${vodPageInfo?.hasNextPage} ? '' : 'return false;'"
+						th:href="|javascript:page('vod', ${vodPageInfo?.pageNum+1});|">
+						<i class="material-icons">
+			<!--							navigate_next-->
+						</i>
+						<span class="hidden">다음페이지</span>
+					</a>
+					<a th:class="${vodPageInfo?.isLastPage} ? 'paginate_button last_back disabled' : 'paginate_button last_back' " th:onclick="${vodPageInfo?.isLastPage} ? 'return false;' : ''"
+						th:href="|javascript:page('vod', ${vodPageInfo?.pages});|">
+						<i class="material-icons">
+			<!--							keyboard_double_arrow_right-->
+						</i>
+						<span class="hidden">마지막페이지</span>
+					</a>
+				</p>
+			</div>
+		</div>
+		<div class="file_box" th:if="${#strings.equals(param?.scType, 'file') or #strings.equals(param?.scType, 'all')}">
+			<h3>첨부파일 <span class="result_count" th:text="'총 ' + (${filePageInfo?.total} ?: 0)"></span></h3>
+			<div class="search_result_box">
+				<ul>
+					<li th:if="${#strings.isEmpty(fileList)}">
+						<p class="null_data">검색된 결과가 없습니다</p>
+					</li>
+					<li th:if="${!#strings.isEmpty(fileList)}" th:each="item : ${fileList}">
+						<span class="cate" th:text="${item?.boardName}"></span>
+						<th:block th:with="highlightText=${#strings.replace(item.postTitle, param?.scWord, #strings.concat('<span class=linkb>',param?.scWord,'</span>'))}">
+						<a class="tit" th:href="|/cms/board/post/view/?site=kepco&mn=${item.mn}&boardId=${item.boardId}&postIdx=${item.postIdx}|" target="_blank" th:text="${highlightText}"></a>
+						<a class="cont" th:text="|${item?.fileOriginName} (${T(kepco.util.StrUtil).formatFileSize(item?.fileFilesize)})|" th:href="|/search/download?fileIdx=${item?.fileIdx}|"></a>
+						<span class="">등록일자</span>
+						<span class="inline_date" th:text="${#dates.format(item?.insertDate, 'yyyy-MM-dd')}"></span>
+					<li>
+				</ul>
+				<button class="more_list_btn" th:if="${(filePageInfo?.total > 4) and !#strings.equals(param?.scType, 'file')}" onclick="doSearch('file', 1)">더보기</button>
+			</div>
+		</div>
+		<!--첨부파일페이징-->
+		<div class="mt20 clear paging" th:if="${!#strings.isEmpty(filePageInfo) and !#strings.equals(param?.scType, 'all') and filePageInfo?.total > filePageInfo?.pageSize}"> 
+			<p class="btn_page ">
+				<a th:class="${filePageInfo?.isFirstPage} ? 'paginate_button first_back disabled' : 'paginate_button first_back'" th:onclick="${filePageInfo?.isFirstPage} ? 'return false;' : ''"
+					th:href="|javascript:page('file', 1);|">
+					<i class="material-icons">
+		<!--							keyboard_double_arrow_left-->
+					</i>
+					<span class="hidden">처음페이지</span>
+				</a>
+				<a th:class="${filePageInfo?.hasPreviousPage} ? 'paginate_button first_back' : 'paginate_button first_back disabled'" th:onclick="${filePageInfo?.hasPreviousPage} ? '' : 'return false; '"
+					th:href="|javascript:page('file', ${filePageInfo?.pageNum-1});|">
+					<i class="material-icons">
+		<!--							navigate_before-->
+					</i>
+					<span class="hidden">이전페이지</span>
+				</a>
+				<a th:each="n : ${filePageInfo.navigatepageNums}" th:class=" ${filePageInfo.pageNum} == ${n} ? 'paginate_button on current' : 'paginate_button'"
+					th:href="|javascript:page('file', ${n});|" th:text="${n}"></a>
+				<a th:class="${filePageInfo?.hasNextPage} ? 'paginate_button next_back' : 'paginate_button last_back disabled' " th:onclick="${filePageInfo?.hasNextPage} ? '' : 'return false;'"
+					th:href="|javascript:page('file', ${filePageInfo?.pageNum+1});|">
+					<i class="material-icons">
+		<!--							navigate_next-->
+					</i>
+					<span class="hidden">다음페이지</span>
+				</a>
+				<a th:class="${filePageInfo?.isLastPage} ? 'paginate_button last_back disabled' : 'paginate_button last_back' " th:onclick="${filePageInfo?.isLastPage} ? 'return false;' : ''"
+					th:href="|javascript:page('file', ${filePageInfo?.pages});|">
+					<i class="material-icons">
+		<!--							keyboard_double_arrow_right-->
+					</i>
+					<span class="hidden">마지막페이지</span>
+				</a>
+			</p>
+		</div>
+	</div>
+
+
+	<div class="search_result_side_wrap">
+		<div class="keywords_list my_keywords">
+			<h4>나의 검색어</h4>
+			<ul>
+				<!-- <li>
+					<a href="">검색어</a>
+				</li>
+				<li>
+					<a href="">검색어</a>
+				</li>
+				<li>
+					<a href="">검색어</a>
+				</li>
+				<li>
+					<a href="">검색어</a>
+				</li>
+				<li>
+					<a href="">검색어</a>
+				</li>
+				<li>
+					<a href="">검색어</a>
+				</li> -->
+			</ul>
+		</div>
+
+		<div class="keywords_list favorite_keywords">
+			<h4>인기 검색어</h4>
+			<div class="favorite_btn_wrap">
+				<button class="favorite_btn current" id="weekButton">주간</button>
+				<button class="favorite_btn" id="dayButton">일간</button>
+			</div>
+			<ul id="weekHistory">
+				<li th:each="item : ${weekHistory}">
+					<a th:href="|javascript:doSearch(undefined, undefined, '${item.scWord}');|" th:text="${item.scWord}"></a>
+				</li>
+			</ul>
+			<ul id="dayHistory" style="display:none">
+				<li th:each="item : ${dayHistory}">
+					<a th:href="|javascript:doSearch(undefined, undefined, '${item.scWord}');|" th:text="${item.scWord}"></a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<script>
+	window.addEventListener('DOMContentLoaded', function (){
+		// 검색어 리스트
+		let search_list = [];
+
+		// 검색 쿠키 존재 유무
+		if(getCookies('kepco_search')){
+			let c_search_list = getCookies('kepco_search');
+
+			c_search_list.forEach(val => {
+				let search_text = val.split('=')[0].split('_')[2];
+				// 검색어 추출 및 공백 제외
+				if(search_text !== ''){
+					// 검색어 목록화
+					search_list.push(search_text);
+				}
+			});
+		}
+
+		// 나의 검색어(리스트)
+		const keywords_list = document.querySelector('.my_keywords ul');
+		// 나의 검색어 갱신
+		if (search_list.length !== 0){
+			search_list.reverse().forEach(val => {
+				keywords_list.innerHTML += `
+				<li>
+					<a href="search?scWord=${val}&scType=all&pageNum=&scOrder=1">${val}</a>
+				</li>
+				`;
+			});
+		}else{
+			// 검색어가 없습니다
+			keywords_list.innerHTML += `<li>최근 검색 목록이 없습니다</li>`;
+		}
+	})
+
+	// 검색 전처리
+	const p_search_form = document.getElementById('search_form');
+	p_search_form.addEventListener('submit', function (){
+		// 입력값 = 검색어
+		let input_data = p_search_form.elements['scWord'].value;
+		// 일일 쿠키 갱신
+		setCookie('kepco_search_'+input_data, input_data, 1);
+	})
+
+</script>
+
+
+<style>
+	
+	header {display: none;}
+
+	/* 셀렉트 박스 */
+	.select_box_search {display: flex; width: auto; min-width: 180px; max-width: 100%; height: 50px; line-height: 1; align-items: center; font-size: 18px; font-weight: 500; background:#000 url(/pages/kepco/img/sub/icon_category_arrow.png) no-repeat 90% 20px ; color: #fff; border: 1px solid #666; cursor: pointer;}
+	.select_box_search > option {background-color: #000;}
+	.select_box_search:hover,
+	.select_box_search:focus {border-color: #fff;}
+	/* 통합검색 */
+	#search_p_header_wrap { border-bottom: 1px solid #2a2a2a;}
+	#search_p_header_wrap .header_wrap {display: flex; width: 100%; max-width: 1500px; height: auto; padding: 0; margin: 0 auto; justify-content: flex-start; align-items: center; gap: 40px;}
+	#search_p_header_wrap .site_logo {display: flex; width: auto; height: auto; align-items: center; gap: 10px;}
+	#search_p_header_wrap .site_logo a {background-color: transparent; width: 169px; height: 101px; background-image: url('/pages/kepco/img/sub/logo-s.svg'); background-repeat: no-repeat; background-position: center; display: flex; align-items: center;}
+	#search_p_header_wrap .site_logo h2 {font-size: 20px; font-weight: bold; color: #fff;}
+
+	#search_p_header_wrap .search_form {display: flex; width: auto; max-width: 100%; height: auto; align-items: center; gap: 10px;}
+	#search_p_header_wrap .search_form .search_input {flex: 1; height: 50px; padding: 8px 12px; border: 1px solid #666; color: #fff; font-size: 18px; font-weight: bold;}
+	#search_p_header_wrap .search_form .search_input::placeholder {opacity: 0.7;}
+	#search_p_header_wrap .search_form .search_input:hover,
+	#search_p_header_wrap .search_form .search_input:focus {border-color: #fff;}
+	#search_p_header_wrap .search_form .search_btn {display: flex; width: 50px; height: 50px; background-color: #3466e9; color: #fff; justify-content: center; align-items: center; font-size: 20px;}
+
+	/* 컨트롤 박스 */
+	.serach_first_ctrl_box {display: flex; flex-direction: column; width: 100%; height: auto; padding: 20px 0; margin-bottom: 50px; }
+
+	/* 검색 분류 탭 */
+	.serach_tab_wrap {display: block; width: 100%; max-width: 1500px; height: auto; margin: 0 auto;}
+	.serach_tab_wrap > ul {display: flex; width: 100%; height: auto; align-items: center;}
+	.serach_tab_wrap > ul > li {display: block; width: 100%; height: auto;}
+	.serach_tab_wrap > ul > li > a {display: flex; width: 100%; height: 50px; justify-content: center; align-items: center; font-size: 16px;  color: #ccc; position: relative; transition: all 0.35s ease; border: 1px solid #2a2a2a;}
+	.serach_tab_wrap > ul > li:not(:first-child) > a {border-left: 0;}
+	.serach_tab_wrap > ul > li > a::after {content: ''; display: none; width: 100%; height: 4px; background-color: #ccc; position: absolute; left: 0; bottom: 0; transition: all 0.35s ease;}
+	.serach_tab_wrap > ul > li > a:hover,
+	.serach_tab_wrap > ul > li > a:focus{color: #fff; border-bottom-color: #ccc;}
+	.serach_tab_wrap > ul > li > a.current {color: #fff; border-bottom-color: #3466e9;}
+	.serach_tab_wrap > ul > li > a:hover::after,
+	.serach_tab_wrap > ul > li > a:focus::after {display: block;}
+	.serach_tab_wrap > ul > li > a.current::after {display: block; background-color: #3466e9;}
+
+
+	/* 정렬 */
+	.serach_sort_wrap {display: block; width: 100%; height: auto;}
+	.serach_sort_wrap > ul {display: flex;width: 100%;max-width: 1500px;height: auto; gap: 20px;margin: 0 auto;padding: 40px 0 0 0;text-align: center;align-content: center;justify-content: center;}
+	.serach_sort_wrap > ul > li {flex: 0 1 auto; display: flex; width: auto; height: auto; align-items: center;}
+	.serach_sort_wrap .radio_tit {display: inline-block;width: auto;height: auto;color: #fff;font-size: 14px;font-weight: bold;}
+	.serach_sort_wrap .radio_btn {display: flex; width: auto; height: auto; justify-content: flex-start; align-items: center; gap: 10px;}
+	.serach_sort_wrap .radio_btn input {position: absolute; width: 1px; height: 1px; overflow: hidden;}
+	.serach_sort_wrap .radio_btn .radio_design {display: flex; width: 20px; height: 20px; border: 1px solid #ccc; border-radius: 50%; position: relative;}
+	.serach_sort_wrap .radio_btn .radio_design::before {content: ''; display: block; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 50%; background-color: transparent; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); transition: all 0.35s ease;}
+	.serach_sort_wrap .radio_btn input:checked +.radio_design {border-color: #fff;}
+	.serach_sort_wrap .radio_btn input:checked +.radio_design::before {background-color: #3466e9;}
+
+
+	/* 검색 결과 */
+	.search_result {display: flex; width: 100%; max-width: 1500px; height: auto; position: relative; margin: 0 auto; gap: 40px;}
+
+	/* 검색어 사이트 바 */
+	.search_result_side_wrap {flex: 0 1 320px; display: flex; width: 100%; flex-direction: column; gap: 40px; position: sticky; right: 0; top: 0;}
+	.search_result_side_wrap .keywords_list {display: block; width: 100%; height: auto;}
+	.search_result_side_wrap .keywords_list h4 {display: block; width: 100%; height: auto; font-size: 18px; font-weight: bold; color: #fff; padding-bottom: 10px; padding-top:18px; margin-bottom: 10px; }
+	.search_result_side_wrap .keywords_list > ul {display: flex; width: 100%; height: auto; flex-direction: column; gap: 10px; counter-reset: list_count;}
+	.search_result_side_wrap .keywords_list > ul > li {display: block; width: 100%; height: auto; counter-increment: list_count; color: #ddd;}
+	.search_result_side_wrap .keywords_list > ul > li > a {flex: 1; display: flex; justify-content: flex-start; align-items: center; gap: 10px;}
+	.search_result_side_wrap .keywords_list > ul > li > a::before {content: counter(list_count); display: inline-flex; width: auto; min-width: 20px; height: auto; justify-content: center; align-items: center; background-color: #ccc; color: #000; border-radius: 2px; padding: 4px;}
+	.search_result_side_wrap .keywords_list > ul > li:nth-child(n+1):nth-child(-n+3) > a::before {background-color: #3466e9; color: #fff;}
+
+	.favorite_btn_wrap {display: flex; width: 100%; height: auto; margin-bottom: 10px;}
+	.favorite_btn_wrap .favorite_btn {flex: 1; display: flex; padding: 10px; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; color: #fff; background-color: transparent; border: 1px solid #2a2a2a; transition: all 0.35s ease;}
+	.favorite_btn_wrap .favorite_btn:hover {background-color: #a2a2a2;}
+	.favorite_btn_wrap .favorite_btn.current {background-color: #3466e9; border-color: #3466e9;}
+
+	/* 검색 결과 분류 */
+	.search_result_split_wrap {flex: 1 1 500px; display: block; height: auto; padding: 0 0 40px 0; margin: 0 auto;}
+	.search_result_split_wrap h3 {display: flex; width: 100%; height: auto; padding: 10px 0; margin-bottom: 20px; border-bottom: 1px solid #2a2a2a; font-size: 24px; font-weight: bold; color: #fff; align-items: center; gap: 20px;}
+	.search_result_split_wrap h3:not(:first-child) {margin-top: 40px;}
+	.search_result_split_wrap .result_count {display: inline-flex; width: auto; height: auto; font-size: 14px; font-weight: 400; color: #ccc;}
+	.search_result_split_wrap .result_count:after {content: '개'; display: inline; width: auto; height: auto; font-size: inherit; font-weight: inherit;}
+
+	.search_result_box {display: block; width: 100%; height: auto; margin-bottom: 20px;}
+	.search_result_box > ul {display: flex; width: 100%; height: auto; flex-direction: column; gap: 20px;}
+	.search_result_box > ul > li {display: flex; width: 100%; height: auto; justify-content: flex-start; align-items: center; gap: 10px; flex-wrap: wrap; color: #fff; margin-bottom: 15px;}
+	.search_result_box > ul > li > a { font-size: 18px; color: inherit; font-weight: inherit; }
+   .search_result_box > ul > li > a:hover { text-decoration: underline; }
+	.search_result_box > ul > li .cate {flex: 0 1 auto; display: inline-flex; width: auto; height: auto; padding: 4px 12px; font-size: 16px; font-weight: 500; color: #212121; background-color: #ccc; border-radius: 2px;}
+	.search_result_box > ul > li .tit {flex: 1; display: flex; font-size:18px; color: #fff; transition: all 0.35s ease;}
+	.search_result_box > ul > li .cont {flex: 1 1 100%; display: block; width: 100%; height: auto; font-size: 15px; font-weight: 400; color: #ccc; line-height: 24px;}
+	.search_result_box > ul > li .date {flex: 1 1 100%; display: block; width: 100%; height: auto; font-size: 14px; font-weight: 400; color: #ccc;}
+	/* 단일 라인에 같이 표시하고 싶은 아이템 */ 
+	.search_result_box > ul > li .inline_date {display: inline-block; height: auto; font-size: 14px; font-weight: 400; color: #ccc;}
+	.search_result_box > ul > li .null_data {flex: 1 1 100%; display: flex; width: 100%; height: auto; padding: 0; margin: 0; justify-content: flex-start; align-items: center; font-size: 16px; font-weight: 500; color: #ccc;}
+	.search_result_box > ul > li:hover .tit {text-decoration: underline;}
+
+	.more_list_btn {display:flex; width: auto; min-width: 120px; max-width: 100%; margin: 10px auto 0; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; background-color: #000; color: #fff; padding: 8px 12px; transition: all 0.35s ease;border: solid 1px #c2c2c2;
+    border-radius: 7px;}
+	/*.more_list_btn:hover,
+	.more_list_btn:focus {background-color: #c2c2c2;}*/
+
+	.linkb{color:#5886ff}
+	
+
+</style>

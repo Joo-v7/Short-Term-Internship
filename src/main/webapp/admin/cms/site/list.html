@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+
+<th:block layout:fragment="content">
+	<div class="row m0 h100">
+		<!-- // 그룹 -->
+		<div class="col s12 m12 l6 xl7 sideline pd_box bg_lightblue h100">
+			<div class="basic">
+				<div class="basic_top_searchbox left">
+					<div class="row">
+						<form id="frmList" method="get">
+						<!-- 검색창 -->
+							<div class="col s12 m8 l19 xl10 search_bar">
+								<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="사이트명 코드 검색">
+								
+								<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+ 									<i class="material-icons left" style="margin-bottom: 10px">search</i> 검색
+								</button>
+								<div class="title left">
+									전체 : <b id="dataTableTotCnt">0건</b>
+								</div>
+							</div>
+						</form>
+						<div class="right">
+							<div class="input-field col select_m0">
+								<button onclick="dataForm('')" class="waves-effect waves-light btn cyan accent-4 z-depth-0 left">
+									<i class="material-icons left">create</i>등록
+								</button>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+				<div class="table_type3">
+					<table id="dataTable" class="striped centered highlight" style="min-width: 1000px">
+						<colgroup>
+							<col width="100px">
+							<col width="140px">
+							<col width="140px">
+							<col width="120px">
+							<col width="120px">
+							<col width="80px">
+							<col width="180px">
+						</colgroup>
+						<thead>
+							<tr>
+								<th>사이트코드</th>
+								<th>사이트명</th>
+								<th>URL</th> 
+								<th>레이아웃</th>
+								<th>메인페이지</th>
+								<th>대표</th>
+								<th>비교</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div id="areaForm" class="col s12 m12 l6 xl5 pd_box bg_lightblue h100">
+		
+		</div>
+	</div>
+<script>
+
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+
+		dataForm('');
+	});
+	
+	// 목록
+	function dataList() {
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#dataTable').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : false,
+			paging : true,
+			pageLength : 10,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/cms/site/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ data : 'site', className : 'dt-body-center' },
+				{ data : 'siteNm', className : 'dt-body-left' },
+				{ data : 'domain', className : 'dt-body-left' },
+				{ data : 'layoutNm', className : 'dt-body-center' },
+				{ data : 'pageNm', className : 'dt-body-center' },
+				
+				
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						if(row.defaultSiteYn == 'y'){
+							return `<i class="material-icons green-text">check_circle</i>`;
+						}else{
+							return `<i class="material-icons red-text">remove_circle</i>`;
+						}
+					}
+				},
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `
+							<button onclick="dataForm(${row.siteIdx},this);" class="waves-effect waves-light btn teal accent-4 z-depth-0"><i class="material-icons left">edit</i>수정</button>
+							<button onclick="dataDelete(${row.siteIdx}, '사이트');" class="waves-effect waves-light btn red lighten-1 z-depth-0 "><i class="material-icons left">delete</i>삭제</button>
+						`;
+					}
+				},
+				//삭제
+				// {
+				// 	data : null, searchable : false, orderable : false, className : 'dt-body-center',
+				// 	render : function(data, type, row, meta) {
+				// 		return `<button onclick="dataDelete(${row.siteIdx}, '사이트');" class="waves-effect waves-light btn red lighten-1 z-depth-0 "><i class="material-icons left">delete</i>삭제</button>`;
+				// 	}
+				// },
+			],
+		});
+	}
+	
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count()+'건');
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+	// 삭제
+	function dataDelete(siteIdx, title) {
+		if (!siteIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : title + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url : gblAdminPath + '/cms/site/delete',
+						type : 'get',
+						data : {
+							'siteIdx' : siteIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							dataForm('');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+
+	// 추가,수정 폼
+	function dataForm(siteIdx,ts) {
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+		
+		$("#areaForm").load(gblAdminPath + "/cms/site/form?siteIdx=" + siteIdx);
+	}
+</script>
+</html>

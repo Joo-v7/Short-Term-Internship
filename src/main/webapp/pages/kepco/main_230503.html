@@ -1,0 +1,753 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>무제 문서</title>
+<link rel="stylesheet" href="/pages/kepco/css/basic.css"><!-- 공통css -->
+<link rel="stylesheet" href="/pages/kepco/css/layout_230503.css"><!-- 공통css -->
+<!-- <script  src="./script.js"></script>공통js -->
+
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css" rel="stylesheet" /><!-- 애니메이션 -->
+<script src="/assets/libs/gsap/gsap.min.js"></script><!-- 비주얼 -->
+
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">애니메이션 -->
+<script src="https://kit.fontawesome.com/0a93cf96a7.js" crossorigin="anonymous"></script><!-- 폰트어썸 -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><!-- aos 애니메이션 -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script><!-- aos 애니메이션 -->
+
+<script src="https://code.jquery.com/jquery-3.5.1.js" ></script><!-- fullpage 제이쿼리 링크 -->
+<script src="./js/fullpage.js"></script><!-- fullpage 제이쿼리 링크 -->
+<link rel="stylesheet" href="./css/fullpage.min.css"><!-- fullpage js css 링크 -->
+
+<script src="https://unpkg.com/swiper@6.3.2/swiper-bundle.min.js" ></script><!-- 비주얼 -->
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.0/gsap.min.js" ></script>비주얼 -->
+
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" /><!-- 4페이지 슬라이드 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" /><!-- 4페이지 슬라이드 -->
+</head>
+
+
+
+<body>
+<script> 
+	AOS.init(); // 자바스크립트로 init()을 해야 동작한다.
+</script>
+<header>
+	<nav>
+		<div id="gnb">
+			<div class="gnbw">
+				<div class="logo"><a href=""></div>
+				<ul>
+					<li><a href="">교육과정</a></li>
+					<li><a href="">교육원</a></li>
+					<li><a href="">커뮤니티</a></li>
+					<li><a href="">나의강의실</a></li>
+				</ul>
+				<div class="snsbox">
+					<a href="" class="yt"><span class="hidden">유튜브</span></a>
+					<a href="" class="fb"><span class="hidden">페이스북</span></a>
+					<a href="" class="ts"><span class="hidden">티스토리</span></a>
+				</div>
+			</div>
+		</div>
+	</nav>  
+</header>
+    
+<!----------------- 상단메뉴
+<div class="top-menu">
+	<div class="top-menuw">
+		<ul class="row">
+			<li class="cell"><a href="#">교육과정</a></li>
+			<li class="cell"><a href="#">교육원</a></li>
+			<li class="cell"><a href="#">커뮤니티</a></li>
+			<li class="cell"><a href="#">나의강의실</a></li>
+		</ul>
+		<ul class="snsbox">
+			<li class="fb"><a href=""><span class="hidden">유튜브</span></a></li>
+			<li class="yt"><a href=""><span class="hidden">페이스북</span></a></li>
+			<li class="ts"><a href=""><span class="hidden">티스토리</span></a></li>
+		</ul>
+	</div>
+</div>
+----------------->
+
+
+<div class="fullpage custom">
+  <div class="section section1"><!------------------- 1페이지 ------------------->
+	<div class="vsbox">
+		<div class="vstxt">
+			<h6 data-aos="fade-up" data-aos-duration="3000">
+				VR 기술을<br />
+				활용한 가상훈련시스템<br />
+				<span>배전 분야 초실감 안전교육</span>
+			</h6>
+			<button>교육과정 바로가기</button>
+			<p>
+			전력설비 작업의 배전설비 및 유지 보수에 필요한 기능기술을<br />
+			반복적으로 훈련하여 철저한 품질관리를 기하면서 양질의 전력을 공급할 수 있도록<br />
+			교육하는 초실감 안전 교육 프로그램
+			</p>
+		</div>
+		<div class="vsimg">
+			<iframe id="inlineFrameExample" onclick='hello()'
+			title="Inline Frame Example"
+			width="100%"
+			height="100%"
+			src="http://kepco-lms.uokdc.net:12080/">
+			</iframe>
+		</div>
+	</div>
+  </div><!------------------- 1페이지 ------------------->
+
+
+  <div class="section section2"><!------------------- 2페이지 ------------------->
+  	<div class="flexbox">
+		<div class="mcbox hg1">
+			<div class="mctit3">
+				<h6>분야별 교육과정</h6>
+				<p>모션 캡쳐 및 VR 시스템을 활용한 분야별 초실감 안전훈련과정을 소개합니다<br />아래 배전 · ICT · 토건 · 송변전의 분야별 교육과정을 클릭하여 자세한 내용을 확인해 보세요</p>
+
+				<div id="circle" class="circle2">
+				  <svg width="210px" height="210px" viewBox="0 0 200 200">
+					<defs>
+					  <path d="M 20, 100 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0
+					" id="circlePath" />
+					</defs>
+					<text id="text">
+					  <textPath xlink:href="#circlePath" startOffset="0%">
+						 korea electric power corporation · korea electric power corporation ·
+					  </textPath>
+					</text>
+				  </svg>
+				</div>
+				<div id="circle">
+				  <svg width="266px" height="266px" viewBox="0 0 200 200">
+					<defs>
+					  <path d="M 20, 100 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0
+					" id="circlePath" />
+					</defs>
+					<text id="text">
+					  <textPath xlink:href="#circlePath" startOffset="0%">
+						 korea electric power corporation · korea electric power corporation ·
+					  </textPath>
+					</text>
+				  </svg>
+				</div>
+			</div>
+
+			<div id="hero-slides">
+			  <div id="slides-cont">
+				<div class="button" id="next"></div>
+				<div class="button" id="prev"></div>
+				<div id="slides">
+				  <div class="slide edbg1">
+					<div class="body">
+						<div class="number">01</div>
+						<div class="headline">배전 안전교육</div>
+						<div class="location">배전에 관한 폭넓은 이해와 직무 수행능력 향상을 위한<br />배전 분야 초실감 안전교육과정 안내</div>
+						<a href="" target="_blank"><div class="link">교육과정 바로가기</div></a>
+					</div>
+				  </div>
+				  <div class="slide edbg2">
+					<div class="body">
+						<div class="number">02</div>
+						<div class="headline">ICT 안전교육</div>
+						<div class="location">ICT에 관한 체계적인 교육과 직무 수행능력 향상을 위한<br />ICT 분야 초실감 안전교육과정 안내</div>
+						<a href="" target="_blank"><div class="link">교육과정 바로가기</div></a>
+					</div>
+				  </div>
+				  <div class="slide edbg3">
+					<div class="body">
+						<div class="number">03</div>
+						<div class="headline">토건 안전교육</div>
+						<div class="location">토건에 관한 폭넓은 이해와 직무 수행능력 향상을 위한<br />토건 분야 초실감 안전교육과정 안내</div>
+						<a href="" target="_blank"><div class="link">교육과정 바로가기</div></a>
+					</div>
+				  </div>
+				  <div class="slide edbg1">
+					<div class="body">
+						<div class="number">01</div>
+						<div class="headline">배전 안전교육</div>
+						<div class="location">배전에 관한 폭넓은 이해와 직무 수행능력 향상을 위한<br />배전 분야 초실감 안전교육과정 안내</div>
+						<a href="" target="_blank"><div class="link">교육과정 바로가기</div></a>
+					</div>
+				  </div>
+				  <div class="slide edbg2">
+					<div class="body">
+						<div class="number">02</div>
+						<div class="headline">ICT 안전교육</div>
+						<div class="location">ICT에 관한 체계적인 교육과 직무 수행능력 향상을 위한<br />ICT 분야 초실감 안전교육과정 안내</div>
+						<a href="" target="_blank"><div class="link">교육과정 바로가기</div></a>
+					</div>
+				  </div>
+				  <div class="slide edbg3">
+					<div class="body">
+						<div class="number">03</div>
+						<div class="headline">토건 안전교육</div>
+						<div class="location">토건에 관한 폭넓은 이해와 직무 수행능력 향상을 위한<br />토건 분야 초실감 안전교육과정 안내</div>
+						<a href="" target="_blank"><div class="link">교육과정 바로가기</div></a>
+					</div>
+				  </div>
+				</div>
+				<div id="next-catch"></div>
+				<div id="prev-catch"></div>
+			  </div>
+			</div>
+			<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js'></script>
+			<script  src="./js/script2.js"></script>				
+		</div>
+	</div>
+	<p class="two_txt">korea electric power corporation</p>
+  </div><!------------------- 2페이지 ------------------->
+
+
+  <div class="section section3"><!------------------- 3페이지 ------------------->
+	<div class="mcbox">
+		<div class="mctit">
+			<div class="mctit2">
+				<h6 class="color_blue">reservation</h6>
+				<h5 class="color_white">안전교육 예약안내</h5>
+			</div>
+			<p>초실감 안전교육 훈련장 예약정보에 대해 안내해 드립니다<br />우측 버튼을 클릭하여 예약 날짜 및 장소를 지정하여 안전교육을 신청해 보세요</p>
+			<a href="" class="mcbtn"><span>예약안내 바로가기<i class="fas fa-arrow-right"></i></span></a>
+		</div>
+
+		<div class="mcdw">
+			<div class="mcd">
+			  <div class="calendar">
+				<div class="calendar_header">
+				  <h2>2023. 03</h2>
+				  <a class="btn-prev fontawesome-angle-left" href="#"><span></span></a>
+				  <a class="btn-next fontawesome-angle-right" href="#"><span></span></a>
+				</div>
+				<table>
+				  <thead>
+					<tr>
+					  <td class="sun">일</td>
+					  <td>월</td>
+					  <td>화</td>
+					  <td>수</td>
+					  <td>목</td>
+					  <td>금</td>
+					  <td class="sat">토</td>
+					</tr>
+				  </thead>
+				  <tbody>
+					<tr>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td>1</td>
+					</tr>
+					<tr>
+					  <td>2</td>
+					  <td>3</td>
+					  <td>4</td>
+					  <td>5</td>
+					  <td>6</td>
+					  <td>7</td>
+					  <td>8</td>
+					</tr>
+					<tr>
+					  <td>9</td>
+					  <td class="event">10</td>
+					  <td>11</td>
+					  <td>12</td>
+					  <td>13</td>
+					  <td>14</td>
+					  <td>15</td>
+					</tr>
+					<tr>
+					  <td>16</td>
+					  <td>17</td>
+					  <td>18</td>
+					  <td>19</td>
+					  <td>20</td>
+					  <td class="event">21</td>
+					  <td>22</td>
+					</tr>
+					<tr>
+					  <td class="event">23</td>
+					  <td>24</td>
+					  <td>25</td>
+					  <td>26</td>
+					  <td>27</td>
+					  <td>28</td>
+					  <td>29</td>
+					</tr>
+					<tr>
+					  <td>30</td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					  <td></td>
+					</tr>
+				  </tbody>
+				</table>
+			  </div> <!-- end calendar -->
+			</div>
+			<div class="mcd_txtw">
+				<div class="mcd_txt">
+					<a href="">
+						<div class="mcd_date">
+							<p>23</p>	
+							<span>2023.03</span>
+						</div>
+						<div class="mcd_info">
+							<span class="permission">승인중</span>
+							<p>경북지역본부 박○현 등 10명</p>
+							<dl>
+								<dt>예약장소</dt>
+								<dd>인재개발원</dd>
+								<dt>예약인원</dt>
+								<dd>10명</dd>
+								<dt>예약날짜</dt>
+								<dd>2023.03.23 13:00 ~ 18:00</dd>
+							</dl>
+						</div>
+						<button><i class="fas fa-angle-right"></i></button>
+					</a>
+				</div>
+
+				<div class="mcd_txt">
+					<a href="">
+						<div class="mcd_date">
+							<p>23</p>	
+							<span>2023.03</span>
+						</div>
+						<div class="mcd_info">
+							<span class="complete">예약완료</span>
+							<p>경북지역본부 박○현 등 10명</p>
+							<dl>
+								<dt>예약장소</dt>
+								<dd>인재개발원</dd>
+								<dt>예약인원</dt>
+								<dd>10명</dd>
+								<dt>예약날짜</dt>
+								<dd>2023.03.23 13:00 ~ 18:00</dd>
+							</dl>
+						</div>
+						<button><i class="fas fa-angle-right"></i></button>
+					</a>
+				</div>
+
+				<div class="mcd_txt">
+					<a href="">
+						<div class="mcd_date">
+							<p>23</p>	
+							<span>2023.03</span>
+						</div>
+						<div class="mcd_info">
+							<span class="complete">예약완료</span>
+							<p>경북지역본부 박○현 등 10명</p>
+							<dl>
+								<dt>예약장소</dt>
+								<dd>인재개발원</dd>
+								<dt>예약인원</dt>
+								<dd>10명</dd>
+								<dt>예약날짜</dt>
+								<dd>2023.03.23 13:00 ~ 18:00</dd>
+							</dl>
+						</div>
+						<button><i class="fas fa-angle-right"></i></button>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+  </div><!------------------- 3페이지 ------------------->
+
+
+  <div class="section section4"><!------------------- 4페이지 ------------------->
+  	<div class="mcbox mt-60">
+		<div class="mctit">
+			<div class="mctit2">
+				<h6>NOTICE</h6>
+				<h5>공지사항 안내</h5>
+			</div>
+			<a href="" class="mcbtn mcbtn2"><span>공지사항 바로가기<i class="fas fa-arrow-right" aria-hidden="true"></i></span></a>
+		</div>
+		<!-- Swiper -->
+		<div class="notice_slide">
+		<div class="swiper mySwiper">
+			<div class="swiper-wrapper">
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+				<div class="swiper-slide">
+					<a href="">
+						<div class="tit">N</div>
+						<div class="category">공지사항</div>
+						<div class="subject">개인정보처리방침, 영상정보처리기기 운개인정보처리방침, 영상정보처리기기 운</div>
+						<div class="content">
+							정부 정책 및 보안기술의 변경사항을 반영한 새로운 버전의
+							개인정보처리방침을 9월 7일부터 적용할 예정이오니 서비
+							스 이용에 참고하시기 바랍니다. 세부내용스 이용에 참고하시기 바랍니다. 세부내용
+						</div>
+						<div class="date">2023.03.28</div>
+					</a>				
+				</div>
+			</div>
+			<div class="swiper-pagination"></div>
+		</div>
+		</div>
+		<!-- Swiper JS -->
+		<script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+
+		<!-- Initialize Swiper -->
+		<script>
+		var swiper = new Swiper(".mySwiper", {
+		  slidesPerView: 3,
+		  spaceBetween: 30,
+		  pagination: {
+			el: ".swiper-pagination",
+			clickable: true,
+		  },
+		});
+		</script>
+  	</div> 
+  </div><!------------------- 4페이지 ------------------->
+
+
+
+  <div class="section section5 fp-auto-height"><!------------------- 5페이지 ------------------->
+    <div id="footer">
+        <div id="footer_wrap">
+            <div class="address_box">
+                <div class="footer_info">
+                    <ul>
+                        <li><a href="/board/?board=personal_info&site=cnc&mn=145&sc_cate=63"><span>개인정보처리방침</span></a></li>
+                        <li><a href="/board/?board=personal_info&site=cnc&mn=153&sc_cate=70"><span>CCTV운영관리방침</span></a></li>
+                        <li><a href="/page/?site=cnc&mn=66"><span>이메일무단수집거부</span></a></li>
+                        <!-- <li><a href="/page/?site=cnc&mn=62"><span>이용약관</span></a></li> -->
+                        <li><a href="/page/?site=cnc&mn=92"><span>찾아오시는길</span></a></li>
+                    </ul>
+                </div>
+                <div class="footer_address">
+                    <address>61453. 광주광역시 동구 조선대2길 70 (서석동 280) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TEL. 062-231-7000 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Fax. 062-231-7019</address>
+                </div>
+                <p class="copy">Copyright © Chosun Nursing College All Rights Reserved </p>
+            </div>
+
+
+
+            <div class="sitelink_sbox linkfamily">
+                <button type="button" >관련사이트</button>
+                <ul style="">
+                    <!-- <li><a href="http://www.academyinfo.go.kr" title="새창" target="_blank">대학정보공시</a></li> -->
+                    <li><a href="http://www.kosaf.go.kr " title="새창" target="_blank">한국장학재단</a></li>
+                    <!-- <li><a href="http://www.moe.go.kr/public/educationReform/" title="새창" target="_blank">교육개혁 6대과제</a></li> -->
+                    <li><a href="http://www2.chosun.ac.kr/mbs/chosun/" title="새창" target="_blank">조선대학교</a></li>
+                    <li><a href="http://www.kcce.or.kr/web/main/index.do" title="새창" target="_blank">한국전문대학교육협의회</a></li>
+                    <!-- <li><a href="http://www.academyinfo.kr/" title="새창" target="_blank">대학알리미</a></li> -->
+                    <li><a href="http://kabone.or.kr/" title="새창" target="_blank">한국간호교육평가원</a></li>
+                    <li><a href="http://www.kave.or.kr/" title="새창" target="_blank">고등직업교육평가인증원</a></li>
+                    <li><a href="http://hosp.chosun.ac.kr/" title="새창" target="_blank">조선대학교병원</a></li>
+                    <!-- <li><a href="http://www2.chosun.ac.kr/mbs/chosun/jsp/history/history.jsp?hisIdx=47273&id=chosun_070901000000" title="새창" target="_blank">학교법인 조선대학교 </a></li> -->
+                </ul>
+            </div>
+			<script>
+			function show_family(){
+	$(".linkfamily_on").slideToggle();
+	return false;
+}
+			</script>
+
+
+
+
+			<div class="select_mate" data-mate-select="active" >
+				<select name="" onchange="" onclick="return false;" id="">
+					<option value=""  >관련사이트1</option>
+					<option value="1"><a href="">관련사이트2</a></option>
+					<option value="2" ><a href="">관련사이트3</a></option>
+					<option value="3"><a href="">관련사이트4</a></option>
+				</select>
+				<p class="selecionado_opcion"  onclick="open_select(this)" ></p><span onclick="open_select(this)" class="icon_select_mate" ><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+				<path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"/>
+				<path d="M0-.75h24v24H0z" fill="none"/>
+				</svg></span>
+				<div class="cont_list_select_mate">
+				<ul class="cont_select_int">  </ul> 
+				</div>
+			</div>
+
+
+			<script>
+			window.onload = function(){
+			  crear_select();
+			}
+
+			function isMobileDevice() {
+				return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+			};
+
+			 
+			var li = new Array();
+			function crear_select(){
+			var div_cont_select = document.querySelectorAll("[data-mate-select='active']");
+			var select_ = '';
+			for (var e = 0; e < div_cont_select.length; e++) {
+			div_cont_select[e].setAttribute('data-indx-select',e);
+			div_cont_select[e].setAttribute('data-selec-open','false');
+			var ul_cont = document.querySelectorAll("[data-indx-select='"+e+"'] > .cont_list_select_mate > ul");
+			 select_ = document.querySelectorAll("[data-indx-select='"+e+"'] >select")[0];
+			 if (isMobileDevice()) { 
+			select_.addEventListener('change', function () {
+			 _select_option(select_.selectedIndex,e);
+			});
+			 }
+			var select_optiones = select_.options;
+			document.querySelectorAll("[data-indx-select='"+e+"']  > .selecionado_opcion ")[0].setAttribute('data-n-select',e);
+			document.querySelectorAll("[data-indx-select='"+e+"']  > .icon_select_mate ")[0].setAttribute('data-n-select',e);
+			for (var i = 0; i < select_optiones.length; i++) {
+			li[i] = document.createElement('li');
+			if (select_optiones[i].selected == true || select_.value == select_optiones[i].innerHTML ) {
+			li[i].className = 'active';
+			document.querySelector("[data-indx-select='"+e+"']  > .selecionado_opcion ").innerHTML = select_optiones[i].innerHTML;
+			};
+			li[i].setAttribute('data-index',i);
+			li[i].setAttribute('data-selec-index',e);
+			// funcion click al selecionar 
+			li[i].addEventListener( 'click', function(){  _select_option(this.getAttribute('data-index'),this.getAttribute('data-selec-index')); });
+
+			li[i].innerHTML = select_optiones[i].innerHTML;
+			ul_cont[0].appendChild(li[i]);
+
+				}; // Fin For select_optiones
+			  }; // fin for divs_cont_select
+			} // Fin Function 
+
+
+
+			var cont_slc = 0;
+			function open_select(idx){
+			var idx1 =  idx.getAttribute('data-n-select');
+			  var ul_cont_li = document.querySelectorAll("[data-indx-select='"+idx1+"'] .cont_select_int > li");
+			var hg = 0;
+			var slect_open = document.querySelectorAll("[data-indx-select='"+idx1+"']")[0].getAttribute('data-selec-open');
+			var slect_element_open = document.querySelectorAll("[data-indx-select='"+idx1+"'] select")[0];
+			 if (isMobileDevice()) { 
+			  if (window.document.createEvent) { // All
+			  var evt = window.document.createEvent("MouseEvents");
+			  evt.initMouseEvent("mousedown", false, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+				slect_element_open.dispatchEvent(evt);
+			} else if (slect_element_open.fireEvent) { // IE
+			  slect_element_open.fireEvent("onmousedown");
+			}else {
+			  slect_element_open.click();
+			}
+			}else {
+
+			  
+			  for (var i = 0; i < ul_cont_li.length; i++) {
+			hg += ul_cont_li[i].offsetHeight;
+			}; 
+			 if (slect_open == 'false') {  
+			 document.querySelectorAll("[data-indx-select='"+idx1+"']")[0].setAttribute('data-selec-open','true');
+			 document.querySelectorAll("[data-indx-select='"+idx1+"'] > .cont_list_select_mate > ul")[0].style.height = hg+"px";
+			 document.querySelectorAll("[data-indx-select='"+idx1+"'] > .icon_select_mate")[0].style.transform = 'rotate(180deg)';
+			}else{
+			 document.querySelectorAll("[data-indx-select='"+idx1+"']")[0].setAttribute('data-selec-open','false');
+			 document.querySelectorAll("[data-indx-select='"+idx1+"'] > .icon_select_mate")[0].style.transform = 'rotate(0deg)';
+			 document.querySelectorAll("[data-indx-select='"+idx1+"'] > .cont_list_select_mate > ul")[0].style.height = "0px";
+			 }
+			}
+
+			} // fin function open_select
+
+			function salir_select(indx){
+			var select_ = document.querySelectorAll("[data-indx-select='"+indx+"'] > select")[0];
+			 document.querySelectorAll("[data-indx-select='"+indx+"'] > .cont_list_select_mate > ul")[0].style.height = "0px";
+			document.querySelector("[data-indx-select='"+indx+"'] > .icon_select_mate").style.transform = 'rotate(0deg)';
+			 document.querySelectorAll("[data-indx-select='"+indx+"']")[0].setAttribute('data-selec-open','false');
+			}
+
+
+			function _select_option(indx,selc){
+			 if (isMobileDevice()) { 
+			selc = selc -1;
+			}
+				var select_ = document.querySelectorAll("[data-indx-select='"+selc+"'] > select")[0];
+
+			  var li_s = document.querySelectorAll("[data-indx-select='"+selc+"'] .cont_select_int > li");
+			  var p_act = document.querySelectorAll("[data-indx-select='"+selc+"'] > .selecionado_opcion")[0].innerHTML = li_s[indx].innerHTML;
+			var select_optiones = document.querySelectorAll("[data-indx-select='"+selc+"'] > select > option");
+			for (var i = 0; i < li_s.length; i++) {
+			if (li_s[i].className == 'active') {
+			li_s[i].className = '';
+			};
+			li_s[indx].className = 'active';
+
+			};
+			select_optiones[indx].selected = true;
+			  select_.selectedIndex = indx;
+			  select_.onchange();
+			  salir_select(selc); 
+			}
+			</script>
+
+
+        </div>
+    </div>
+
+	</div><!------------------- 5페이지 ------------------->
+</div>
+
+<script>
+$(document).ready(function() {
+	$(".fullpage").fullpage({ //id로 불러오든 class로 불러도은 상관없다
+    navigation : true, // 섹션 네비게이션
+    navigationPosition: 'right', //섹션 네비게이션 위치 설정 (right, left)
+    
+    navigationTooltips :[ //섹션 네비게이션에 마우스를 올리면 설명 나옴
+      "섹션 1",
+      "섹션 2",
+      "섹션 3",
+      "섹션 4",
+      "섹션 5",
+    ],
+    
+    controlArrows : false,
+    slidesNavigation : true,
+    slidesNavPosition : 'top', //top or bottom
+		onLeave: function(origin, destination, direction){
+			if(destination.index == 0){
+				$('#gnb .gnbw .logo a').css('background-color','#DF002A');
+				$('#gnb .gnbw .logo a').css('background-image','url(/pages/kepco/img/logo.svg)');
+				$('#gnb .gnbw .logo a').css('width','165px');
+				$('#gnb .gnbw .logo a').css('height','200px');
+
+				$('#gnb ul li a').css('color','#fff');
+				$('#gnb .snsbox a.yt').css('background','url("./img/ico_yt.svg") center no-repeat');
+				$('#gnb .snsbox a.fb').css('background','url("./img/ico_fb.svg") center no-repeat');
+				$('#gnb .snsbox a.ts').css('background','url("./img/ico_ts.svg") center no-repeat');
+
+
+			}else{
+				$('#gnb .gnbw .logo a').css('background-color','transparent');
+				$('#gnb .gnbw .logo a').css('background-image','url(/pages/kepco/img/logo-on.svg)');
+				$('#gnb .gnbw .logo a').css('width','102px');
+				$('#gnb .gnbw .logo a').css('height','165px');
+
+				$('#gnb ul li a').css('color','#000');
+				$('#gnb .snsbox a.yt').css('background','url("./img/ico_yt_on.svg") center no-repeat');
+				$('#gnb .snsbox a.fb').css('background','url("./img/ico_fb_on.svg") center no-repeat');
+				$('#gnb .snsbox a.ts').css('background','url("./img/ico_ts_on.svg") center no-repeat');
+			}
+		}
+    
+	});
+
+});	
+</script>	
+
+
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<script>
+	$(function() {
+		var detailIdx = $("input[name='detailIdx']").val();
+		studentList(detailIdx);
+	});
+	
+	// 목록
+	function studentList(detailIdx) {
+		$('#dataTable').DataTable({
+			autoWidth: false,
+			lengthChange: false,
+			searching: false,
+			bDestroy: true,
+			bInfo: false,
+			responsive: true,
+			processing: true,
+			ordering: true,
+			select: true,
+			paging: false,
+			scrollCollapse: false,
+			scrollY: "174px",
+			scrollX: "auto",
+			fixedHeader: {
+				header: false,
+				footer: false,
+			},
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/assessment/studentList?detailIdx='+detailIdx,
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			initComplete : dataTableInit1,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'memberId', className : 'dt-body-center' },
+				{ data : 'memberNm', className : 'dt-body-center' },
+				{ data : 'team', className : 'dt-body-center' },
+				{
+					data: null, searchable: false, orderable: true, className: 'dt-body-center',
+					render: function (data, type, row, meta) {
+						var workRole = row.workRole;
+						if (row.workRole == '1') {
+							workRole = "주작업자";
+						} else if (row.workRole == '2') {
+							workRole = "보조작업자";
+						} else if (row.workRole == '3') {
+							workRole = "지상작업자";
+						} else if (row.workRole == '4') {
+							workRole = "작업책임자";
+						}
+						return workRole;
+					}
+				},
+				{ data : 'startTime', className : 'dt-body-center' },
+				{ data : 'endTime', searchable : false, className : 'dt-body-center',},
+			],
+		    createdRow: function (row, data, dataIndex) {
+		        // 각 행에 대한 이벤트를 여기서 추가
+		        $(row).on('click', function () {
+		            // 클릭 이벤트에 대한 동작을 여기에 추가
+		            assessmentView(data.playIdx);
+		        });
+		    },
+		});
+	}
+	
+	// 목록
+	function assessmentView(playIdx) {
+		$('#dataTable2').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : true,
+			paging : false,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/assessment/assessmentView?playIdx='+playIdx,
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			initComplete : dataTableInit2,
+			columns : [
+				{ data : 'moduleCnt', className : 'dt-body-center' }, //수행 모듈 수
+				{ data : 'taskCnt', className : 'dt-body-center',}, //진행 작업 수
+				{ data : 'accidentCnt', className : 'dt-body-center',}, //사고 발생 수
+				{ data : 'elecShockCnt', className : 'dt-body-center',}, //감전 횟수
+				{ data : 'stuckCnt', className : 'dt-body-center',}, //끼임 횟수
+				{ data : 'etcCnt', className : 'dt-body-center',}, //기타 사고 횟수
+// 				{ data : 'successRate', className : 'dt-body-center',}, // 작업 성공률
+				{ data : 'evScore', className : 'dt-body-center',}, //사후 평가 점수 임시 80
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return `A`;} }, //종합 등급 임시 A
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete1
+	function dataTableInit1(settings, json) {
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		if (!$('#dataTable').DataTable().data().count() > 0) {
+			assessmentView(); //수행내역이 없으면 빈 테이블로 초기화
+		}
+		// 마지막 행의 데이터 가져오기
+	    var lastRowData = $('#dataTable').DataTable().row(':first').data();
+	    if (lastRowData) {
+	        // 마지막 행의 playIdx 가져오기
+	        var playIdx = lastRowData.playIdx;
+	        // 마지막 행의 modulePlayIdx를 사용하여 함수 실행
+	        assessmentView(playIdx);
+		}
+		
+	}
+	
+	// 데이터테이블 initComplete2
+	function dataTableInit2(settings, json) {
+		if ($('#dataTable2').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+
+</script>
+
+<div class="row">
+	<input type="hidden" name="detailIdx" th:value="${detailVo?.detailIdx}"/>
+	<h2 class="h2_butt mb10">훈련자 목록</h2>
+	<div class="table_type3">
+		<table id="dataTable" class="striped centered highlight" style="min-width:1000px">
+			<colgroup>
+				<col width="60px">
+				<col width="140px">
+				<col width="140px">
+				<col width="50px">
+				<col width="auto">
+				<col width="200px">
+				<col width="200px">
+			</colgroup>
+			<thead>
+				<tr>
+					<th>NO</th>
+					<th>아이디</th>
+					<th>성명</th>
+					<th>팀</th>
+					<th>역할</th>
+					<th>훈련 시작시간</th>
+					<th>훈련 종료시간</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+	<h2 class="h2_butt mt20 mb10">종합 점수</h2>
+	<div class="right_table_box"> <!--우측 테이블 박스-->
+		<div class="table_type3">
+			<table id="dataTable2" class="striped centered highlight" style="min-wdith: 1200px"> <!--하단 우측 테이블-->
+				<colgroup>
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+					<col width="120px">
+<!-- 					<col width="120px"> -->
+					<col width="120px">
+					<col width="auto">
+				</colgroup>
+				<thead>
+					<tr>
+						<th>수행 모듈 수</th>
+						<th>진행 작업 수</th>
+						<th>사고 발생 수</th>
+						<th>감전 횟수</th>
+						<th>끼임 횟수</th>
+						<th>기타 사고 횟수</th>
+<!-- 						<th>작업 성공률</th> -->
+						<th>사후평가 점수</th>
+						<th>종합 등급</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+	</div><!--우측 테이블 박스-->
+</div>
+	

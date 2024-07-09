@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.setting.SettingMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">
+					AND delete_yn = #{scDeleteYn}
+				</when>
+				<otherwise>
+					AND delete_yn = 'n'
+				</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND (
+					setting_key LIKE CONCAT ('%',#{scWord},'%') 
+					OR setting_value LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(settingIdx)">
+				AND setting_idx = #{settingIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.setting.SettingVo">
+		SELECT
+			*
+		FROM cms_setting
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.setting.SettingVo">
+		SELECT
+			*
+		FROM cms_setting
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- settingKey 중복시 미등록, 중복 and 삭제시 등록 -->
+	<insert id="insert" parameterType="kepco.cms.setting.SettingVo" useGeneratedKeys="true" keyProperty="settingIdx" keyColumn="setting_idx">
+		INSERT INTO cms_setting
+		(
+			setting_idx, setting_key, setting_value, setting_type, setting_comment, insert_idx, insert_ip, insert_date
+		)
+		SELECT 
+			#{settingIdx}, 
+			#{settingKey}, 
+			#{settingValue}, 
+			#{settingType}, 
+			#{settingComment}, 
+			#{insertIdx}, 
+			#{insertIp}, 
+			CURRENT_TIMESTAMP
+      	FROM DUAL
+		WHERE NOT EXISTS
+		(SELECT setting_key, delete_yn FROM cms_setting where setting_key=#{settingKey} and delete_yn='n') LIMIT 1
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="kepco.cms.setting.SettingVo">
+		UPDATE cms_setting
+		<set>
+			setting_key = #{settingKey}, 
+			setting_value = #{settingValue}, 
+			setting_comment = #{settingComment},
+			update_idx = #{updateIdx}, 
+			update_ip = #{updateIp}, 
+			update_date = CURRENT_TIMESTAMP,
+			setting_type = #{settingType}
+		</set>
+		WHERE
+			setting_idx = #{settingIdx}
+	</update>
+	
+	<!-- 삭제 -->
+	<update id="delete" parameterType="map">
+		UPDATE cms_setting
+		<set>
+			delete_idx = #{deleteIdx}, 
+			delete_ip = #{deleteIp}, 
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND setting_idx = #{settingIdx}
+	</update>
+	
+	<!-- 문자열 보안금지 검사 -->
+	<select id="secureVaildate" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM cms_setting
+		WHERE setting_type = '보안'
+		AND setting_value LIKE CONCAT ('%', #{value},'%')
+	</select>
+	
+</mapper>

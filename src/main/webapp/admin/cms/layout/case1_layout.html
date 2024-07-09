@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+	<link href="//getbootstrap.com/docs/5.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+	
+	<!-- header -->
+	<header class="container-fluid border border-primary">
+		<div class="text-center">헤더 영역1</div>
+		
+		<div class="container p-5">
+			<div class="d-grid gap-3">
+				<div class="p-2 bg-light border">
+					컨트롤러에서 넘긴 모델은 기본적으로 공유한다. ${myLayoutName} : [[${myLayoutName}]]
+				</div>
+			</div>
+		</div>
+	</header>
+	<!-- //header -->
+	
+	<div layout:fragment="content"></div>
+	
+	<!-- footer -->
+	<footer class="container-fluid border border-primary">
+		<div class="text-center">푸터 영역1</div>
+	</footer>
+	<!-- //footer -->
+</body>
+
+</html>

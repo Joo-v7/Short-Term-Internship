@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.sec.roleHierarchy.RoleHierarchyMapper">
+	
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.sec.roleHierarchy.RoleHierarchyVo">
+		SELECT
+			role_cd, parent_role_cd
+		FROM cms_sec_role
+		WHERE delete_yn = 'n' AND use_yn = 'y'
+	</select>
+	
+</mapper>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<th:block layout:fragment="content">
+<script>
+$(function () {
+	layout_log_onSubmit();
+	// 검색
+	$("#search_layout_log_submit").click(function () {
+	  setTimeout(function () {
+		var formData = $("#form_search_layout_log").serialize();
+		layout_log_list(formData);
+	  }, 40);
+
+	  return false;
+	});
+});
+
+function layout_log_onSubmit() {
+	var param = $("#form_search_layout_log").serialize();
+	layout_log_list(param);
+  }
+
+function layout_log_list(formData){
+	
+	$('#layout_log_table').DataTable({
+	
+		ajax: {
+			type : 'get',
+			url : gblAdminPath + '/cms/layout/log/listJson?type=layout_log_data_list&'+formData,
+			dataType: "json",
+			dataSrc : "data.list",
+		},
+		select: {
+			'style': 'multi'
+		},
+		'columnDefs': [
+			{
+			  'width': '40px',
+			  'searchable': false,
+			  'orderable': true,
+			  'targets': 0,
+			  render: function(data, type, row, meta) {
+				return meta.row + meta.settings._iDisplayStart + 1;
+			  },
+			}],
+		order: [0, 'desc'],
+		initComplete: dataTableInit,
+		columns: [
+			{data: "logIdx", className : 'dt-body-center'},//번호
+			{data: "site", className : 'dt-body-center'},//그룹아이디
+			{data: "layoutNm", className : 'dt-body-center'},//레이아웃명
+			{data: "layoutCd", className : 'dt-body-center'},//레이아웃코드
+			{data: "layoutPath", className : 'dt-body-left'},//경로
+			{data: "updateDate", className : 'dt-body-center', render: $.fn.dataTable.render.datetime()},//수정일
+// 			TODO: 미리보기, 복원기능
+// 			{data: "layout_log_idx", className : 'dt-body-center',
+// 				render: function(data, type, full, meta) {
+// 					if(full.layout_type == 'sub' || full.layout_type == 'main'){
+// 						return '<button onclick="layout_preview('+full.layout_idx+','+full.url+');" class="waves-effect waves-light btn black accent-4 z-depth-0 ">미리보기</button>';
+// 					}else{
+// 						return '';
+// 					}
+// 				},
+// 			},//복원
+// 			{data: 'pl_idx', className:'center',
+// 				render: function(data, type, full, meta) {
+// 					return '<button onclick="layout_log_save('+full.pl_idx+');" class="waves-effect waves-light btn black accent-4 z-depth-0 "><i class="material-icons left" style="margin-bottom: 10px">file_copy</i>복원</button>';
+// 				},
+// 			},//복원
+		]
+	});
+}
+
+
+function layout_log_save(log_idx){
+	$.confirm({
+	  theme: 'supervan', // 'material', 'bootstrap'
+	  title: '복원',
+	  content: '현재 데이터가 사라집니다. <br /> 복원 하시겠습니까?',
+	  buttons: {
+		확인: function() {
+		  $.ajax({
+			 url: gblAdminPath + '/cms/layout/log/?type=layout_log_save',
+			type: 'POST',
+			data: {'log_idx': log_idx},
+			dataType: 'json',
+		  }).done(function (d) {
+			toast(d.message);
+			if (d.status == 1) {
+			  layout_log_table.ajax.reload(null, false);
+			}
+
+		  }).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		  });
+		},
+		취소: function() {}
+	  }
+	});	
+}
+
+// 데이터테이블 initComplete
+function dataTableInit(settings, json) {
+	$('#search_layout_log_total').text( $('#layout_log_table').DataTable().data().count()+'건');
+	if ($('#dataTable').DataTable().data().count() == 10000) {
+		toast('데이터 조회를 10,000건으로 제한합니다.');
+	}
+}
+</script>
+<div class="top pop-title">
+	<div class="row">
+		<div style="float:left; margin-top: 6px; margin-left:5px;">
+			<a href="#" onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light" name="action">
+				<i class="material-icons">clear</i>
+			</a>
+			<h4>페이지 로그기록</h4>
+		</div>
+	</div>
+</div>
+
+<div class="basic pd_box">
+	<div class="row">
+		<div class="basic_top_searchbox left">
+			<div class="col s12">
+				<form name="form_search_layout_log" id="form_search_layout_log" method="get" enctype="multipart/form-data">
+					<div class="search_bar" style="margin-left:0px;">
+						<input type="hidden" name="layout_idx" th:value="${layoutIdx}">
+						<input type="text" name="scWord" class="browser-default">
+						<button id="search_layout_log_submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left"><i class="material-icons md-18 left">search</i> 검색</button>
+						<div class="title left">총 <b id="search_layout_log_total"></span>0건</b></div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col s12 table_type3">
+			<table id="layout_log_table"class="striped centered highlight">
+				<thead>
+				<tr>
+					<th width="8%">번호</th>
+					<th width="12%">사이트코드</th>
+					<th width="20%">레이아웃명</th>
+					<th width="12%">코드명</th>
+					<th width="24%">경로</th>
+					<th width="12%">수정일</th>
+					<th width="12%">복원</th>
+				</tr>
+				</thead>
+				<tbody style="word-break:break-all;">
+
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+</html>

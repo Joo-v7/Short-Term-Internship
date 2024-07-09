@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.regist.RegistMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(registIdx)">
+				AND regist_idx = #{registIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scDetailIdx)">
+				AND a.detail_idx = #{scDetailIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scMemberIdx)">
+				AND a.member_idx = #{scMemberIdx}
+			</if>
+			<choose>
+				<when test="scTeam == 'all'">
+					AND regist_state = '2'
+					AND ( a.member_idx = '0' OR (SELECT delete_yn FROM cms_member e WHERE e.member_idx = a.member_idx ) = 'n')
+				</when>
+				<when test="@kepco.util.StrUtil@isBlank(scTeam)">
+					AND member_idx != '0'
+					AND (SELECT delete_yn FROM cms_member e WHERE e.member_idx = a.member_idx ) = 'n'
+				</when>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey1)">
+				AND regist_state = ${scKey1}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey2)">
+				AND edu_state = ${scKey2}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND ( 
+					team LIKE CONCAT('%',#{scWord},'%')
+					OR (SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx AND c.delete_yn = 'n') LIKE CONCAT('%',#{scWord},'%')
+					OR (SELECT member_id FROM cms_member c WHERE c.member_idx = a.member_idx AND c.delete_yn = 'n') LIKE CONCAT('%',#{scWord},'%')
+				)
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.regist.RegistVo">
+		SELECT a.*,b.*,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm,
+			(SELECT member_id FROM cms_member c WHERE c.member_idx = a.member_idx) memberId,
+			(SELECT COUNT(1) FROM lms_edu_regist d INNER JOIN cms_member c ON d.member_idx = c.member_idx WHERE d.delete_yn = 'n' AND c.delete_yn = 'n' AND d.detail_idx = b.detail_idx AND d.regist_state != '3' AND d.member_idx != '0' ) edu_reg_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist d WHERE d.delete_yn = 'n' AND b.detail_idx = d.detail_idx AND d.regist_state != '3' AND d.member_idx = '0') edu_bot_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist d INNER JOIN cms_member c ON d.member_idx = c.member_idx WHERE d.delete_yn = 'n' AND c.delete_yn = 'n' AND d.detail_idx = b.detail_idx AND d.regist_state = '2' AND d.member_idx != '0' ) edu_accept_cnt
+		FROM lms_edu_regist a
+		LEFT JOIN lms_edu_detail b ON a.detail_idx = b.detail_idx
+		<include refid="selectWhere"/>
+		<if test="@kepco.util.StrUtil@isBlank(scTeam)">
+			GROUP BY member_idx
+		</if>
+		ORDER BY
+			<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(site)">
+				a.regist_idx DESC
+			</when>
+			<otherwise>
+	  		  	a.regist_state DESC,
+				a.member_idx ASC,
+				a.team DESC,
+				a.regist_role DESC,
+				a.regist_idx ASC
+			</otherwise>
+			</choose>
+	</select>
+
+	<select id="studentList" parameterType="map" resultType="kepco.lms.edu.regist.RegistVo">
+		SELECT a.*,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm,
+			(SELECT member_id FROM cms_member c WHERE c.member_idx = a.member_idx) memberId
+		FROM (
+			SELECT
+				@RNUM := @RNUM + 1 AS rn, a.*
+			FROM lms_edu_regist a, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+			) a
+	</select>
+
+	<select id="selectMyList" parameterType="map" resultType="kepco.lms.edu.regist.RegistVo">
+		SELECT 
+			@RNUM := @RNUM + 1 AS rn, 
+			a.*,
+			b.*,
+			d.*,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm,
+			(SELECT member_id FROM cms_member c WHERE c.member_idx = a.member_idx) memberId
+		FROM (
+			SELECT
+				a.*
+			FROM lms_edu_regist a, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+			AND member_idx != 0 
+			) a
+		JOIN 
+        	(SELECT 
+            	b.*
+             FROM lms_edu_detail b, (select @RNUM := 0) tmp ) b
+		ON a.detail_idx = b.detail_idx
+		JOIN 
+        	(SELECT 
+            	d.*,
+            	(SELECT category_nm FROM lms_edu_category c WHERE c.category_idx = d.category_idx) categoryNm
+                
+             FROM lms_edu d, (select @RNUM := 0) tmp ) d
+		ON b.edu_idx = d.edu_idx
+		<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+		WHERE 
+			eduTitle LIKE CONCAT('%',#{scWord},'%')
+		</if>
+		ORDER BY
+        a.insert_date DESC
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.regist.RegistVo">
+		SELECT *,
+			(SELECT train_title FROM lms_edu_detail c WHERE c.detail_idx = a.detail_idx) trainTitle,
+			(SELECT member_nm FROM cms_member c WHERE c.member_idx = a.member_idx) memberNm,
+			(SELECT member_id FROM cms_member c WHERE c.member_idx = a.member_idx) memberId
+		FROM lms_edu_regist a
+		WHERE regist_idx = #{registIdx}
+	</select>
+
+	<select id="duplicate" parameterType="map" resultType="int">
+		SELECT COUNT(1)
+		FROM lms_edu_regist a
+			<include refid="selectWhere"/>
+			AND regist_state != '3'
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.regist.RegistVo" useGeneratedKeys="true" keyProperty="registIdx" keyColumn="registIdx">
+		INSERT INTO lms_edu_regist (
+			detail_idx,member_idx,team_idx,team,regist_role,regist_state,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{detailIdx},#{memberIdx},#{teamIdx},#{team},#{registRole},#{registState},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.regist.RegistVo">
+		UPDATE lms_edu_regist
+		<set>
+			<if test="!@kepco.util.StrUtil@isBlank(teamIdx) and teamIdx != 0">
+			team_idx = #{teamIdx},
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(team)">
+			team = #{team},
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(registRole)">
+			regist_role = #{registRole},
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(registState)">
+			regist_state = #{registState},
+			</if>
+			<if test="registState != 1">
+			regist_date = CURRENT_TIMESTAMP,
+			</if>
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND regist_idx = #{registIdx}
+			<if test="@kepco.util.StrUtil@getUserRole() eq 'USER'">
+				<bind name="memberIdx" value="@kepco.util.StrUtil@getSessionIdx()"/>
+				AND member_idx = #{memberIdx}
+			</if>
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.edu.regist.RegistVo">
+		UPDATE lms_edu_regist
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND regist_idx = #{registIdx}
+	</update>
+	
+	<select id="selectByDetailAndMember" parameterType="map" resultType="kepco.lms.edu.regist.RegistVo">
+		SELECT a.*
+		FROM lms_edu_regist a
+		WHERE a.detail_idx = #{detailIdx}
+		AND a.member_idx = #{memberIdx}
+		AND a.delete_yn = 'n'
+		LIMIT 1
+	</select>
+	
+	<update id="graduate" parameterType="kepco.lms.edu.regist.RegistVo">
+		UPDATE lms_edu_regist
+		<set>
+			edu_state = #{eduState},
+			edu_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			regist_idx = #{registIdx}
+	</update>
+	
+	<update id="eduStateSave" parameterType="map">
+		UPDATE lms_edu_regist
+		<set>
+			edu_state = #{eduState},
+			edu_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			regist_idx = #{registIdx}
+	</update>
+</mapper>

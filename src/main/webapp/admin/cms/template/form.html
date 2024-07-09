@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<head>
+</head>
+
+<link rel="stylesheet" href="/assets/libs/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="/assets/libs/codemirror/addon/hint/show-hint.css">
+<link rel="stylesheet" href="/assets/libs/codemirror/theme/material.css">
+<script src="/assets/libs/codemirror/lib/codemirror.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/show-hint.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/xml-hint.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/html-hint.js"></script>
+<script src="/assets/libs/codemirror/mode/xml/xml.js"></script>
+<script src="/assets/libs/codemirror/mode/javascript/javascript.js"></script>
+<script src="/assets/libs/codemirror/mode/css/css.js"></script>
+<script src="/assets/libs/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+
+<style>
+.co_m1 .CodeMirror { height:140px !important; }
+.co_m2 .CodeMirror { height:270px !important; }
+.pop-title-bar {padding-left:5px; padding-top:5px;}
+</style>
+<body>
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/cms/template/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+		<div id="popbox_memberinfo">
+			<div class="top pop-title">
+				<div class="row">
+					<div class="pop-title-bar pd_box2">
+						<div class="col s2" >
+							<a href="#" onclick="side_close('#side_view');" class="btn grey lighten-1 waves-effect waves-light">
+								<i class="material-icons">clear</i>
+							</a>
+						</div>
+						<div class="col s10" style="text-align: right;">
+							<button th:if="${!#strings.isEmpty(vo?.tempIdx)}" class="btn waves-effect z-depth-0 red lighten-1" type="button"  th:onclick="|dataDelete(${vo?.tempIdx}, '템플릿');|">삭제<i class="material-icons left">delete</i></button>				
+							<button th:if="${!#strings.isEmpty(vo?.tempIdx)}" class="btn waves-effect waves-light blue-grey accent-4 z-depth-0 " type="button" th:onclick="|set_template_log(${vo?.tempIdx});return false;|" data-position="bottom">로그기록 <i class="material-icons left fs1">history</i></button>
+							<button class="btn waves-effect waves-light blue-grey darken-4" type="submit" style="display: inline-block;" name="action">저장<i class="material-icons left">save</i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col s12 con">
+			<div class="row pd_box">
+				<input type="hidden" name="tempIdx" id="tempIdx" th:value="${vo?.tempIdx}"/>
+				<div class="row">
+					<div class="input-field col s12">
+						<input type="text" id="tempTitle" name="tempTitle" th:value="${vo?.tempTitle}">
+						<label for="tempTitle" class="req">템플릿 제목</label>
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field col s6">
+						<input type="text" id="tempCode1" name="tempCode1" th:value="${vo?.tempCode1}">
+						<label for="tempCode1" class="req">템플릿 코드</label>
+					</div>
+					<div class="input-field col s6">
+						<input type="text" id="tempCode2" name="tempCode2" th:value="${vo?.tempCode2}">
+						<label for="tempCode2" class="req">템플릿 구분</label>
+					</div>
+				</div>
+				<div class="row pd_box2">
+					<div class="input-field col s12 co_m2">
+						<textarea id="tempContent" name="tempContent" class="x-materialize-textarea" style="height:250px; margin-top:10px; background: #000; color: #fff; padding: 10px;" th:text="${vo?.tempContent}"></textarea>
+						<label for="tempContent">템플릿 내용</label>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</body>
+<script>
+	$(function() {
+// 		M.textareaAutoResize($('#tempContent'));
+			
+		$("select", "#frmForm").formSelect();
+		
+		setTimeout(() => {
+		editor1 = CodeMirror.fromTextArea($('#tempContent')[0], {
+            mode: "text/html",
+            lineNumbers: true,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "F11": function(cm) {
+                    setFullScreen(cm, !isFullScreen(cm));
+                },
+                "Esc": function(cm) {
+                    if (isFullScreen(cm)) setFullScreen(cm, false);
+                }
+            },
+
+            value: document.documentElement.innerHTML
+        });
+		}, "200");
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			
+			var $frm = $(this);
+			var form = $('#frmForm')[0];
+			var data = new FormData(form);
+			
+			var tempContent = editor1.getValue();
+			$("#tempContent").text(tempContent);
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					$('.sidenav').sidenav('close');
+// 					$("#pop_modal").modal('close');
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	
+	});
+	
+	
+	function reload_template_table() {
+		template_table.ajax.reload(null, false);
+		$('#pop_modal').modal('close');
+	}
+	
+	function set_template_log(temp_idx){
+		$.ajax({
+			url: gblAdminPath + '/cms/template/log/list?type=template_log_data&tempIdx='+temp_idx,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').css({'max-width':'1140px', 'height':'80%'});
+			$('#pop_modal').html(data);
+
+			var pop_modal = $("#pop_modal").modal();
+			pop_modal.modal('open');
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+</script>
+</html>
+
+

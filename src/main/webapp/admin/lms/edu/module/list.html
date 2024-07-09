@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+<script>
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+		// 추가,수정 폼
+// 		dataForm('');
+	});
+	
+	// 목록
+	function dataList() {
+		$('#dataTable').DataTable({
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/edu/module/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'moduleCd', className : 'dt-body-center' },
+				{ data : 'moduleTitle', className : 'dt-body-left' },
+				{ data : 'moduleDesc', className : 'dt-body-left' },
+				{ data : 'eduCount', className : 'dt-body-center' },
+				{ data : 'moduleTime', className : 'dt-body-center' },
+				{ data : 'insertDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+				// { data : 'updateDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `<button onclick="dataForm(${row.moduleIdx},this);" class="waves-effect waves-light btn teal accent-4" ><i class="material-icons left">edit</i>수정</button>
+						<button onclick="dataDelete(${row.moduleIdx}, '모듈');" class="waves-effect waves-light btn red" ><i class="material-icons left">delete</i>삭제</button>`;
+					}
+				},
+				//삭제
+				// {
+				// 	data : null, searchable : false, orderable : false, className : 'dt-body-center',
+				// 	render : function(data, type, row, meta) {
+				// 		return `<button onclick="dataDelete(${row.moduleIdx}, '모듈');" class="waves-effect waves-light btn red"><i class="material-icons left">delete</i>삭제</button>`;
+				// 	}
+				// },
+			],
+		});
+		
+		// 구조가 마음에 안든다. 확인해서 교체
+		$('#dataTable tbody').on('click', 'td', function() {
+// 			var data = $('#dataTable').DataTable().row(this).data();
+// 			dataForm(data.postIdx);
+// 			$('#dataTable tbody tr.selected').removeClass('selected');
+// 			$(this).addClass('selected');
+		});
+
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		user_guide_flow();
+	}
+	
+	// 삭제
+	function dataDelete(moduleIdx, title) {
+		if (!moduleIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : title + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/lms/edu/module/delete',
+						type : 'get',
+						data : {
+							'moduleIdx' : moduleIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							//dataForm('');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+
+	// 추가,수정 폼
+	function dataForm(moduleIdx,ts) {
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+		
+		//모든 Toast 메세지 제거
+		M.Toast.dismissAll();
+		
+		if (moduleIdx==undefined) {
+			moduleIdx = '';
+        }
+		
+		sidenav_default_options = {
+            edge : 'right', //	String	'left'	Side of screen on which Sidenav appears.
+            draggable : true,	//Boolean	true	Allow swipe gestures to open/close Sidenav.
+            onCloseStart : null	//Function	null	Function called when sidenav starts exiting.
+        }
+		
+		$('.sidenav').sidenav(sidenav_default_options);
+        $('.sidenav').sidenav('open');
+        $('#side_view').css({'width':'100%', 'max-width':'800px'});
+
+        $.ajax({
+            url: gblAdminPath + "/lms/edu/module/form?moduleIdx=" + moduleIdx,
+            type: 'GET',
+            dataType: 'html',
+        }).done(function (data) {
+            $('#side_view').html(data);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+		$("#areaForm").load(gblAdminPath + "/lms/edu/module/form?moduleIdx=" + moduleIdx);
+		//location.href = gblAdminPath + "/edu/module/form?moduleIdx=" + moduleIdx;
+	}
+</script>
+	
+
+
+	<div>
+		<div class="row">
+			<!-- // 그룹 -->
+			<div class="col s12 pd_box">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<form id="frmList" method="get">
+							<div class="row">
+								<!-- <div class="helper_text_box">
+									<p>훈련을 구축하기 위한 첫번째 단계로서,
+										<strong>훈련자가 단위적으로 수행할 모듈을 등록합니다.</strong>
+										수행할 모듈의 정보를 입력하고, 모듈 파일을 업로드하여 등록하실 수 있습니다.
+									</p>
+								</div> -->
+								<!-- 검색창 -->
+								<div class="input-field col s12 m6 l2 xl1 select_m0">
+									<label for="scModuleCd" class="">모듈코드</label>
+									<input name="scModuleCd" type="text" th:value="${param?.scModuleCd}" placeholder="">
+								</div>
+								<div class="input-field col search_bar">
+									<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="모듈명 검색">
+									
+									<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+	 									<i class="material-icons md-18 left">search</i> 검색
+									</button>
+									
+									<div class="title left">
+										전체 : <b id="dataTableTotCnt">0</b>
+									</div>
+								</div>
+								<div class="btn_infolist right">
+									<button type="button" onclick="dataForm('')" class="waves-effect waves-light btn cyan left">
+										<i class="material-icons left">add_box</i>등록
+									</button>
+								</div>
+								<span class="desc">
+									<p>
+										훈련의 모듈 목록 조회 및 등록, 각 모듈의 수정 및 삭제[훈련 구성 : 절차 > <strong>모듈</strong> > 콘텐츠]
+									</p>
+								</span>
+							</div>
+						</form>
+					</div>
+					<div class="table_type3" >
+						<table id="dataTable" class="striped centered highlight" style="min-width:1500px">
+							<colgroup>
+								<col width="80px">
+								<col width="120px">
+								<col width="320px">
+								<col width="auto">
+								<col width="100px">
+								<col width="120px">
+								<col width="120px">
+								<col width="180px">
+							</colgroup>
+							<thead>
+								<tr>
+									<th>NO</th>
+									<th>모듈코드</th>
+									<th>모듈명</th>
+									<th>설명</th>
+									<th>콘텐츠 수</th>
+									<th>훈련시간(분)</th>
+									<th>등록일시</th>
+									<th>비고</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>	
+
+
+
+
+</body>
+</html>

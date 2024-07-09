@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+    
+<th:block layout:fragment="content">
+	<style>
+    hr{border:none;display:none}
+	.h2_butt{font-size:14px;margin:10px 0;float:left;font-weight:700}
+    #dashboard_box{width:100%;height:auto;background:#f2f3f8;padding: 28px;box-sizing:border-box;}
+	  .dashboard_wrap{width:100%;margin:0 auto}
+    .dash_top{width:100%;overflow:hidden;display:flex;}
+    .dash_top > div{width:calc(100% / 4 - 15px);float:left;height:auto;margin:0 20px 0 0;background:transparent;}
+    .dash_top > div:last-child{margin-right:0}
+    .dash_top > div h2{background:transparent; font-size:18px;height:40px;line-height:38px;font-weight:bold;color:#304867;letter-spacing:-.08em;width:100%;padding:0; border-bottom: 1px solid #ccc;}
+    .dash_top > div > .dash_box{font-size:17px;line-height:27px;padding:10px 20px}
+    .dash_val_box {display: flex; justify-content: flex-start; align-items: center; width: 100%; height: 120px; padding: 10px 20px;}
+    .data_val_box {display: flex; justify-content: flex-start; flex-direction: column; line-height: 1; white-space: nowrap;
+    }
+    .data_val_box .data { font-size: 38px; font-weight: bold; color: #5189f8;
+      /* background: -webkit-linear-gradient(120deg, #2bbbad, #2aa0a0);
+      -webkit-background-clip: text;
+      color: transparent; */
+      filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+    }
+    .data_val_box .tit {font-size: 14px; font-weight: 400; color: #666;}
+    .icons {font-size: 32px; margin-right: 20px; display: flex; justify-content: center; align-items: center; width: 60px; height: 60px; border-radius: 50%; padding: 10px; background-color: transparent; color: #44B7E1; background-color: #fff; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.1));}
+    /* .icons::before {filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2));} */
+    .dash_top > div p span.subtxt{font-size:13px;color:#999}
+    .dash_topbox{padding:0;float:left;border:1px solid #ddd}
+
+    .dash_bbs{width:100%;overflow:hidden;margin:10px 0;display:flex;}
+    .dash_bbs > div{width:calc(100% / 2 - 10px);margin:0 20px 0 0;}
+    .dash_bbs > div:last-child{margin-right:0;}
+	
+	/*최근게시물*/
+    /*.recent_board {float:left;width:58%}*/
+    .recent_board {height: auto;}
+    .notice_box{float:left;position:relative;border:1px solid #ddd;width:100%;background:#fff; padding: 20px;}
+    .notice_box a.tab_h3{position:relative;color:#333;display:block;float:left;}
+    .notice_box a.tab_h3 h3{font-size:14px;text-align:center;line-height:40px;padding:0 20px}
+    .notice_box a.tab_h3.active{border-bottom:3px solid #21b9bb;z-index: 1;}
+    .notice_box a.tab_h3 br{display:none}
+    .notice_box a:hover{text-decoration:none;}
+    .notice_box a:hover h3{font-weight:800}
+    .notice_box ul{position:absolute;left:0;top:42px;width:100%;padding:10px 20px;border-top:1px solid #e7eaec;display:none}
+    .notice_box ul li{overflow:hidden;line-height:21px}
+    .notice_box ul li:last-child{border-bottom:none}
+    .notice_box ul li a{position:relative;color:#999;font-weight:400;font-size:13px;width:80%;float:left;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;padding-left:15px}
+    .notice_box ul li a:before{content:'';position:absolute;top:10px;left:0;width:3px;height:3px;background:#5998d3}
+    .notice_box ul li a .cate{color:#333;background:#f2f2f2;float:left;padding:4px 10px;border-radius:4px;margin-right:10px;font-weight:700}
+    .notice_box ul li .date{padding-right:3px;width:20%;text-align:right;font-size:12px;float:right;color:#999}
+    .notice_box ul li a:hover{color:#333;font-weight:600}
+    .notice_box a.tab_more span{font-size:0;position:absolute;left:0;top:0}
+	.notice_tab{display: inline-block;width: 100%;}
+	a.tab_more{position:absolute;display:block;width:34px;height:40px;font-size:20px;line-height:40px;right:0;top:0;text-align:center;font-weight:200;color:#20252a;display: flex; align-items: center;display: flex; align-items: center;}
+    a.tab_more i{font-size:26px;color:#585858;}	
+	a.tab_more span{font-size:0;}
+
+    /*.center_board{float:left;width:40.6%;margin-left:20px}*/
+    .center_board .notice_box{height:370px}
+    .center_board .notice_box:first-child{margin-bottom:10px}
+
+    .progress{width:98%;margin:22px auto 0;height: 8px;position: relative;border-radius: 100px;}
+    .progress-bar{background:#21b9bb}
+
+    /*일일검색어*/
+    .rank_board{float:left;width:17.2%;height:380px;margin-left:20px;padding:20px;background:#5998d3;position: relative}
+    .rank_board h3{font-size:15px;padding-bottom:20px;color:#fff}
+
+    .rank_board a.more{position:absolute;display:block;width:40px;height:40px;font-size:20px;line-height:40px;right:0;top:0;text-align:center;font-weight:200;color:#fff;background: #4e8ec9}
+    .rank_board a.more:hover{text-decoration:none;background:#4686c1}
+    .rank_board a.more span{font-size:0;position:absolute;left:0;top:0}
+
+    #rank_tab ol{display:inline-block;width:100%}
+    #rank_tab ol li{display:block;float:left;width:100%;padding:3px 0}
+    #rank_tab ol li span{text-align:center;line-height:20px;padding:5px 0 0 0;box-sizing:border-box;display:block;overflow:hidden;float:left;width:20px;height:20px;margin-right:5px;padding:0;
+		background:#999;font-weight:bold;line-height:19px;color:#272e3c;font-size:11px;color:#fff}
+    #rank_tab ol li .first{background:#35a2b0  none repeat scroll 0 0;color:#fff}
+    #rank_tab ol li .second{background:#35a2b0  none repeat scroll 0 0;color:#fff}
+    #rank_tab ol li .third{background:#35a2b0  none repeat scroll 0 0;color:#fff}
+    #rank_tab ol li a{display:block;float:left;height:auto;border:0 none;font-size:1em;line-height:1.3em;color:#fff}
+
+
+
+    /*일정안내*/
+    .schedule_board{float:left;width:40%;margin-right:20px}
+    .schedule_board .notice_box{height:255px;background:#f6fdff}
+
+    /*통계안내*/
+    .dash_status{width:100%;overflow:hidden}
+    .status_board{float:left;width:100%;}
+    .status_board .status_box{height:265px}
+    .status_box{float:left;background:#fff;position:relative;border:1px solid #ddd;width:100%;display:flex;}
+    .status_box a.tab_h3{position:relative;color:#333;display:block;float:left;}
+    .status_box a.tab_h3 h3{font-size: 14px;text-align: center;line-height: 40px;padding: 0 20px;}
+    .status_box a.tab_h3.active{border-bottom:3px solid #21b9bb;z-index:1;}
+    .status_box a.tab_h3 br{display:none}
+    .status_box a:hover{text-decoration:none;}
+    .status_box a:hover h3{font-weight:800}
+    .status_box .cont_box{position:absolute;left:0;top:42px;width:100%;padding:39px 30px 30px;border-top:1px solid #e7eaec;display:none;box-sizing: border-box;}
+    .status_box a.more:hover{text-decoration:none;background:#f2f2f2}
+    .status_box a.more span{font-size:0;position:absolute;left:0;top:0}
+    
+
+
+
+	@media screen and (max-width: 1200px) {
+	#dashboard_box{height:100%;padding: 25px;}
+	.dash_top{display:block;}
+	.dash_top .dashbox{width: calc(100% / 2 - 10px);margin-bottom: 20px;}
+	.dash_top .dashbox:nth-child(3){margin-right:0 !important;}
+	}
+
+	@media screen and (max-width: 900px) {
+	.status_box a.tab_h3 h3{font-size: 14px;padding: 0 10px;}
+	}
+
+	@media screen and (max-width: 600px) {
+	#dashboard_box{padding: 15px;}
+	.dash_top > div{height:auto;}
+	.dash_top .dashbox{width:100%; background:#fff;}
+	.dash_bbs{display:block;}
+	.dash_bbs > div{width:100%;}
+	.status_box{display:block;}
+	.status_box a.tab_h3{width:100%;border-bottom: 1px solid #e7eaec;}
+	.status_box .cont_box{top: 124px;padding: 5px;}
+	a.tab_more{right: -10px;top: -38px;}
+	.status_board .status_box{height: 280px;}
+	}
+
+.cnt_wrap, .cnt_box {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  
+  .cnt_wrap::after, .cnt_box::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+  
+  .text-hide {
+    overflow: hidden;
+    position: absolute;
+    display: inline-block;
+    border: 0;
+    width: 1px;
+    height: 1px;
+    clip: rect(1px 1px 1px 1px);
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    z-index: -1;
+  }
+  
+  .calendar {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    font-size: 10px;
+  }
+  
+  .calendar::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+  
+  .calendar .calendar_header {
+    display: block;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    margin: 0 auto 10px;
+    padding: 0;
+  }
+  
+  .calendar .calendar_header::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+  
+  .calendar .calendar_header .ym_title {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    padding: 0 10px;
+    margin: 0;
+    box-sizing: border-box;
+    font-size: 2.6em;
+    line-height: 40px;
+    vertical-align: top;
+    font-weight: bold;
+  }
+  
+  .calendar .calendar_header .ym_title .year {
+    color: #333;
+  }
+  
+  .calendar .calendar_header .ym_title .month {
+    color: #783267;
+  }
+  
+  .calendar .calendar_header .m_btn {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+  
+  .calendar .calendar_header .m_btn:before, .calendar .calendar_header .m_btn:after {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 2px;
+    background-color: #333;
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+  
+  .calendar .calendar_header .m_btn.prev:before {
+    left: 50%;
+    top: calc(50% - 5px);
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+  
+  .calendar .calendar_header .m_btn.prev:after {
+    left: 50%;
+    top: calc(50% + 5px);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  
+  .calendar .calendar_header .m_btn.next:before {
+    left: 50%;
+    top: calc(50% - 5px);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  
+  .calendar .calendar_header .m_btn.next:after {
+    left: 50%;
+    top: calc(50% + 5px);
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+  
+  .calendar .calendar_table {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .calendar .calendar_table::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+  
+  .calendar .calendar_table table {
+    width: 100%;
+    height: auto;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  
+  .calendar .calendar_table table th, .calendar .calendar_table table td {
+    width: auto;
+    height: auto;
+    padding: 10px;
+    margin: 0;
+    vertical-align: middle;
+  }
+  
+  /* section calendar */
+  .sec_cal {
+    width: 100%;
+    margin: 0 auto;
+    font-family: "NotoSansR";
+    font-size: 10px;
+  }
+  
+  .sec_cal .cal_nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 2em;
+    line-height: 40px;
+  }
+  
+  .sec_cal .cal_nav .year-month {
+    width: 300px;
+    text-align: center;
+    line-height: 1;
+    color: #212121;
+  }
+  
+  .sec_cal .cal_nav .year-month .year_wrap {
+    display: inline-block;
+  }
+  
+  .sec_cal .cal_nav .year-month .month_wrap {
+    display: inline-block;
+  }
+  
+  .sec_cal .cal_nav .nav {
+    display: flex;
+    border: 1px solid #666;
+    border-radius: 5px;
+  }
+  
+  .sec_cal .cal_nav .go-prev,
+  .sec_cal .cal_nav .go-next {
+    display: block;
+    width: 50px;
+    height: 40px;
+    font-size: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .sec_cal .cal_nav .go-prev:before, .sec_cal .cal_nav .go-prev:before,
+  .sec_cal .cal_nav .go-next:before,
+  .sec_cal .cal_nav .go-next:before {
+    content: "";
+    display: block;
+    width: 10px;
+    height: 10px;
+    border: 3px solid #212121;
+    border-width: 3px 3px 0 0;
+    transition: border 0.1s;
+  }
+  
+  .sec_cal .cal_nav .go-prev:hover:before, .sec_cal .cal_nav .go-prev:hover:before,
+  .sec_cal .cal_nav .go-next:hover:before,
+  .sec_cal .cal_nav .go-next:hover:before {
+    border-color: #5189f8;
+  }
+  
+  .sec_cal .cal_nav .go-prev:before {
+    transform: rotate(-135deg);
+  }
+  
+  .sec_cal .cal_nav .go-next:before {
+    transform: rotate(45deg);
+  }
+  
+  .sec_cal .cal_wrap {
+    position: relative;
+    margin: 0 auto;
+  }
+  
+  .sec_cal .cal_wrap:after {
+    top: 368px;
+  }
+  
+  .sec_cal .cal_wrap .days {
+    display: flex;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .sec_cal .cal_wrap .day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% / 7);
+    text-align: left;
+    color: #999;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 5px;
+  }
+  
+  .sec_cal .cal_wrap .day:nth-child(7n) {
+    color: #3c6ffa;
+  }
+  
+  .sec_cal .cal_wrap .day:nth-child(7n + 1) {
+    color: #ed2a61;
+  }
+  
+  .sec_cal .cal_wrap .day.disable {
+    color: #ddd;
+  }
+  
+  .sec_cal .cal_wrap .dates {
+    display: flex;
+    flex-flow: wrap;
+    height: 180px;
+  }
+  
+  .sec_cal .cal_wrap .dates .current.today {
+    /* background: #f2f2f2; */
+    background: #5189f8; color: #fff;
+  }
+  
+
+</style>
+
+<!-- AM 차트 4 -->
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<script src="/assets/libs/amchart4/themes/animated.js"></script>
+<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+
+<div id="dashboard_box">
+<div class="dashboard_wrap">
+    <div class="dash_top">
+        <!--승인대기-->
+        <div class="dashbox">
+            <!-- <h2>승인대기</h2> -->
+          <div class="dash_val_box">
+            <i class="icons fa-solid fa-check"></i>
+            <span class="data_val_box">
+              <span class="tit">승인대기</span>
+              <span class="data">321</span>
+            </span>
+          </div>
+        </div>
+        <!--//승인대기-->
+        <hr>
+        <!--//승인대기-->
+        <div class="dashbox">
+            <!-- <h2>평가대기</h2> -->
+          <div class="dash_val_box">
+            <i class="icons fa-solid fa-file-lines"></i>
+            <span class="data_val_box">
+              <span class="tit">평가대기</span>
+              <span class="data">345,321</span>
+            </span>
+          </div>
+        </div>
+        <!--//평가대기-->
+        <hr>
+        <!--답변대기-->
+        <div class="dashbox">
+            <!-- <h2>답변대기</h2> -->
+            <div class="dash_val_box">
+            <i class="icons fa-solid fa-comment"></i>
+            <span class="data_val_box">
+              <span class="tit">답변대기</span>
+              <span class="data">456,321</span>
+            </span>
+          </div>
+        </div>
+        <!--//답변대기-->
+        <hr>
+        <!--교육과정-->
+        <div class="dashbox">
+            <!-- <h2>교육과정</h2> -->
+            <div class="dash_val_box">
+            <i class="icons fa-solid fa-book-open"></i>
+            <span class="data_val_box">
+              <span class="tit">교육과정</span>
+              <span class="data">43,321</span>
+            </span>
+          </div>
+        </div>
+        <!--//교육과정-->
+        <!--학습자-->
+         <div class="dashbox">
+            <!-- <h2>학습자</h2> -->
+            <div class="dash_val_box">
+            <i class="icons fa-solid fa-graduation-cap"></i>
+            <span class="data_val_box">
+              <span class="tit">학습자</span>
+              <span class="data">153,621</span>
+            </span>
+          </div>
+        </div>
+        <!--//학습자-->
+    </div>
+    <hr><hr>
+    <script>
+        $(function(){
+            $("#board_new .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#board_new  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#board_new  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+
+            $("#board_comment .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#board_comment  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#board_comment  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+
+            $("#board_delete .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#board_delete  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#board_delete  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+
+            $("#calendar .notice_tab .tab_h3").click(function(e){
+                e.preventDefault();
+                $("#calendar  .notice_tab .tab_h3").removeClass('active');
+                $(this).addClass('active');
+                $("#calendar  .notice_tab ul").hide();
+                $(this).next().show();
+            })
+        })
+    </script>
+
+    <div class="dash_bbs">
+        <div class="recent_board">
+            <h2 class="h2_butt">과정별 만족도 현황</h2>
+            <div id="board_new" class="notice_box border_box">
+                <div id="chartdiv_1" style="width: 100%; height:240px"></div>
+            </div>
+            <script>
+                am4core.ready(function() {
+
+                // Themes begin
+                am4core.useTheme(am4themes_animated);
+                // Themes end
+
+                var chart = am4core.create("chartdiv_1", am4charts.XYChart);
+                chart.padding(10, 10, 10, 10);
+
+                var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+                categoryAxis.renderer.grid.template.location = 0;
+                categoryAxis.dataFields.category = "edu_name";
+                categoryAxis.renderer.labels.template.fill = '#fff';
+                categoryAxis.renderer.labels.template.fontSize = 14;
+                // categoryAxis.renderer.labels.template.fontWeight = "bold";
+                categoryAxis.renderer.minGridDistance = 1;
+                categoryAxis.renderer.inversed = true;
+                categoryAxis.renderer.grid.template.disabled = true;
+                categoryAxis.renderer.inside=true;
+                var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+                valueAxis.min = 0;
+                valueAxis.max = 5;
+                valueAxis.renderer.labels.template.fill = '#999';
+                valueAxis.renderer.labels.template.fontSize = 12;
+                valueAxis.renderer.grid.template.stroke = '#1da7fa';
+                valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+
+                // valueAxis.renderer.inside=true;
+                var series = chart.series.push(new am4charts.ColumnSeries());
+                series.dataFields.categoryY = "edu_name";
+                series.dataFields.valueX = "MAU";
+                series.tooltipText = "{valueX.value}"
+                series.columns.template.strokeOpacity = 0;
+                series.columns.template.column.cornerRadiusBottomRight = 5;
+                series.columns.template.column.cornerRadiusTopRight = 5;
+
+                var labelBullet = series.bullets.push(new am4charts.LabelBullet())
+                labelBullet.label.horizontalCenter = "right";
+                labelBullet.label.dx = -10;
+                labelBullet.label.text = "{values.valueX.workingValue.formatNumber('#점')}";
+                labelBullet.label.fill = am4core.color("#fff"); // edu_name 텍스트의 색상 변경
+                labelBullet.label.fontSize = 16;
+                labelBullet.locationX = 0;
+
+                // 각 바에 대한 색상을 설정하는 배열
+                var barColors = [
+                  am4core.color("#5189f8"),
+                  am4core.color("#01cba5"),
+                  am4core.color("#00beea"),
+                  am4core.color("#a674ef"),
+                  am4core.color("#a0a0a0"),
+                ];
+
+                // 각 바의 색상 설정
+                series.columns.template.adapter.add("fill", function(fill, target){
+                    return barColors[target.dataItem.index % barColors.length];
+                });
+
+                categoryAxis.sortBySeries = series;
+                chart.data = [
+                    {
+                    "edu_name": "활선용 완철사용 사전작업 2023년 1기",
+                    "MAU": 5
+                    },
+                    {
+                    "edu_name": "지중케이블 포설 및 접속 2023년 2기",
+                    "MAU": 4
+                    },
+                    {
+                    "edu_name": "이동용변압기 공종 1",
+                    "MAU": 4
+                    },
+                    {
+                    "edu_name": "활선용 완철 사용 공종 (Part 1) 2기",
+                    "MAU": 3
+                    },
+                    {
+                    "edu_name": "활선용 완철 사용 공종 (Part 1) 1기",
+                    "MAU": 2
+                    }
+                ]
+                }); // end am4core.ready()
+            </script>
+        </div>
+
+        <div class="recent_board">
+            <h2 class="h2_butt">과정별 평균 성적지표</h2>
+            <div id="board_new" class="notice_box border_box">
+                <div id="chartdiv_2" style="width: 100%; height:240px"></div>
+            </div>
+            <script>
+                am4core.ready(function() {
+
+                // Themes begin
+                am4core.useTheme(am4themes_animated);
+                // Themes end
+
+                var chart = am4core.create("chartdiv_2", am4charts.XYChart);
+                chart.padding(10, 10, 10, 10);
+
+                var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+                categoryAxis.renderer.grid.template.location = 0;
+                categoryAxis.dataFields.category = "edu_name";
+                categoryAxis.renderer.labels.template.fill = '#fff';
+                categoryAxis.renderer.labels.template.fontSize = 14;
+                categoryAxis.renderer.minGridDistance = 1;
+                categoryAxis.renderer.inversed = true;
+                categoryAxis.renderer.grid.template.disabled = true;
+                categoryAxis.renderer.inside=true;
+                var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+                valueAxis.min = 0;
+                valueAxis.max = 100;
+                valueAxis.renderer.labels.template.fill = '#999';
+                valueAxis.renderer.labels.template.fontSize = 12;
+                valueAxis.renderer.grid.template.stroke = '#1da7fa';
+                valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+                // dateAxis.renderer.maxGridDistance = 100;
+                // valueAxis.renderer.inside=true;
+                var series = chart.series.push(new am4charts.ColumnSeries());
+                series.dataFields.categoryY = "edu_name";
+                series.dataFields.valueX = "rate";
+                series.tooltipText = "{valueX.value}";
+                series.columns.template.strokeOpacity = 0;
+                series.columns.template.column.cornerRadiusBottomRight = 5;
+                series.columns.template.column.cornerRadiusTopRight = 5;
+
+                var labelBullet = series.bullets.push(new am4charts.LabelBullet())
+                labelBullet.label.horizontalCenter = "right";
+                labelBullet.label.dx = -10;
+                labelBullet.label.text = "{values.valueX.workingValue.formatNumber('#점')}";
+                labelBullet.label.fill = am4core.color("#fff"); // edu_name 텍스트의 색상 변경
+                labelBullet.label.fontSize = 16;
+                labelBullet.locationX = 0;
+
+                var gradient = new am4core.LinearGradient();
+                  gradient.addColor(am4core.color("#758a9d"));
+                  gradient.addColor(am4core.color("#56717e"));
+
+                // 각 바에 대한 색상을 설정하는 배열
+                var barColors = [
+                  am4core.color("#5189f8"),
+                  am4core.color("#01cba5"),
+                  am4core.color("#00beea"),
+                  am4core.color("#a674ef"),
+                  am4core.color("#a0a0a0"),
+                ];
+
+
+                // 각 바의 색상 설정
+                series.columns.template.adapter.add("fill", function(fill, target){
+                    return barColors[target.dataItem.index % barColors.length];
+                });
+
+
+                categoryAxis.sortBySeries = series;
+                chart.data = [
+                    {
+                    "edu_name": "활선용 완철사용 사전작업 2023년 1기",
+                    "rate": 87
+                    },
+                    {
+                    "edu_name": "지중케이블 포설 및 접속 2023년 2기",
+                    "rate": 67
+                    },
+                    {
+                    "edu_name": "이동용변압기 공종 1",
+                    "rate": 58
+                    },
+                    {
+                    "edu_name": "활선용 완철 사용 공종 (Part 1) 2기",
+                    "rate": 54
+                    },
+                    {
+                    "edu_name": "활선용 완철 사용 공종 (Part 1) 1기",
+                    "rate": 43
+                    }
+                ]
+                }); // end am4core.ready()
+            </script>
+        </div>
+
+        <div class="popular_board" style="width:calc(100% / 5 - 15px)">
+            <h2 class="h2_butt">과정일정표</h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div class="cnt_wrap calendar">
+                    <div class="sec_cal">
+                        <div class="cal_nav">
+                        <a href="javascript:;" class="nav-btn go-prev">prev</a>
+                        <div class="year-month">
+                            <div class="year_wrap"></div>
+                            <div class="month_wrap"></div>
+                        </div>
+                        <a href="javascript:;" class="nav-btn go-next">next</a>
+                        </div>
+                        <div class="cal_wrap">
+                        <div class="days">
+                            <div class="day">SUN</div>
+                            <div class="day">MON</div>
+                            <div class="day">TUE</div>
+                            <div class="day">WED</div>
+                            <div class="day">THU</div>
+                            <div class="day">FRI</div>
+                            <div class="day">SAT</div>
+                        </div>
+                        <div class="dates"></div>
+                        </div>
+                    </div>
+                    <script>
+                        window.addEventListener('load', function (){
+                            calendarInit();
+                        });
+                        // $(document).ready(function() {
+                        //   calendarInit();
+                        // });
+                        /*
+                            달력 렌더링 할 때 필요한 정보 목록
+
+                            현재 월(초기값 : 현재 시간)
+                            금월 마지막일 날짜와 요일
+                            전월 마지막일 날짜와 요일
+                        */
+
+                        function calendarInit() {
+
+                            // 날짜 정보 가져오기
+                            let date = new Date(); // 현재 날짜(로컬 기준) 가져오기
+                            let utc = date.getTime() + (date.getTimezoneOffset() * 60 * 1000); // uct 표준시 도출
+                            let kstGap = 9 * 60 * 60 * 1000; // 한국 kst 기준시간 더하기
+                            let today = new Date(utc + kstGap); // 한국 시간으로 date 객체 만들기(오늘)
+
+                            let thisMonth = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                            // 달력에서 표기하는 날짜 객체
+
+
+                            let currentYear = thisMonth.getFullYear(); // 달력에서 표기하는 연
+                            let currentMonth = thisMonth.getMonth(); // 달력에서 표기하는 월
+                            let currentDate = thisMonth.getDate(); // 달력에서 표기하는 일
+
+                            // kst 기준 현재시간
+                            // console.log(thisMonth);
+
+                            // 캘린더 렌더링
+                            renderCalender(thisMonth);
+
+                            function renderCalender(thisMonth) {
+
+                                // 렌더링을 위한 데이터 정리
+                                currentYear = thisMonth.getFullYear();
+                                currentMonth = thisMonth.getMonth();
+                                currentDate = thisMonth.getDate();
+
+                                // 이전 달의 마지막 날 날짜와 요일 구하기
+                                let startDay = new Date(currentYear, currentMonth, 0);
+                                let prevDate = startDay.getDate();
+                                // let prevDay = startDay.getDay();         // 일요일이 마지막 열
+                                let prevDay = (startDay.getDay() + 1) % 7;  // 일요일이 첫번째 열
+
+                                // 이번 달의 마지막날 날짜와 요일 구하기
+                                let endDay = new Date(currentYear, currentMonth + 1, 0);
+                                let nextDate = endDay.getDate();
+                                // let nextDay = endDay.getDay();           // 일요일이 마지막 열
+                                let nextDay = (endDay.getDay() + 1) % 7;    // 일요일이 첫번째 열
+                                // console.log(prevDate, prevDay, nextDate, nextDay);
+
+                                // 현재 월 표기
+                                // document.querySelector('.year-month').innerHTML = currentYear + '.' + (currentMonth + 1);
+                                // $('.year-month').text(currentYear + '.' + (currentMonth + 1));
+                                document.querySelector('.year_wrap').innerHTML = currentYear;
+                                document.querySelector('.month_wrap').innerHTML = currentMonth + 1;
+
+                                // 렌더링 html 요소 생성
+                                calendar = document.querySelector('.dates')
+                                calendar.innerHTML = '';
+
+                                // 지난달
+                                for (var i = prevDate - prevDay + 1; i <= prevDate; i++) {
+                                    calendar.innerHTML = calendar.innerHTML + '<div class="day prev disable">' + i + '</div>'
+                                }
+                                // 이번달
+                                for (var i = 1; i <= nextDate; i++) {
+                                    calendar.innerHTML = calendar.innerHTML + '<div class="day current">' + i + '</div>'
+                                }
+                                // 다음달
+                                for (var i = 1; i <= (7 - nextDay == 7 ? 0 : 7 - nextDay); i++) {
+                                    calendar.innerHTML = calendar.innerHTML + '<div class="day next disable">' + i + '</div>'
+                                }
+
+                                // 오늘 날짜 표기
+                                if (today.getMonth() == currentMonth) {
+                                    todayDate = today.getDate();
+                                    var currentMonthDate = document.querySelectorAll('.dates .current');
+                                    currentMonthDate[todayDate -1].classList.add('today');
+                                }
+                            }
+
+                            // 이전달로 이동
+                            document.querySelector('.go-prev').addEventListener('click', function (){
+                            thisMonth = new Date(currentYear, currentMonth - 1, 1);
+                            renderCalender(thisMonth);
+                            });
+
+                            // 다음달로 이동
+                            document.querySelector('.go-next').addEventListener('click', function (){
+                            thisMonth = new Date(currentYear, currentMonth + 1, 1);
+                            renderCalender(thisMonth);
+                            });
+                        }
+
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash_bbs">
+        <div class="popular_board" style="width:calc(100% / 5 - 15px)">
+            <h2 class="h2_butt">만족도 평점</h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_3" style="width: 100%; height:240px"></div>
+            </div>
+            
+            <h2 class="h2_butt">평균 수료율</h2>
+            <div id="board_new"  class="notice_box border_box">
+                <div id="chartdiv_4" style="width: 100%; height:240px"></div>
+            </div>
+        </div>
+        <div class="popular_board" style="width: 100%; margin-right:0;">
+            <h2 class="h2_butt">연간 평균 이수율</h2>
+            <div id="board_new" class="notice_box border_box" style="height: 100%">
+                <div id="chartdiv_5" style="width: 100%; height:calc(100% - 16px)"></div>
+            </div>
+        </div>  
+
+        <script>
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_3", am4charts.PieChart);
+
+            // Add data
+            chart.data = [ {
+            "country": "4점",
+            "litres": 789
+            }, {
+            "country": "5점",
+            "litres": 567
+            }, {
+            "country": "3점",
+            "litres": 456
+            }, {
+            "country": "2점",
+            "litres": 234
+            }, {
+            "country": "1점",
+            "litres": 123
+            }];
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "litres";
+            pieSeries.dataFields.category = "country";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 1;
+            pieSeries.slices.template.strokeOpacity = 1;
+
+            // This creates initial animation
+            pieSeries.hiddenState.properties.opacity = 1;
+            pieSeries.hiddenState.properties.endAngle = -90;
+            pieSeries.hiddenState.properties.startAngle = -90;
+
+            // Disable ticks and labels
+            pieSeries.labels.template.disabled = true;
+            pieSeries.ticks.template.disabled = true;
+
+            pieSeries.colors.list = [
+              am4core.color("#7760f9"),
+                am4core.color("#344678"),
+                am4core.color("#2e7df4"),
+                am4core.color("#1da7fa"),
+                am4core.color("#6af4ff"),
+            ];
+
+        });
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_4", am4charts.PieChart);
+
+            // Add data
+            chart.data = [ {
+            "country": "수료율",
+            "litres": 67
+            }, {
+            "country": "",
+            "litres": 33
+            }];
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "litres";
+            pieSeries.dataFields.category = "country";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeWidth = 1;
+            pieSeries.slices.template.strokeOpacity = 1;
+
+            // This creates initial animation
+            pieSeries.hiddenState.properties.opacity = 1;
+            pieSeries.hiddenState.properties.endAngle = -90;
+            pieSeries.hiddenState.properties.startAngle = -90;
+
+            // Disable ticks and labels
+            pieSeries.labels.template.disabled = true;
+            pieSeries.ticks.template.disabled = true;
+
+            pieSeries.colors.list = [
+              am4core.color("#1da7fa"),
+                am4core.color("#6af4ff"),
+            ];
+
+        });
+        am4core.ready(function() {
+            am4core.useTheme(am4themes_animated);
+            var chart = am4core.create("chartdiv_5", am4charts.XYChart);
+            chart.padding(20, 20, 20, 20);
+            // Add data
+            chart.data = [
+            {date:new Date(2023, 0,01), value1:50, value2:48, previousDate:new Date(2022, 0, 01)},
+            {date:new Date(2023, 1,01), value1:50, value2:48, previousDate:new Date(2022, 1, 01)},
+            {date:new Date(2023, 2,01), value1:53, value2:51, previousDate:new Date(2022, 2, 01)},
+            {date:new Date(2023, 3,01), value1:65, value2:58, previousDate:new Date(2022, 3, 01)},
+            {date:new Date(2023, 4,01), value1:52, value2:53, previousDate:new Date(2022, 4, 01)},
+            {date:new Date(2023, 5,01), value1:45, value2:44, previousDate:new Date(2022, 5, 01)},
+            {date:new Date(2023, 6,01), value1:75, value2:42, previousDate:new Date(2022, 6, 01)},
+            {date:new Date(2023, 7,01), value1:86, value2:55, previousDate:new Date(2022, 7, 01)},
+            {date:new Date(2023, 8,01), value1:65, value2:45, previousDate:new Date(2022, 8, 01)},
+            {date:new Date(2023, 9,01), value1:76, value2:56, previousDate:new Date(2022, 9, 01)},
+            {date:new Date(2023, 10,01), value1:67, value2:65, previousDate:new Date(2022, 10, 01)},
+            {date:new Date(2023, 11,01), value1:87, value2:76, previousDate:new Date(2022, 11, 01)}
+            // {date:new Date(2023, 12,01), value1:59, value2:55, previousDate:new Date(2022, 12, 01)}
+            ]
+
+            // Create axes
+            var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+            dateAxis.renderer.minGridDistance = 50;
+            dateAxis.renderer.maxGridDistance = 100;
+            dateAxis.renderer.labels.template.fill = '#999';
+            dateAxis.renderer.labels.template.fontSize = 12;
+            dateAxis.renderer.grid.template.stroke = '#1da7fa';
+            dateAxis.renderer.grid.template.strokeOpacity = 0.08;
+            var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+            valueAxis.renderer.labels.template.fill = '#999';
+            valueAxis.renderer.labels.template.fontSize = 12;
+            valueAxis.renderer.grid.template.stroke = '#1da7fa';
+            valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+            // Create series
+            var series = chart.series.push(new am4charts.LineSeries());
+            series.dataFields.valueY = "value1";
+            series.dataFields.dateX = "date";
+            series.strokeWidth = 3;
+            series.minBulletDistance = 10;
+            series.tensionX = 0.8;
+            series.tooltipText = "[bold]이번년도 : {date.formatDate()} {value1}[/]\n이전년도 : {previousDate.formatDate()} {value2}";
+            series.tooltip.pointerOrientation = "vertical";
+
+            var gradient = new am4core.LinearGradient();
+                gradient.addColor(am4core.color('#fff'));
+                gradient.addColor(am4core.color("#53e7f5"));
+                gradient.addColor(am4core.color("#1da7fa"));
+                gradient.addColor(am4core.color("#1da7fa"));
+            series.stroke = gradient;
+
+            // Create series
+            var series2 = chart.series.push(new am4charts.LineSeries());
+            series2.dataFields.valueY = "value2";
+            series2.dataFields.dateX = "date";
+            series2.strokeWidth = 3;
+            series2.strokeDasharray = "3,4";
+            series2.tensionX = 0.8;
+            // series2.stroke = series.stroke;
+            var gradient2 = new am4core.LinearGradient();
+                gradient2.addColor(am4core.color('#fff'));
+                gradient2.addColor(am4core.color("#0735b3"));
+                gradient2.addColor(am4core.color("#2B64F9"));
+                gradient2.addColor(am4core.color("#713eef"));
+                series2.stroke = gradient2;
+
+            // Add cursor
+            chart.cursor = new am4charts.XYCursor();
+            chart.cursor.xAxis = dateAxis;
+
+            });
+        </script>
+    </div>
+
+    
+    
+</div>
+</div>
+</th:block>

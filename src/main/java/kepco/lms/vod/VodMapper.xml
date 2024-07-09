@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.VodMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					vod_title LIKE CONCAT ('%',#{scWord},'%') 
+					OR vod_desc LIKE CONCAT ('%',#{scWord},'%')
+				)
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(keyword)">
+				AND (
+					vod_keyword LIKE CONCAT ('%',#{keyword},'%') 
+				)
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scCategory)">
+				AND (
+					vod_keyword LIKE CONCAT ('%',#{scCategory},'%') 
+				)
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(vodIdx)">
+				AND vod_idx = #{vodIdx}
+			</if>
+			<if test="@kepco.util.StrUtil@getContextPath() eq 'ADMIN' and @kepco.util.StrUtil@getUserRole() eq 'USER'">
+				<bind name="memberIdx" value="@kepco.util.StrUtil@getSessionIdx()"/>
+				AND insert_idx = #{memberIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(startDate)">
+				AND vod_edu_bgn_date >= #{startDate}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(endDate)">
+				AND	#{endDate} >= vod_edu_end_date
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scInsertNm)">
+				AND (insert_idx in (SELECT member_idx FROM cms_member m WHERE m.member_nm LIKE CONCAT ('%',#{scInsertNm},'%') ))
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.vod.VodVo">
+		SELECT
+			*,
+			(SELECT COUNT(1) FROM lms_vod_bundle b WHERE b.vod_idx = a.vod_idx) content_cnt,
+			(SELECT member_nm FROM cms_member m WHERE a.insert_idx = m.member_idx) insert_nm,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.apply_state = '1') vod_apply_cnt,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.apply_state = '2') vod_students_cnt,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.learn_state = '2') vod_complete_cnt
+		FROM lms_vod a
+			<include refid="selectWhere"/>
+			<if test="!@kepco.util.StrUtil@isBlank(type)">
+				AND vod_state = 2
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(lms)">
+				AND vod_state = 2
+			</if>
+		ORDER BY
+		<choose>
+			<when test="!@kepco.util.StrUtil@isBlank(lms)">
+				vod_idx DESC
+			</when>
+			<otherwise>
+				vod_idx ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.vod.VodVo">
+		SELECT 
+			*,
+			(SELECT po_subject FROM lms_poll b WHERE a.po_idx = b.po_idx) po_subject,
+			(SELECT ev_subject FROM lms_evaluation b WHERE a.ev_idx = b.ev_idx) ev_subject
+			
+		FROM lms_vod a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.vod.VodVo" useGeneratedKeys="true" keyProperty="vodIdx" keyColumn="vodIdx">
+		INSERT INTO lms_vod (
+			vod_title,vod_desc,vod_summary,vod_category,vod_keyword,vod_state,vod_image,vod_file,po_idx,ev_idx,
+			vod_accept_bgn_date,vod_accept_end_date,vod_edu_bgn_date,vod_edu_end_date,vod_limit_cnt,vod_accept_auto,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{vodTitle},#{vodDesc},#{vodSummary},#{vodCategory},#{vodKeyword},#{vodState},#{vodImage},#{vodFile},#{poIdx},#{evIdx},
+			#{vodAcceptBgnDate},#{vodAcceptEndDate},#{vodEduBgnDate},#{vodEduEndDate},#{vodLimitCnt},#{vodAcceptAuto},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.vod.VodVo">
+		UPDATE lms_vod
+		<set>
+			vod_title = #{vodTitle},
+			vod_desc = #{vodDesc},
+			vod_summary = #{vodSummary},
+			vod_category = #{vodCategory},
+			vod_keyword = #{vodKeyword},
+			vod_state = #{vodState},
+			vod_image = #{vodImage},
+			vod_file = #{vodFile},
+			po_idx = #{poIdx},
+			ev_idx=#{evIdx},
+			vod_accept_bgn_date = #{vodAcceptBgnDate},
+			vod_accept_end_date = #{vodAcceptEndDate},
+			vod_edu_bgn_date = #{vodEduBgnDate},
+			vod_edu_end_date = #{vodEduEndDate},
+			vod_limit_cnt = #{vodLimitCnt},
+			vod_accept_auto = #{vodAcceptAuto},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND vod_idx = #{vodIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.vod.VodVo">
+		UPDATE lms_vod
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND vod_idx = #{vodIdx}
+	</update>
+	
+	<select id="myPrintSelect" parameterType="string" resultType="egovMap">
+		select 
+			*, 
+			(select member_birth from cms_member where member_idx = a.member_idx) member_birth
+		from lms_vod_apply a
+		left join lms_vod b
+		on a.vod_idx = b.vod_idx
+		
+		where apply_idx =  #{applyIdx}
+	</select>
+	
+	<select id="myListSelect"  parameterType="int" resultType="egovMap">
+		select 
+		    a.apply_idx,a.vod_idx,a.member_idx,a.apply_state,a.apply_date,a.learn_state,a.learn_date,
+			b.vod_title,b.vod_category,b.vod_summary,b.vod_desc,b.vod_state,b.vod_image,b.vod_file,b.vod_keyword,b.po_idx,b.ev_idx,
+			c.content_cnt,ifnull(c.learn_time,0) learn_time_sum, c.learn_cnt,c.learn_score, e.poqr_idx,e.poqr_insert_date,f.evqr_idx,f.evqr_insert_date
+		from lms_vod_apply a
+		left join lms_vod b
+		on a.vod_idx = b.vod_idx
+		left join (
+			select aa.vod_idx,count(DISTINCT aa.content_idx) content_cnt, count(DISTINCT bb.content_idx) learn_cnt, sum(DISTINCT learn_time) learn_time, learn_score from lms_vod_bundle aa 
+			left join lms_vod_learn bb on bb.member_idx = #{memberIdx} and aa.vod_idx = bb.vod_idx and aa.content_idx = bb.content_idx group by vod_idx
+		) c
+		on a.vod_idx = c.vod_idx
+		left join lms_poll_qson_review e
+		on b.po_idx = e.po_idx
+		and b.vod_idx = e.vod_idx
+		left join lms_evaluation_qson_review f
+        on b.ev_idx = f.ev_idx
+        and b.vod_idx = f.vod_idx
+		where a.member_idx = #{memberIdx}
+			and a.apply_state = '2'
+			and a.delete_yn = 'n'
+			and b.delete_yn = 'n'
+		GROUP by a.vod_idx
+	</select>
+	
+	<update id="thumbnailUpdate" parameterType="kepco.lms.vod.VodVo">
+		UPDATE lms_vod
+		<set>
+			vod_image = #{vodImage}
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND vod_idx = #{vodIdx}
+	</update>
+	
+	<update id="fileUpdate" parameterType="kepco.lms.vod.VodVo">
+		UPDATE lms_vod
+		<set>
+			vod_file = #{vodFile}
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND vod_idx = #{vodIdx}
+	</update>
+</mapper>

@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>무제 문서</title>
+<link rel="stylesheet" href="/assets/css/board.css"><!-- 게시판css -->
+
+<link rel="stylesheet" href="/pages/kepco/css/basic.css"><!-- 공통css -->
+<link rel="stylesheet" href="/pages/kepco/css/layout.css"><!-- 공통css -->
+<link th:if="${currMenuNode?.data?.mn}" rel="stylesheet" href="/pages/kepco/css/sub.css"><!-- 공통css -->
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css"><!-- 애니메이션 -->
+<script src="/assets/libs/fontawesome/fontawesome.js" crossorigin="anonymous"></script><!-- 폰트어썸 -->
+<link href="/assets/libs/aos/aos.css" rel="stylesheet"><!-- aos 애니메이션 -->
+<script src="/assets/libs/aos/aos.js"></script><!-- aos 애니메이션 -->
+
+<script src="/assets/js/jquery-3.5.1.min.js"></script><!-- fullpage 제이쿼리 링크 -->
+<script src="/pages/kepco/js/fullpage.js"></script><!-- fullpage 제이쿼리 링크 -->
+<link rel="stylesheet" href="/pages/kepco/css/fullpage.min.css"><!-- fullpage js css 링크 -->
+
+<script src="/assets/libs/swiperjs/swiper-bundle.min.js" ></script><!-- 비주얼 -->
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<link rel="stylesheet" href="/assets/libs/swiperjs/swiper-bundle.min.css" /><!-- 슬라이드 -->
+
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<script src="/pages/kepco/js/script.js" ></script><!-- 컨텐츠 스크립트 -->
+<script src="/pages/kepco/js/mouse_interaction.js" ></script><!-- 마우스 인터랙션 스크립트 -->
+
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" /><!-- 4페이지 슬라이드 -->
+
+<style>
+#gnb .gnbw .logo a{
+	background-color: transparent;
+    background-image: url(/pages/kepco/img/logo-on.svg);
+    width: 85px;
+    height: 150px;
+}
+</style>
+</head>
+
+
+
+<body>
+<script> 
+	AOS.init(); // 자바스크립트로 init()을 해야 동작한다.
+</script>
+
+<header>
+	<nav>
+		<div id="gnb">
+			<div class="gnbw">
+				<div class="logo"><a href=""></a></div>
+				<ul>
+					<li><a href="">교육과정</a></li>
+					<li><a href="">교육원</a></li>
+					<li><a href="">커뮤니티</a></li>
+					<li><a href="">나의강의실</a></li>
+				</ul>
+				<div class="snsbox">
+					<a href="" class="fb"><i class="fa-brands fa-facebook-f"></i></a>
+					<a href="" class="yt"><i class="fa-brands fa-youtube"></i></a>
+					<!-- <a href="" class="ts"><span class="hidden">티스토리</span></a> -->
+				</div>
+				<div class='toggle modalLink'>
+				  <span></span>
+				  <span></span>
+				  <span></span>
+				</div>
+				<script>
+				//사이트맵 아이콘
+				$('.toggle').click(function(){
+				   $(this).toggleClass('active');
+				});	
+				</script>
+			</div>
+		</div>
+	</nav>  
+</header>
+ 
+
+<div class="sub_wrap">
+        <div id="sub_content">
+            <div class="content_box">
+                <!-- contents -->
+                <div id="contents">
+					<div class="contents_top">
+						<p class="subtop_title2">korea electric power corporation</p>
+						<h3 class="subtop_title">공지사항</h3>
+					</div>
+					<div id="contents_wrap" class="conStyle">
+						<div id="page_content"><!-- 페이지영역 -->
+							<!-- 게시판 검색 영역 -->
+							<div id="board_search">
+								<div class="board_search_form text-center">
+									<form id="board_search_form" action="" method="get">
+										<div class="input_box select float-none input_category">
+										  <select name="sc_key" title="검색분류" id="board_select_label" class="select_type">
+											  <option value="subject">제목</option>
+											  <option value="content">내용</option>
+											  <option value="writer_name">작성자</option>
+										  </select>
+										</div>
+										<div class="input_box search float-none">
+										  <input type="text" title="검색어" name="sc_word" id="search_keyword" class="search_keyword input_type" value="">
+										  <input type="submit" value="검색" title="검색" class="btn_serach">
+										</div>
+									</form>
+								</div>
+							</div>
+							<!-- //게시판 검색 영역 -->
+
+							<div id="list_total_count">
+								전체 : <strong>100</strong>,
+								페이지 : <strong id="page_num">1</strong>/10                    
+								<a href="/board/rss/?board=notice&amp;site=cnc&amp;mn=48" class="btn_rss" target="_blank">
+									<img src="/assets/img/icon_rss.png" alt="RSS">
+								</a>
+							</div>
+							
+							<div id="board_list">
+								<table>
+									<caption>  리스트 : 공지사항 게시판의 번호, 제목,작성자, 등록일, 첨부파일, 조회 리스트입니다. </caption>
+									<thead>
+										<tr>
+											<th scope="col" class="t_num">번호</th>
+											<th scope="col" class="t_title">제목</th>
+											<th scope="col" class="t_user">작성자</th>
+											<th scope="col" class="t_date">등록일</th>
+											<th scope="col" class="t_file">첨부</th>
+											<th scope="col" class="t_hit">조회</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?
+											for($i = 10; $i >= 1; $i--){
+										?>
+										<tr>
+											<td class="t_num">
+											<?=$i?>
+											<!--
+											<div><img alt="공지" src="/_modules/board/assets/img/icon_notice2.png"></div>
+											-->
+											</td>
+											<td class="txt_l t_title">
+												<a href="/pages/kepco/view.html" style=" font-weight: 600;">
+												<!--<span class="category">[일반]</span>-->
+												공지사항 게시글입니다.	
+											</td>
+											<td class="t_user">관리자</td>
+											<td class="t_date">2023-05-10</td>
+											<td class="t_file"><img alt="첨부파일 있음" src="/assets/img/icon_file.png"></td>
+											<td class="t_hit">108</td>
+										</tr>
+										<?}?>
+									</tbody>
+								</table>
+								<div id="paginate_complex" class="mt20 clear">
+									<p class="btn_page">
+										<a href="#" class="first_back" title="처음페이지">
+											<span class="hidden">처음페이지</span>
+										</a>
+										<a href="#" title="현재페이지" class="on">1</a>
+										<a href="#" title="2">2</a>
+										<a href="#" title="3">3</a>
+										<a href="#" title="4">4</a>
+										<a href="#" title="5">5</a>
+										<a href="#" class="next_back" title="다음페이지">
+											<span class="hidden">다음페이지</span>
+										</a>
+										<a href="#" class="last_back" title="끝페이지">
+											<span class="hidden">끝페이지</span>
+										</a>            
+									</p>
+								</div>
+								
+								<div class="board_btn clear">
+									<div class="fr">
+										<a href="/pages/kepco/write.html" class="button_type2">쓰기</a>
+									</div>
+								</div>
+							</div>
+						</div><!--// 페이지영역 -->
+					</div>
+				</div>
+                <!-- contents -->
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>

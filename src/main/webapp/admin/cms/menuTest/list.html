@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+	
+<th:block layout:fragment="content">
+
+<input type="hidden" id="siteNm" value="">
+
+		<div class="row mb0">
+			<!-- 그룹 -->
+			<div class="col s1 page_box">
+				<div class="row">
+					<div class="col s12 pd0">
+						<ul class="layout_group">
+<!-- 						테스트용 -->
+							<li><a href="LMS" class="on">LMS</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<!-- // 그룹 -->
+<!-- 			<div class="col s1 sideline pd_box" >  -->
+<!-- 			사이트 목록 -->
+<!-- 						<form id="frmList" method="get"> -->
+<!-- 							사이트 검색 -->
+<!-- 							<select name="scSiteIdx" id="scSiteIdx"> -->
+<!-- 								<option value="" >선택</option> -->
+<!-- 								<option th:each="svo : ${siteList}" th:value="${svo?.siteIdx}" th:utext="${svo?.siteNm}" th:selected="${svo?.siteIdx} == ${vo?.siteIdx}" ></option> -->
+<!-- 							</select> -->
+<!-- 						</form> -->
+<!-- 			</div> -->
+			<div class="col s3 sideline pd_box" id="menu_tree"> 
+				<!-- 검색창 -->
+				<div class="row">
+				    <div class="col s12 left-align">
+				        <div class="search_tree input-field">
+				            <input type="text" id="search_name">
+				            <label for="search_name">메뉴검색</label>
+				        </div>
+				    </div>
+				</div>
+				<div id="tree_menu" style="max-height: 700px;overflow-y: scroll;">
+				    <ul>
+				        <li>Root node 1
+				            <ul>
+				                <li id="child_node_1">Child node 1</li>
+				                <li>Child node 2</li>
+				            </ul>
+				        </li>
+				        <li>Root node 2</li>
+				    </ul>
+				</div>
+			</div>
+		</div>
+
+
+<script>
+
+$(function() {
+    //그룹선택
+    var group_tab = $(".layout_group").find('a');
+    group_tab.click(function() {
+    	
+      siteNm = $(this).attr('href');
+      
+      group_tab.removeClass('on');
+      $(this).addClass('on');
+      $('#siteNm').val(siteNm);
+	  $('#menu_form').empty();
+
+      setTimeout(function() {
+        get_menu_tree(siteNm)
+      }, 40);
+      return false;
+    });
+    group_tab.eq(0).trigger('click');
+  });
+
+  function get_menu_tree(siteNm) {
+    if (siteNm == '') {
+      toast('왼쪽의 그룹부터 선택해주세요');
+      return false;
+    }
+    
+	make_tree(siteNm);
+//     $.ajax({
+//       url: gblAdminPath+'/cms/menuTest/menuList?type=group_tree&siteNm='+siteNm,
+//       type: 'GET',
+//       dataType: 'html',
+//     }).done(function(data) {
+//       $('#menu_tree').html(data);
+//     }).fail(function() {
+//       toast('네트워크 또는 시스템 장애입니다.', 3000);
+//     });
+  }
+
+//   todo 생성하면서 이름변경이 동시에 안됨 추후 처리
+function make_tree(siteNm){
+    $('#tree_menu').jstree({
+		"core": {
+		  "animation": 1,
+		  "check_callback": true,
+		  "themes": {"stripes": true},
+		  'data': {
+			'url':  gblAdminPath+'/cms/menuTest/listJson?type=tree_menu',
+		    'data': function(node) {
+		      return {'id':node.id, 'siteNm': siteNm};
+		    },
+		    "dataType": "json"
+		  }
+		  , 'check_callback': true,
+		  'themes': {
+		    'responsive': false
+		  }
+		},
+		"types": {
+			"#": {
+			  "max_children": 1,
+			  "max_depth": 5,
+			  "valid_children": ["root"]
+			},
+			"root": {
+			  "icon": "glyphicon glyphicon-folder",
+			  "valid_children": ["default"]
+			},
+			"default": {
+				"valid_children": ["default", "file"]
+			},
+			"file": {
+				"icon": "glyphicon glyphicon-file",
+				"valid_children": ["file"]
+			}
+		},
+      "plugins": ["contextmenu", "dnd","search", "state", "types", "html_data"]
+    }).on('create_node.jstree', function(e, data) {    	
+      $.ajax({
+        url: gblAdminPath+'/menu/?type=set_insert',
+        type: 'POST',
+        data: {'id': data.node.parent, 'position': data.position, 'text': data.node.text, 'siteNm': siteNm},
+        dataType: 'json',
+      }).done(function (d) {
+          data.node.id = d.status;
+          $tree = $('#tree_menu');
+          $tree.jstree("open_node", $tree.jstree("get_selected"));
+          var inst = $.jstree.reference(data);
+          inst.edit(data);
+          data.instance.refresh();
+      }).fail(function () {
+        toast('네트워크 또는 시스템 장애입니다.', 4000);
+        data.instance.refresh();
+      });
+    }).on('rename_node.jstree', function(e, data) {
+
+      $.ajax({
+        url:  gblAdminPath+'/menu/?type=set_rename',
+        type: 'POST',
+        data: {'id': data.node.id, 'text': data.text, 'siteNm': siteNm},
+        dataType: 'json',
+      }).done(function (d) {
+
+        toast(d.message);
+        data.instance.refresh();
+        setTimeout(function() {
+         $("#"+data.node.id).focus();
+        }, 40);
+      }).fail(function () {
+        toast('네트워크 또는 시스템 장애입니다.', 4000);
+        data.instance.refresh();
+      });
+    }).on('delete_node.jstree', function(e, data) {
+      $.confirm({
+        theme: 'supervan', // 'material', 'bootstrap'
+        title: data.node.text + '삭제',
+        content: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+        buttons: {
+          확인: function() {
+            $.ajax({
+              url: gblAdminPath+'/menu/?type=set_delete',
+              type: 'POST',
+              data: {'id': data.node.id},
+              dataType: 'json',
+            }).done(function (d) {
+              toast(d.message);
+              data.instance.refresh();
+            }).fail(function () {
+              toast('네트워크 또는 시스템 장애입니다.', 4000);
+              data.instance.refresh();
+            });
+          },
+          취소: function() {
+            data.instance.refresh();
+          }
+        }
+      });
+      return false;
+
+    }).on("move_node.jstree", function(e, data) {
+      var parent = data.instance.get_node(data.parent);
+      var previous = data.instance.get_node(parent.children[data.position - 1]);
+      var param = {
+        prev_idx: previous.id || ''
+        , move_idx: data.node.id
+        , parent_idx: data.parent
+        , siteNm: siteNm
+        , children: parent.children
+      };
+
+      $.ajax({
+        url: gblAdminPath+'/menu/?type=set_move',
+        type: 'POST',
+        data: param,
+        dataType: 'json',
+      }).done(function (d) {
+        toast(d.message);
+        data.instance.refresh();
+      }).fail(function () {
+        toast('네트워크 또는 시스템 장애입니다.', 4000);
+        data.instance.refresh();
+      });
+
+      if (!data.instance.is_open(data.parent)) {
+        data.instance.open_node(data.parent);
+      }
+	 }).on("cut.jstree", function(evt, data) {
+     console.log('잘라내기');
+	}).on("copy.jstree", function(evt, data) {
+     console.log('복사');
+	 }).on("paste.jstree", function(evt, data) {
+     console.log('붙여넣기');
+    }).on("select_node.jstree", function(evt, data) {
+      $.post(gblAdminPath+'/menu/?type=menu_form', {'mn_idx': data.node.id, 'siteNm': siteNm}).done(function(d) {
+        $('#menu_form').html(d);
+      }).fail(function() {
+        data.instance.refresh();
+      });
+    });
+    var to = false;
+    $('#search_name').keyup(function() {
+      if (to) { clearTimeout(to); }
+      to = setTimeout(function() {
+        var v = $('#search_name').val();
+        $('#tree_menu').jstree(true).search(v);
+      }, 250);
+    });
+}
+</script>
+
+			<div id="areaForm" class="col s6 scroll_defalt">
+			</div>
+</body>
+</html>

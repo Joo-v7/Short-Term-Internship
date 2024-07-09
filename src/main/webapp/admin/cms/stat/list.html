@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+	
+<th:block layout:fragment="content">
+<!-- AM 차트 4 -->
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<script src="/assets/libs/amchart4/themes/animated.js"></script>
+<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+<script src="/assets/libs/amchart4/lang/ko_KR.js"></script>
+<script>
+am4core.ready(function() {
+	am4core.useTheme(am4themes_animated);
+	am4core.options.autoDispose = true;
+});
+</script>
+<script>
+
+	$(function() {
+		visitWeek();
+		visitHour();
+		visitDevice();
+		visitCount();
+	});
+function visitWeek() { // chartdiv_personal_2 사고 위치 비교
+	 $.ajax({
+        url: gblAdminPath + "/cms/stat/chart/visitWeek",
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+
+			var chart = am4core.create("curve_chart", am4charts.XYChart);
+			
+			chart.data = [];
+			// Add data
+			 for (var i = 0; i < data.data.list.length; i++) {
+	            var chartDataItem = {
+	            	"date": data.data.list[i].visitDate,
+	        		"value": data.data.list[i].visitCount
+	            };
+	
+	            chart.data.push(chartDataItem);
+	        }
+
+			// X축을 생성합니다.
+			var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+			dateAxis.renderer.grid.template.location = 0;
+			dateAxis.renderer.minGridDistance = 50; // X축 간격을 조정합니다.
+			dateAxis.language.locale = am4lang_ko_KR; // 한국어로 표시되도록 설정합니다.
+			dateAxis.dateFormats.setKey("day", "MM월 dd일"); // 날짜 형식을 설정합니다.
+
+			// Y축을 생성합니다.
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+
+			// 꺾은선 그래프 시리즈를 생성합니다.
+			var series = chart.series.push(new am4charts.LineSeries());
+			series.dataFields.dateX = "date";
+			series.dataFields.valueY = "value";
+			series.tooltipText = "{valueY.value}";
+
+			// 차트 커서를 생성합니다.
+			chart.cursor = new am4charts.XYCursor();
+    	
+		
+    }).fail(function () {
+		console.log("최근 일주일 방문자 추이를 불러오지 못했습니다.");
+    });
+}
+function visitHour() { // chartdiv_personal_2 사고 위치 비교
+	 $.ajax({
+       url: gblAdminPath + "/cms/stat/chart/visitHour",
+       type: 'GET',
+       dataType: 'json',
+     }).done(function (data) {
+			var chart = am4core.create("chart_time_div", am4charts.XYChart);
+			
+			chart.data = [];
+			// Add data
+			 for (var i = 0; i < data.data.list.length; i++) {
+	            var chartDataItem = {
+	            	"category": data.data.list[i].visitDate,
+	        		"value": data.data.list[i].visitCount
+	            };
+	
+	            chart.data.push(chartDataItem);
+	        }
+
+			// X축
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.dataFields.category = "category";
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.renderer.minGridDistance = 50; // X축 간격을 조정합니다.
+			categoryAxis.renderer.labels.template.rotation = 0; // X축 레이블을 가로로 표시합니다.
+
+			// Y축
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+
+			var series = chart.series.push(new am4charts.ColumnSeries());
+			series.dataFields.categoryX = "category";
+			series.dataFields.valueY = "value";
+			series.columns.template.tooltipText = "{valueY.value}";
+			series.columns.template.width = am4core.percent(40); // 막대의 너비를 80%로 설정합니다.
+
+			chart.cursor = new am4charts.XYCursor();
+   				
+    }).fail(function () {
+		console.log("최근 일주일 시간대별 방문자 수를 불러오지 못했습니다.");
+    });
+}
+function visitDevice() { // chartdiv_personal_2 사고 위치 비교
+	 $.ajax({
+       url: gblAdminPath + "/cms/stat/chart/visitDevice",
+       type: 'GET',
+       dataType: 'json',
+       global: false, //로딩창 제외
+   }).done(function (data) {
+			var chart = am4core.create("donutchart", am4charts.PieChart);
+			
+			var data = [{
+			"category": "데스크탑",
+			"value": data.data.vo.comTotal
+			}, {
+			"category": "모바일",
+			"value": data.data.vo.mobTotal
+			}];
+
+			chart.data = data;
+			chart.innerRadius = am4core.percent(40); 
+			var series = chart.series.push(new am4charts.PieSeries());
+			series.dataFields.value = "value";
+			series.dataFields.category = "category";
+			series.template.disabled = true; // 라인 틱을 비활성화합니다.
+			series.ticks.template.disabled = true; // 라인 틱을 비활성화합니다.
+
+			chart.legend.position = 'right';
+
+   }).fail(function () {
+		console.log("최근 일주일 디바이스별 방문자 비율을 불러오지 못했습니다.");
+   });
+}
+function visitCount() { // 분류별 특정기간 방문자 수
+	 $.ajax({
+       url: gblAdminPath + "/cms/stat/chart/visitCount",
+       type: 'GET',
+       dataType: 'json',
+   }).done(function (data) {
+			var chart = am4core.create('tt_chart', am4charts.XYChart);
+			chart.colors.step = 2;
+
+			chart.legend = new am4charts.Legend()
+			chart.legend.position = 'top'
+			chart.legend.paddingBottom = 20
+			chart.legend.labels.template.maxWidth = 95
+
+			var xAxis = chart.xAxes.push(new am4charts.CategoryAxis())
+			xAxis.dataFields.category = 'category'
+			xAxis.renderer.cellStartLocation = 0.1
+			xAxis.renderer.cellEndLocation = 0.9
+			xAxis.renderer.grid.template.location = 0;
+
+			var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			yAxis.min = 0;
+
+			function createSeries(value, name) {
+				var series = chart.series.push(new am4charts.ColumnSeries())
+				series.dataFields.valueY = value
+				series.dataFields.categoryX = 'category'
+				series.name = name
+
+				series.events.on("hidden", arrangeColumns);
+				series.events.on("shown", arrangeColumns);
+
+				var bullet = series.bullets.push(new am4charts.LabelBullet())
+				bullet.interactionsEnabled = false
+				bullet.dy = 30;
+				bullet.label.text = '{valueY}'
+				bullet.label.fill = am4core.color('#ffffff')
+
+				return series;
+			}
+			
+			chart.data = [];
+			// Add data
+			 for (var i = 0; i < data.data.list.length; i++) {
+	            // Assuming data.data.list is an array with objects having properties like "teom", "caution", "danger", "accident", "carelessness"
+	            var chartDataItem = {
+	            	"category": data.data.list[i].systemType,
+	        		"day": data.data.list[i].dayVisit,
+	        		"week": data.data.list[i].weekVisit,
+	        		"month": data.data.list[i].monthVisit,
+	        		"year": data.data.list[i].yearVisit
+	            };
+	
+	            chart.data.push(chartDataItem);
+	        }
+			
+			createSeries('day', '하루');
+			createSeries('week', '일주일');
+			createSeries('month', '한달');
+			createSeries('year', '연간');
+
+			function arrangeColumns() {
+
+				var series = chart.series.getIndex(0);
+
+				var w = 1 - xAxis.renderer.cellStartLocation - (1 - xAxis.renderer.cellEndLocation);
+				if (series.dataItems.length > 1) {
+					var x0 = xAxis.getX(series.dataItems.getIndex(0), "categoryX");
+					var x1 = xAxis.getX(series.dataItems.getIndex(1), "categoryX");
+					var delta = ((x1 - x0) / chart.series.length) * w;
+					if (am4core.isNumber(delta)) {
+						var middle = chart.series.length / 2;
+
+						var newIndex = 0;
+						chart.series.each(function(series) {
+							if (!series.isHidden && !series.isHiding) {
+								series.dummyData = newIndex;
+								newIndex++;
+							}
+							else {
+								series.dummyData = chart.series.indexOf(series);
+							}
+						})
+						var visibleCount = newIndex;
+						var newMiddle = visibleCount / 2;
+
+						chart.series.each(function(series) {
+							var trueIndex = chart.series.indexOf(series);
+							var newIndex = series.dummyData;
+
+							var dx = (newIndex - trueIndex + middle - newMiddle) * delta
+
+							series.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+							series.bulletsContainer.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+						})
+					}
+				}
+			}
+
+   }).fail(function () {
+		console.log("분류별 특정기간 방문자 수를 불러오지 못했습니다");
+   });
+}
+</script>
+
+<div class="row">
+	
+	<input type="hidden" id="gr_id" value="">
+	<div class="col s11 sideline">
+		<!-- //그룹 -->
+		<div class="col s12 m12 l6 xl6">
+			<h2 class="h2_butt">최근 일주일 방문자 추이</h2>
+			<div id="curve_chart" style="width:100%; height: 400px"></div>
+		</div>
+		<div class="col s12 m12 l6 xl6">
+			<h2 class="h2_butt">최근 일주일 시간대별 방문자 수</h2>
+			<div id="chart_time_div" style="width:100%; height: 400px; "></div>
+		</div>
+		<div class="col s12 m12 l6 xl4">
+			<h2 class="h2_butt">최근 일주일 디바이스별 방문자 비율</h2>
+			<div id="donutchart" style="width:100%; height: 300px;"></div>	
+		</div>
+		<div class="col s12 m12 l6 xl8">
+			<h2 class="h2_butt">분류별 특정기간 방문자 수</h2>
+			<div id="tt_chart" style="width:100%; height: 300px;"></div>	
+		</div>
+	</div>
+</div>
+</body>
+</html>

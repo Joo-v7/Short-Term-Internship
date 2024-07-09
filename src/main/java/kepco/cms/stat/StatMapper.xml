@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.stat.StatMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND visit_session_id LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scType)">
+			AND visit_url LIKE CONCAT ('%',#{scType},'%')
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.stat.StatVo">
+		SELECT
+			*
+		FROM cms_visit_count
+			<include refid="selectWhere"/>
+	</select>
+	
+<!-- 	일별 통계 -->
+	<select id="selectDate" parameterType="map" resultType="kepco.cms.stat.StatVo">
+		SELECT date_format(visit_date, '%Y-%m-%d') visit_date, count(visit_date) visit_count
+		FROM cms_visit_count
+		WHERE `visit_date` > date_add(now(),interval -7 day) and date_format(now(), '%Y-%m-%d') != date_format(visit_date, '%Y-%m-%d')
+		AND  visit_url NOT LIKE '%cms!%' ESCAPE '!'
+		GROUP BY date_format(visit_date, '%Y-%m-%d')
+	</select>
+	
+<!-- 	시간별 통계 -->
+	<select id="selectHour" parameterType="map" resultType="kepco.cms.stat.StatVo">
+
+		SELECT date_format(visit_date, '%H') visit_date, count(*) visit_count
+		FROM `cms_visit_count`
+		WHERE `visit_date` > date_add(now(),interval -7 day) and date_format(now(), '%Y-%m-%d') != date_format(visit_date, '%Y-%m-%d')
+		AND  `visit_url` NOT LIKE '%cms!%' ESCAPE '!'
+		GROUP BY date_format(visit_date, '%H')
+	</select>
+	
+<!-- 	기기별 통계 -->
+	<select id="selectDevice" parameterType="map" resultType="kepco.cms.stat.StatVo">
+		SELECT sum(if(visit_device = 'MOBILE', '1', 0)) mob_total, sum(if(visit_device = 'DESKTOP', '1', 0)) com_total
+		FROM `cms_visit_count`
+		WHERE `visit_date` > date_add(now(),interval -8 day) and date_format(now(), '%Y-%m-%d') != date_format(visit_date, '%Y-%m-%d')
+	</select>
+	
+	<!-- 	기기별 통계 -->
+	<select id="selectDeviceStat" parameterType="map" resultType="kepco.cms.stat.StatVo">
+		SELECT sum(if(visit_device != 'DESKTOP', '1', 0)) mob_total, sum(if(visit_device = 'DESKTOP', '1', 0)) com_total
+		FROM `cms_visit_count`
+		WHERE `visit_date` > date_add(now(),interval -8 day) and date_format(now(), '%Y-%m-%d') != date_format(visit_date, '%Y-%m-%d')
+		AND  `visit_url` NOT LIKE '%cms!%' ESCAPE '!'
+	</select>
+<!-- 브러우저별 통계 -->
+	<select id="selectBrowser" parameterType="map" resultType="kepco.cms.stat.StatVo">
+		SELECT `visit_browser`, count(visit_idx) visit_count
+		FROM `cms_visit_count`
+		WHERE `visit_date` > date_add(now(),interval -8 day) and date_format(now(), '%Y-%m-%d') != date_format(visit_date, '%Y-%m-%d')
+		AND  `visit_url` NOT LIKE '%cms!%' ESCAPE '!'
+		GROUP BY `visit_browser`
+	</select>
+	
+<!-- 	os별 통계 -->
+	<select id="selectOs" parameterType="map" resultType="kepco.cms.stat.StatVo">
+		SELECT `visit_os`, count(visit_idx) visit_count
+		FROM `cms_visit_count`
+		WHERE `visit_date` > date_add(now(),interval -8 day) and date_format(now(), '%Y-%m-%d') != date_format(visit_date, '%Y-%m-%d')
+		AND  `visit_url` NOT LIKE '%cms!%' ESCAPE '!'
+		GROUP BY `visit_os`
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.stat.StatVo">
+		SELECT
+			*
+		FROM cms_visit_count
+		WHERE
+			<if test="!@kepco.util.StrUtil@isBlank(visitIdx)">
+				AND visit_idx = #{visitIdx}
+			</if>
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="kepco.cms.stat.StatVo" useGeneratedKeys="true" keyProperty="visitIdx" keyColumn="visit_idx">
+		INSERT INTO cms_visit_count
+		(
+		visit_idx, visit_session_id, visit_browser, visit_os, visit_mobile, visit_keyword, visit_search_engine, visit_user_agent, visit_referer_url, visit_url, visit_date, menu_idx, siteNm, visit_ip, visit_country, visit_city, visit_loc
+		)
+		VALUES
+		(
+		#{visitIdx}, #{visitSessionId}, #{visitBrowser}, #{visitOs}, #{visitMobile}, #{visitKeyword}, #{visitSearchEngine}, #{visitUserAgent}, #{visitRefererUrl}, #{visitUrl}, #{visit_date}, #{menuIdx}, #{sitenm}, #{visitIp}, #{visitCountry}, #{visitCity}, #{visitLoc}
+		)
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="kepco.cms.stat.StatVo">
+		UPDATE cms_visit_count
+		<set>
+			visit_session_id = #{visitSessionId}, 
+			visit_browser = #{visitBrowser}, 
+			visit_os = #{visitOs}, 
+			visit_mobile = #{visitMobile}, 
+			visit_keyword = #{visitKeyword}, 
+			visit_search_engine = #{visitSearchEngine}, 
+			visit_user_agent = #{visitUserAgent}, 
+			visit_referer_url = #{visitRefererUrl}, 
+			visit_url = #{visitUrl}, 
+			visit_date = #{visit_date}, 
+			menu_idx = #{menuIdx}, 
+			site_nm = #{siteNm}, 
+			visit_ip = #{visitIp}, 
+			visit_country = #{visitCountry}, 
+			visit_city = #{visitCity}, 
+			visit_loc = #{visitLoc}
+		</set>
+		WHERE
+			AND visit_idx = #{visitIdx}
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="delete" parameterType="map">
+		DELETE FROM cms_visit_count
+		WHERE
+			visit_idx = #{visitIdx}
+	</delete>
+	
+	<select id="visitCount" parameterType="map" resultType="kepco.cms.stat.StatVo">
+	    SELECT
+	        (SELECT COUNT(*) FROM cms_visit_count WHERE visit_date >= CURDATE() - INTERVAL 1 DAY AND visit_url LIKE CONCAT ('%',#{scType},'%')) AS dayVisit,
+	        (SELECT COUNT(*) FROM cms_visit_count WHERE visit_date >= CURDATE() - INTERVAL 1 WEEK AND visit_url LIKE CONCAT ('%',#{scType},'%')) AS weekVisit,
+	        (SELECT COUNT(*) FROM cms_visit_count WHERE visit_date >= CURDATE() - INTERVAL 1 MONTH AND visit_url LIKE CONCAT ('%',#{scType},'%')) AS monthVisit,
+	        (SELECT COUNT(*) FROM cms_visit_count WHERE visit_date >= CURDATE() - INTERVAL 1 YEAR AND visit_url LIKE CONCAT ('%',#{scType},'%')) AS yearVisit
+	</select>
+	
+</mapper>

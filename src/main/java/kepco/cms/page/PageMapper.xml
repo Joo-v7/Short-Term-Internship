@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.page.PageMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(siteIdx)">
+				AND site_idx = #{siteIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scSite)">
+				AND site = #{scSite}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND page_cd LIKE CONCAT ('%',#{scWord},'%')
+				OR page_nm LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scPageType)">
+				AND page_type = #{scPageType}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.page.PageVo">
+		SELECT *
+		FROM cms_page
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.page.PageVo">
+		SELECT
+			*
+		FROM cms_page
+		WHERE delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(pageIdx)">
+				AND page_idx = #{pageIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scPageType)">
+				AND page_type = #{scPageType}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scSite)">
+				AND site = #{scSite}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scPageCd)">
+				AND page_cd = #{scPageCd}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scUseYn)">
+				AND use_yn = #{scUseYn}
+			</if>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.page.PageVo" useGeneratedKeys="true" keyProperty="pageIdx" keyColumn="page_idx">
+		INSERT INTO cms_page
+		( page_idx, site, page_nm, page_cd, page_type, page_path, page_ext, page_content, use_yn, 
+		delete_yn, insert_idx, insert_ip, insert_date )
+		VALUES
+		( #{pageIdx}, #{site}, #{pageNm}, #{pageCd}, #{pageType}, #{pagePath}, #{pageExt}, #{pageContent}, #{useYn}, 
+		'n', #{insertIdx}, #{insertIp}, CURRENT_TIMESTAMP() )
+	
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.page.PageVo">
+		UPDATE cms_page
+		<set>
+			page_nm = #{pageNm},
+			page_cd = #{pageCd},
+			page_type = #{pageType},
+			page_path = #{pagePath},
+			page_content = #{pageContent},
+			page_ext = #{pageExt},
+			site = #{site},
+			use_yn = #{useYn},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP()
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND page_idx = #{pageIdx}
+	</update>
+	
+	<update id="delete" parameterType="map">
+		UPDATE cms_page
+		<set>
+			delete_yn = 'y',
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP()
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND page_idx = #{pageIdx}
+	</update>
+	
+</mapper>
+	

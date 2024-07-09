@@ -1,0 +1,141 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<link rel="stylesheet" href="/assets/css/board.css"><!-- 게시판css -->
+<style>
+.t_num {width: 100px;}
+.t_date {width: 250px;}
+.t_title {width: calc(100% - 810px);}
+.t_user {width: 200px;}
+.t_file {width: 160px;}
+.t_hit {width: 100px;}
+.secret {background:url('/pages/kepco/img/sub/lock-ico.png') center no-repeat; margin-left:10px;     width: 13px;    height: 15px;    display: inline-block;}
+.comment {background:url('/pages/kepco/img/sub/bubble-ico.png') center no-repeat; font-weight: 600; padding-left:17px; margin-left:10px;}
+</style>
+<div class="sub-container">
+
+<!-- 게시판 검색 영역 -->
+<div id="board_search">
+	<div class="board_search_form text-center">
+		<form id="board_search_form" action="" method="get">
+			<input type="hidden" name="site" value="kepco"/>
+			 
+			<input type="hidden" name="mn" th:value="${req?.mn}"/> 
+			<input type="hidden" name="boardId" th:value="${vo?.boardId}"/> 
+			<input type="hidden" name="pageNum" th:value="${req?.pageNum}"/> 
+			<div class="input_box select float-none input_category">
+				<select name="scKey" title="검색분류" id="board_select_label" class="select_type">
+					<option value="subject" th:selected="subject == ${req.scKey}">제목</option>
+					<option value="content" th:selected="content == ${req.scKey}">내용</option>
+					<option value="writer_name" th:selected="writer_name == ${req.scKey}">작성자</option>
+				</select>
+			</div>
+			<div class="input_box search float-none">
+			  <input type="text" title="검색어" name="scWord" id="search_keyword" class="search_keyword input_type" th:value="${req?.scWord}"/> 
+			  <input type="submit" value="검색" title="검색" class="btn_serach">
+			</div>
+		</form>
+	</div>
+</div>
+<!-- //게시판 검색 영역 -->
+
+<div id="list_total_count">
+	전체 : <strong th:text="${total?.postTotal}"></strong>,
+	페이지 : <strong id="page_num" th:text="${req?.pageNum}"></strong>/<span data-th-text="${#numbers.formatInteger(total?.postTotal/15, 2, 'COMMA')}+1"></span>
+	
+	<!--                    
+	<a href="/board/rss/?board=notice&amp;site=cnc&amp;mn=48" class="btn_rss" target="_blank">
+		<img src="/assets/img/icon_rss.png" alt="RSS">
+	</a>
+	  -->
+	</div>
+
+	<div id="board_list">
+		<table>
+			<caption>  리스트 : 공지사항 게시판의 번호, 제목,작성자, 등록일, 첨부파일, 조회 리스트입니다. </caption>
+			<thead>
+				<tr>
+					<th scope="col" class="t_num">번호</th>
+					<th scope="col" class="t_title">제목</th>
+					<th scope="col" class="t_user">작성자</th>
+					<th scope="col" class="t_date">등록일</th>
+					<th scope="col" class="t_file" width="7%">첨부</th>
+					<th scope="col" class="t_hit" width="7%">조회</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="list : ${list}">
+					<td class="t_num" th:if="${list.postNotice == 'y'}" style="color: #fff;font-weight: 600;">공지</td>
+					<td class="t_num" th:text="${list.rn}" th:if="!${list.postNotice == 'y'}"></td>
+					<td class="txt_l">
+						<a th:href="@{/cms/board/post/view/?site=kepco&(mn = ${req?.mn}, boardId=${vo?.boardId}, postIdx=${list.postIdx}, pageNum=${req?.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}"
+						th:text="${list.postTitle}">
+						</a>
+						<th:block th:if="${list.postCommentCount > 0}">
+							<span:block class="comment"></span>							
+						</th:block>
+						<th:block th:if="${list.postSecret == 'y'}">
+							<span class="secret"></span>
+						</th:block>
+					</td>
+					<td class="t_user" th:text="${list.postName}"></td>
+					<td class="t_date" th:text="${list.insertDate}"></td>
+					
+					<td class="t_file">
+						<th:block th:if="${list.postFile != 0}">
+							<img alt="첨부파일 있음" src="/assets/img/icon_file.png">
+						<th:block>
+					</td>
+					<td class="t_hit" th:text="${list.postHit}"></td>
+				</tr>
+				
+				<tr th:if="${#lists.isEmpty(list)}">
+					<td  colspan="6">데이터가 존재하지 않습니다.</td>
+				</tr>
+			</tbody>
+		</table>
+		<div id="paginate_complex" class="mt20 clear" th:if="${!#lists.isEmpty(list)}">
+			<p class="btn_page">
+			
+				<a class="first_back" th:href="@{/cms/board/post/list/?site=kepco&(mn = ${req?.mn}, boardId=${vo?.boardId}, pageNum=1, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">처음페이지</span>
+				</a>
+				
+				<a th:if="${paging.startPage-1} != 0" class="prev_back" th:href="@{/cms/board/post/list/?site=kepco&(mn = ${req?.mn}, boardId=${vo?.boardId}, pageNum=${paging.startPage-1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">이전페이지</span>
+				</a>
+				
+				<a th:attr="class=${req?.pageNum} == ${num} ? 'on' : ''"
+				th:href="@{/cms/board/post/list/?site=kepco&(mn = ${req?.mn}, boardId=${vo?.boardId}, pageNum=${num}, scKey=${req.scKey}, scWord=${req.scWord})}" 
+				th:each="num : ${#numbers.sequence(paging.startPage,paging.endPage)}" th:text="${num}">
+				</a>
+				
+				
+				<a th:if="${paging.endPage+1} <= ${#numbers.formatInteger(total?.postTotal/15, 2, 'COMMA')}+1" class="next_back" th:href="@{/cms/board/post/list/?site=kepco&(mn = ${req?.mn}, boardId=${vo?.boardId}, pageNum=${paging.endPage+1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">다음페이지</span>
+				</a>
+				
+				
+				<a class="last_back" th:href="@{/cms/board/post/list/?site=kepco&(mn = ${req?.mn}, boardId=${vo?.boardId}, pageNum=${#numbers.formatInteger(total?.postTotal/15, 2, 'COMMA')}+1, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">마지막페이지</span>
+				</a>
+				
+				           
+			</p>
+		</div>
+		
+		<div class="board_btn clear">
+			<div class="fr mt20">
+				<a class="button_type2"
+				th:href="@{/cms/board/post/form/?site=kepco&(mn = ${req?.mn}, boardId=${vo?.boardId})}">쓰기
+				</a>
+			</div>
+		</div>
+	</div>
+</div><!--// 페이지영역 -->
+</div>
+</th:block>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.page.log.LogMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+<!-- 				<otherwise>AND delete_yn = 'n'</otherwise> -->
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND page_cd LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+		</where>
+	</sql>
+
+	<select id="selectList" parameterType="map" resultType="kepco.cms.page.log.LogVo">
+		SELECT 
+			*,
+<!-- 			(select site_nm from cms_site where site_idx=#{siteIdx}) as site_nm, -->
+			(SELECT site_nm FROM cms_site b WHERE a.site_idx = b.site_idx) as site_nm
+		FROM cms_page_log a
+			<include refid="selectWhere"/>
+			WHERE
+			page_idx = #{pageIdx}
+	</select>
+	
+	<insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="logIdx" keyColumn="logIdx">
+		INSERT INTO cms_page_log
+			( page_idx, site_idx, page_nm, page_cd, page_type, page_path, use_yn, insert_date )
+		SELECT
+			page_idx, site_idx, page_nm, page_cd, page_type, page_path, use_yn, insert_date
+		FROM cms_page
+		WHERE page_idx = #{pageIdx}
+	</insert>
+	
+</mapper>

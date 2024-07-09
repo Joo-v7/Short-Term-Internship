@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.play.team.PlayTeamMapper">
+
+	<sql id="selectWhere">
+		<where>
+			a.delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(playTeamIdx)">
+				AND a.play_team_idx = #{playTeamIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND a.detail_idx = #{detailIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(startDate)">
+				AND DATE_FORMAT(a.start_time,'%Y-%m-%d') >= #{startDate}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(endDate)">
+				AND #{endDate} >= DATE_FORMAT(a.start_time,'%Y-%m-%d')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND de.train_title LIKE CONCAT ('%',#{scWord},'%')  
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.play.team.PlayTeamVo">
+		SELECT 
+			a.*, de.train_title,
+			(SELECT member_nm FROM cms_member m WHERE m.member_idx = de.teacher_idx) AS teacher_nm,
+			(SELECT member_idx FROM cms_member m WHERE m.member_idx = de.teacher_idx) AS teacher_idx,
+			TIMESTAMPDIFF(MINUTE, a.start_time, a.end_time) AS play_minute,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '1' LIMIT 1) AS main_worker,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '2' LIMIT 1) AS sub_worker,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '3' LIMIT 1) AS ground_worker,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '4' LIMIT 1) AS super_worker,
+			(SELECT MAX(attempt) FROM lms_edu_module_play emp WHERE emp.play_team_idx = a.play_team_idx) AS attempt_max,
+			(SELECT COUNT(DISTINCT module_cd) FROM lms_edu_module_play emp WHERE emp.play_team_idx = a.play_team_idx) AS module_cd_cnt
+		FROM lms_edu_play_team a
+		LEFT JOIN lms_edu_detail de ON a.detail_idx = de.detail_idx
+<!-- 		LEFT JOIN lms_edu_module_play b ON a.play_team_idx = b.play_team_idx -->
+		<include refid="selectWhere"/>
+		ORDER BY a.play_team_idx DESC
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.play.team.PlayTeamVo">
+		SELECT a.*
+		FROM lms_edu_play_team a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="modulePlayListByPlayTeam" parameterType="map" resultType="kepco.lms.edu.play.team.PlayTeamVo">
+		SELECT 
+			a.*, b.module_cd, c.module_title,
+			COUNT(a.play_team_idx) AS team_idx_count,
+			(SELECT MAX(attempt) FROM lms_edu_module_play emp WHERE emp.play_team_idx = a.play_team_idx) AS attempt_max,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '1' LIMIT 1) AS main_worker,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '2' LIMIT 1) AS sub_worker,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '3' LIMIT 1) AS ground_worker,
+			(SELECT member_nm FROM cms_member m LEFT JOIN lms_edu_play p ON p.member_idx = m.member_idx WHERE p.play_team_idx = a.play_team_idx AND p.work_role = '4' LIMIT 1) AS super_worker,
+			COALESCE(NULLIF((SELECT COUNT(*) FROM lms_edu_module_play emp WHERE emp.success_yn = 'y' AND emp.delete_yn = 'n' AND emp.play_team_idx = a.play_team_idx), 0) / NULLIF((SELECT COUNT(*) FROM lms_edu_play p WHERE p.play_team_idx = a.play_team_idx), 0), 0) AS module_play_success_cnt,
+			COALESCE(NULLIF((SELECT COUNT(*) FROM lms_edu_module_play emp WHERE emp.success_yn != 'y' AND emp.delete_yn = 'n' AND emp.play_team_idx = a.play_team_idx), 0) / NULLIF((SELECT COUNT(*) FROM lms_edu_play p WHERE p.play_team_idx = a.play_team_idx), 0), 0) AS module_play_fail_cnt,
+						
+<!-- 			COALESCE(SUM(CASE WHEN b.success_yn = 'y' AND b.delete_yn = 'n' THEN 1 ELSE 0 END), 0) module_play_success_cnt, -->
+<!-- 			COALESCE(SUM(CASE WHEN b.success_yn = 'n' AND b.delete_yn = 'n' THEN 1 ELSE 0 END), 0) module_play_fail_cnt, -->
+			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '1' AND d.delete_yn = 'n' AND p.detail_idx = a.detail_idx AND m.module_cd = b.module_cd AND p.play_team_idx = a.play_team_idx) es_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '2' AND d.delete_yn = 'n' AND p.detail_idx = a.detail_idx AND m.module_cd = b.module_cd AND p.play_team_idx = a.play_team_idx) fall_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '3' AND d.delete_yn = 'n' AND p.detail_idx = a.detail_idx AND m.module_cd = b.module_cd AND p.play_team_idx = a.play_team_idx) care_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.risk_factor = '4' AND d.delete_yn = 'n' AND p.detail_idx = a.detail_idx AND m.module_cd = b.module_cd AND p.play_team_idx = a.play_team_idx) load_cnt,
+			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_module_play m ON d.module_play_idx = m.module_play_idx LEFT JOIN lms_edu_play p ON m.play_idx = p.play_idx WHERE d.delete_yn = 'n' AND IFNULL(d.event_id, '') != '' AND p.detail_idx = a.detail_idx AND m.module_cd = b.module_cd AND p.play_team_idx = a.play_team_idx) accident_cnt
+<!-- 			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_play p ON d.play_idx = p.play_idx WHERE d.risk_factor = '2' AND d.delete_yn = 'n' AND a.play_team_idx = p.play_team_idx) fall_cnt, -->
+<!-- 			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_play p ON d.play_idx = p.play_idx WHERE d.risk_factor = '3' AND d.delete_yn = 'n' AND a.play_team_idx = p.play_team_idx) care_cnt, -->
+<!-- 			(SELECT COUNT(*) FROM lms_edu_event d LEFT JOIN lms_edu_play p ON d.play_idx = p.play_idx WHERE d.risk_factor = '4' AND d.delete_yn = 'n' AND a.play_team_idx = p.play_team_idx) load_cnt, -->
+			
+			
+<!-- 		    COALESCE(SUM(CASE WHEN d.risk_factor = '1' AND d.delete_yn = 'n' THEN 1 ELSE 0 END), 0) es_cnt, -->
+<!-- 		    COALESCE(SUM(CASE WHEN d.risk_factor = '2' AND d.delete_yn = 'n' THEN 1 ELSE 0 END), 0) fall_cnt, -->
+<!-- 		    COALESCE(SUM(CASE WHEN d.risk_factor = '3' AND d.delete_yn = 'n' THEN 1 ELSE 0 END), 0) care_cnt, -->
+<!-- 		    COALESCE(SUM(CASE WHEN d.risk_factor = '4' AND d.delete_yn = 'n' THEN 1 ELSE 0 END), 0) load_cnt, -->
+		FROM lms_edu_play_team a
+		LEFT JOIN lms_edu_play p ON a.play_team_idx = p.play_team_idx
+		LEFT JOIN lms_edu_module_play b ON a.play_team_idx = b.play_team_idx
+		LEFT JOIN lms_edu_module c ON b.module_cd = c.module_cd
+		LEFT JOIN lms_edu_event d ON b.module_play_idx = d.module_play_idx
+		<include refid="selectWhere"/>
+		AND b.module_cd IS NOT NULL
+        AND c.module_idx IS NOT NULL
+		<if test="!@kepco.util.StrUtil@isBlank(moduleCd)">
+			AND b.module_cd = #{moduleCd}
+		</if>
+		
+		GROUP BY a.play_team_idx, b.module_cd
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.play.team.PlayTeamVo" useGeneratedKeys="true" keyProperty="playTeamIdx" keyColumn="playTeamIdx">
+		INSERT INTO lms_edu_play_team (
+			detail_idx, team, start_time
+		)
+		VALUES (
+			#{detailIdx}, #{team}, #{startTime}
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.play.team.PlayTeamVo">
+		UPDATE lms_edu_play_team
+		<set>
+			success_yn = #{successYn},
+			end_time = #{endTime}
+		</set>
+		WHERE
+			play_team_idx = #{playTeamIdx}
+	</update>
+	
+	<delete id="deletePlayTeam" parameterType="String">
+	    DELETE FROM lms_edu_play_team WHERE play_team_idx = #{playTeamIdx};
+	</delete>
+	
+	<delete id="deletePlay" parameterType="String">
+	    DELETE FROM lms_edu_play WHERE play_team_idx = #{playTeamIdx};
+	</delete>
+	
+	<delete id="deleteModulePlay" parameterType="String">
+	    DELETE FROM lms_edu_module_play WHERE play_idx IN (SELECT play_idx FROM lms_edu_play WHERE play_team_idx = #{playTeamIdx});
+	</delete>
+	
+	<delete id="deleteProcessPlay" parameterType="String">
+	    DELETE FROM lms_edu_process_play WHERE play_idx IN (SELECT play_idx FROM lms_edu_play WHERE play_team_idx = #{playTeamIdx});
+	</delete>
+	
+	<delete id="deleteEvent" parameterType="String">
+	    DELETE FROM lms_edu_event WHERE play_idx IN (SELECT play_idx FROM lms_edu_play WHERE play_team_idx = #{playTeamIdx});
+	</delete>
+		
+</mapper>

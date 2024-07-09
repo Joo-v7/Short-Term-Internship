@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.bundle.BundleMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(bundleIdx)">
+				bundle_idx = #{bundleIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.vod.bundle.BundleVo">
+		SELECT 
+			*
+		FROM (
+			SELECT
+				*
+			FROM lms_vod_bundle a
+			WHERE
+				vod_idx = #{vodIdx}
+		) a
+		JOIN lms_vod_content b
+		ON a.content_idx = b.content_idx
+		WHERE b.delete_yn = 'n'
+		GROUP BY a.content_idx
+		ORDER BY
+		<choose>
+			<otherwise>
+				a.content_order ASC, a.insert_date ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.vod.bundle.BundleVo">
+		SELECT *
+		FROM lms_vod_bundle
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.vod.bundle.BundleVo" useGeneratedKeys="true" keyProperty="bundleIdx" keyColumn="bundleIdx">
+		<selectKey resultType="int" keyProperty="contentOrder" keyColumn="contentOrder" order="BEFORE">
+			SELECT IFNULL(MAX(content_order)+1,1) FROM lms_vod_bundle WHERE vod_idx = #{vodIdx}
+		</selectKey>
+		INSERT INTO lms_vod_bundle (
+			vod_idx,content_idx,content_order,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{vodIdx},#{contentIdx},#{contentOrder},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.vod.bundle.BundleVo">
+		UPDATE lms_vod_bundle
+		<set>
+			content_order = #{contentOrder},
+			insert_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			bundle_idx = #{bundleIdx}
+	</update>
+	
+	<delete id="delete" parameterType="String">
+		DELETE FROM lms_vod_bundle
+		WHERE
+			bundle_idx = #{bundleIdx}
+	</delete>
+	
+	
+	
+</mapper>
