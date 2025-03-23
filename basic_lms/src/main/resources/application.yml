@@ -1,0 +1,6 @@
+spring:
+  profiles:
+    group:
+      local: common, spring, log, db, email, local
+      server: common, spring, log, db, email, server
+    active: local

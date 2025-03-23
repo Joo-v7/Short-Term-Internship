@@ -1,0 +1,212 @@
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+<style>
+.nested-list-bundle input { 
+	width: 95% !important;
+    border: 0 none !important;
+}
+#pack_ul { padding-bottom: 20px; }
+.pack_order2 { display: inline-block; background:red;   color: #fff;  padding: 0 10px;  position: relative;  left: -10px;}
+</style>
+<form id="bundle_form">
+	<input type="hidden" id="vodidx" th:value="${req.vodIdx}">
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+</form>
+<div class="row m0">
+	<span class="text_cnt_box"><i class="material-icons small" style="margin-bottom:-2px; margin-right:10px;">info</i>회차를 추가하여 교육을 구성할 수 있습니다.</span>
+	<div class="" style="margin-left: auto; float:right">
+		<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" style="background: #00b8d4 !important; " href="#" th:onclick="set_content_list([[${req.vodIdx}]]); return false;">
+			<i class="material-icons left">create</i>
+			회차 추가
+		</a>
+	</div>
+</div>
+
+<div class="list ">
+	<div id="bundle_ul" class="dd p0">
+		
+	</div>
+
+</div>
+
+
+
+<script>
+$(function() {
+	vodidx = $('#vodidx').val();
+	bundle_ul(vodidx);
+	
+	$('#bundle_ul').nestable({
+	  maxDepth: 1, //1개까지만
+	  dropCallback: function(details) {
+		var order = new Array();
+
+		$('li[data-id=\'' + details.destId + '\']').find('ol:first').children().each(function(index, elem) {
+		  order[index] = $(elem).attr('data-id');
+		});
+		
+
+		if (order.length === 0) {
+		  var order = new Array();
+		  $('#bundle_ul > ol > li').each(function(index, elem) {
+			order[index] = $(elem).attr('data-id');
+		  });
+		}
+		
+		// don't post if nothing changed
+		var data_id = window.location.hostname + '.nestable';
+		var drag_data = JSON.stringify($('#bundle_ul').nestable('serialize'));
+		var storage_data = localStorage.getItem(data_id);
+
+		if (drag_data === storage_data) {
+		  return false;
+		}
+		localStorage.setItem(data_id, drag_data);
+		
+		csrf = $('#csrf').val();
+		
+		$.post(gblAdminPath+'/lms/vod/bundle/bundleChange',
+			{
+			  sourceId: details.sourceId,
+			  destinationId: details.destId,
+			  order: order,
+			  _csrf:csrf,
+			},
+			function(result) {
+			  bundle_ul(vodidx);
+			  toast('정상적으로 처리되었습니다.', 3000);
+			},
+			'json'
+		).fail(function(result) {
+		  toast('시스템 오류로 처리할 수 없습니다.', 3000);
+		});
+	  },
+	});
+
+});
+
+
+function bundleDelete(bundleIdx) {
+	
+	if(confirm("영상 콘텐츠을 삭제하시겠습니까?")){
+		
+		if (!bundleIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.ajax({
+			url  : gblAdminPath + '/lms/vod/bundle/delete',
+			type : 'get',
+			data : {
+				'bundleIdx' : bundleIdx
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				bundle_ul(vodidx);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function() {
+			toast('시스템 오류로 처리할 수 없습니다.');
+		});
+	}
+}
+
+function set_vod_detail_del(bundleIdx,vodIdx){
+	
+	csrf = $('#csrf').val();
+	$.confirm({
+		theme: 'supervan', // 'material', 'bootstrap'
+		title: '문항삭제',
+		bundle: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+		buttons: {
+		  확인: function() {
+			$.ajax({
+			  url: gblAdminPath+'/lms/vod/bundle/vodDetailDelete',
+			  type: 'POST',
+			  data: {'bundleIdx': bundleIdx,'vodIdx':vodIdx,'_csrf':csrf},
+			  dataType: 'json',
+			}).done(function (d) {
+				$('#bundle_detail').html('');
+
+				var order = new Array();
+				if (order.length === 0) {
+				  var order = new Array();
+				  i = 0;
+				  $('#bundle_ul > ol > li').each(function(index, elem) {
+					if($(elem).attr('data-id') != bundleIdx){
+						order[i] = $(elem).attr('data-id');
+						i++;
+					}
+				  });
+				}
+				
+				$.post(gblAdminPath+'/lms/vod/bundle/bundleChange',
+					{
+					  order: order,
+					  _csrf:csrf,
+					},
+					function(result) {
+					  bundle_ul(vodIdx);
+					  toast("삭제완료", 3000);
+					},
+					'json'
+				).fail(function(result) {
+				  toast(result.message, 3000);
+				});
+				
+			}).fail(function () {
+			  toast('네트워크 또는 시스템 장애입니다.', 4000);
+			});
+		  },
+		  취소: function() {}
+		}
+	});
+
+}
+
+function bundle_ul(vodIdx) {
+	if (!vodIdx) {
+	  vodIdx = '';
+	}
+	$.ajax({
+	  url: gblAdminPath +'/lms/vod/bundle/vodContentList?vodIdx=' + vodIdx,
+	  type: 'GET',
+	  dataType: 'html',
+	}).done(function (data) {
+		$('#bundle_ul').html(data);
+	}).fail(function () {
+	  toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+  }
+  
+function bundle_save(vodIdx,bundleIdx){
+	csrf = $('#csrf').val();
+	
+	var order = new Array();
+	if (order.length === 0) {
+	  var order = new Array();
+	  i = 0;
+	  $('#bundle_ul > ol > li').each(function(index, elem) {
+		order[index] = $(elem).attr('data-id');
+	  });
+	}
+	maxOrder = order.length+1;
+	
+	$.ajax({
+		url: gblAdminPath +'/lms/vod/bundle/vodQsonSave',
+		type: 'POST',
+		data: {'vodIdx': vodIdx, '_csrf':csrf,'bundleIdx':bundleIdx, 'bundleOrder':maxOrder,},
+		dataType: 'json',
+	}).done(function (d) {
+		bundle_ul(vodIdx);
+		$('#bundle_ul').animate({scrollTop: $("#bundle_ul")[0].scrollHeight}, 300);
+		toast('저장완료');
+	}).fail(function () {
+		toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+}
+</script>

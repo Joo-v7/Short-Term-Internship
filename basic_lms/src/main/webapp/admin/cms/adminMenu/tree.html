@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+
+<head>
+	<link href="/assets/libs/jstree/themes/default/style.css" rel="stylesheet"/>
+	<script src="/assets/libs/jstree/jstree.min.js"></script>
+</head>
+
+<th:block layout:fragment="content">
+	
+	<div class="row mb0 h100">
+		<!-- 트리 -->
+		<div class="col s12 m12 l4 xl4 sideline pd_box" id="menu_tree">
+			<div class="row">
+				<div class="col s12 left-align">
+					<div class="search_tree input-field">
+						<input type="text" id="search_name" placeholder="메뉴명 검색"> <label for="search_name">메뉴검색</label>
+					</div>
+				</div>
+			</div>
+			<div id="tree_menu" style="max-height: 700px; overflow-y: scroll;">
+				<ul>
+					<li>메뉴1
+						<ul>
+							<li>메뉴1-1</li>
+							<li>메뉴1-2</li>
+						</ul>
+					</li>
+					<li>메뉴2</li>
+				</ul>
+			</div>
+		</div>
+		<!-- //트리 -->
+
+		<!-- 폼 -->
+		<div class="col s12 m12 l8 xl8 scroll_defalt pd_box bg_lightblue h100 m800" id="areaForm"></div>
+		<!-- //폼 -->
+	</div>
+	
+	<script>
+	$(function() {		
+		getTreeJson();
+		// 추가,수정 폼
+		dataForm(0);
+	});
+	
+	function dataForm(menuIdx) {
+		if( menuIdx == null ) {
+			// 하위 메뉴 추가. 트리의 선택된 노드를 부모 메뉴로 가정
+			var node = $('#tree_menu').jstree('get_selected', true);
+			if(node.length != 1) {
+				return;
+			}
+			
+			if(node[0].parents.length >= 4) {
+				toast("메뉴깊이 초과로 하위메뉴를 추가할 수 없습니다.");
+				return;
+			}
+			
+			var parentMenuIdx = node[0].id;
+			
+			$("#areaForm").load(gblAdminPath + "/cms/adminMenu/form?parentMenuIdx=" + parentMenuIdx);
+			return;
+		}
+		
+		// 트리의 노드 선택시 기본 동작
+		$("#areaForm").load(gblAdminPath + "/cms/adminMenu/form?menuIdx=" + menuIdx);
+	}
+	
+	function getTreeJson() {
+		$.ajax(
+			{url : gblAdminPath + '/cms/adminMenu/treeJson?site=1'}
+		)
+		.done(function (res) {
+			var treeList = [];
+			
+			// 최상위에 메뉴를 추가할 수 있도록 ROOT 노드 추가
+			treeList.push(
+				{
+					"id": ""+0, 
+					"parent": "#", 
+					"text": "ROOT"
+				}
+			);
+			
+			res.data.menuList.forEach(function(v) {
+				var node = {
+					"id": ""+v.menuIdx, 
+					"parent": ""+v.parentMenuIdx, 
+					"text": v.menuNm
+				};
+				treeList.push(node);
+			});
+			
+			createTree(treeList);
+			
+		});
+	}
+	
+	function createTree(treeList) {
+		$('#tree_menu').jstree({
+			"core" : {
+				"animation" : 1,
+				"multiple" : false,
+				"themes" : {
+					"stripes" : true
+				},
+	 			"data" : treeList,
+				"themes" : {
+					"responsive" : false
+				}
+			},
+			"types" : {
+				"#" : {
+					"max_children" : 1,
+					"max_depth" : 3,
+					"valid_children" : [ "root" ]
+				},
+				"root" : {
+					"icon" : "glyphicon glyphicon-folder",
+					"valid_children" : [ "default" ]
+				},
+				"default" : {
+					"valid_children" : [ "default", "file" ]
+				},
+				"file" : {
+					"icon" : "glyphicon glyphicon-file",
+					"valid_children" : [ "file" ]
+				}
+			},
+			"plugins" : [ "contextmenu", "dnd", "search", "state", "types", "html_data" ],
+			"contextmenu": {
+	            "items": function(node) {
+	                return {};
+	            }
+	        }
+		});
+		
+		
+		$('#tree_menu').bind("select_node.jstree", function(event, data) {
+			dataForm(data.node.id);
+		});
+		
+		$('#tree_menu').bind("loaded.jstree", function(event, data) {
+			$(this).jstree("open_node", "#");
+		});
+	}
+	</script>
+</th:block>

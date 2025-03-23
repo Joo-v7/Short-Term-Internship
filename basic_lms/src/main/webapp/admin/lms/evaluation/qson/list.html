@@ -1,0 +1,180 @@
+
+<style>
+.nested-list-content input { 
+	width: 95% !important;
+    border: 0 none !important;
+}
+#evaluation_qson_ul { padding-bottom: 20px; }
+.poq_order2 { display: inline-block; background:red;   color: #fff;  padding: 0 10px;  position: relative;  left: -10px;}
+</style>
+<div class="row  " style="    margin-bottom: 0;">
+	<!-- 
+	<div class="layout_group2 col s6">
+		<p><a href="#" th:onclick="evaluation_qson_view([[${req.evIdx}]]); return false;" ><i style="margin-top: -6px;"  class="material-icons left">check</i>미리보기</a></p>
+	</div>
+	 -->
+	<div class="layout_group2 btn_infolist  right" style="float: right;     margin-right: 10px;">
+		<!-- <p><a style="background: #00b8d4 !important; " href="#" th:onclick="evaluation_qson_save([[${req.evIdx}]]); return false;" ><i style="margin-top: -6px;" class="material-icons left">create</i>문항등록</a></p> -->
+		<button th:onclick="evaluation_qson_save([[${req.evIdx}]]); return false;"class="waves-effect waves-light btn cyan accent-4 z-depth-0 left"><i class="material-icons left" style="margin-bottom: 10px">create</i>문항등록
+                        </button>
+	</div>
+</div>
+<form id="qson_form">
+	<input type="hidden" id="qson_evIdx" th:value="${req.evIdx}">
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+</form>
+
+<div id="evaluation_qson_ul" class="dd " style="height: 723px; overflow-y: auto;     padding: 10px;">
+
+</div>
+
+
+<script>
+$(function() {
+	qson_evIdx = $('#qson_evIdx').val();
+	evaluation_qson_ul(qson_evIdx);
+	
+	$('#evaluation_qson_ul').nestable({
+	  maxDepth: 1, //1개까지만
+	  dropCallback: function(details) {
+		var order = new Array();
+
+		$('li[data-id=\'' + details.destId + '\']').find('ol:first').children().each(function(index, elem) {
+		  order[index] = $(elem).attr('data-id');
+		});
+		
+
+		if (order.length === 0) {
+		  var order = new Array();
+		  $('#evaluation_qson_ul > ol > li').each(function(index, elem) {
+			order[index] = $(elem).attr('data-id');
+		  });
+		}
+		
+		// don't post if nothing changed
+		var data_id = window.location.hostname + '.nestable';
+		var drag_data = JSON.stringify($('#evaluation_qson_ul').nestable('serialize'));
+		var storage_data = localStorage.getItem(data_id);
+
+		if (drag_data === storage_data) {
+		  return false;
+		}
+		localStorage.setItem(data_id, drag_data);
+		
+		csrf = $('#csrf').val();
+		
+		$.post(gblAdminPath+'/lms/evaluation/qson/evaluationQsonChange',
+			{
+			  sourceId: details.sourceId,
+			  destinationId: details.destId,
+			  order: order,
+			  _csrf:csrf,
+			},
+			function(result) {
+				evaluation_qson_ul(qson_evIdx);
+			  toast(result.message, 3000);
+			},
+			'json'
+		).fail(function(result) {
+		  toast(result.message, 3000);
+		});
+	  },
+	});
+
+});
+
+function set_evaluation_detail_del(evqIdx,evIdx){
+	
+	csrf = $('#csrf').val();
+	$.confirm({
+		theme: 'supervan', // 'material', 'bootstrap'
+		title: '문항삭제',
+		content: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+		buttons: {
+		  확인: function() {
+			$.ajax({
+			  url: gblAdminPath+'/lms/evaluation/qson/delete',
+			  type: 'POST',
+			  data: {'evqIdx': evqIdx,'evIdx':evIdx,'_csrf':csrf},
+			  dataType: 'json',
+			}).done(function (d) {
+				$('#evaluation_qson_detail').html('');
+
+				var order = new Array();
+				if (order.length === 0) {
+				  var order = new Array();
+				  i = 0;
+				  $('#evaluation_qson_ul > ol > li').each(function(index, elem) {
+					if($(elem).attr('data-id') != evqIdx){
+						order[i] = $(elem).attr('data-id');
+						i++;
+					}
+				  });
+				}
+				
+				$.post(gblAdminPath+'/lms/evaluation/qson/evaluationQsonChange',
+					{
+					  order: order,
+					  _csrf:csrf,
+					},
+					function(result) {
+						evaluation_qson_ul(evIdx);
+					  toast("삭제완료", 3000);
+					},
+					'json'
+				).fail(function(result) {
+				  toast(result.message, 3000);
+				});
+				
+			}).fail(function () {
+			  toast('네트워크 또는 시스템 장애입니다.', 4000);
+			});
+		  },
+		  취소: function() {}
+		}
+	});
+
+}
+
+function evaluation_qson_ul(evIdx) {
+	if (!evIdx) {
+		evIdx = '';
+	}
+	$.ajax({
+	  url: gblAdminPath +'/lms/evaluation/qson/evaluationQsonList?evIdx=' + evIdx,
+	  type: 'GET',
+	  dataType: 'html',
+	}).done(function (data) {
+		$('#evaluation_qson_ul').html(data);
+	}).fail(function () {
+	  toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+  }
+  
+function evaluation_qson_save(evIdx,evqIdx){
+	csrf = $('#csrf').val();
+	
+	var order = new Array();
+	if (order.length === 0) {
+	  var order = new Array();
+	  i = 0;
+	  $('#evaluation_qson_ul > ol > li').each(function(index, elem) {
+		order[index] = $(elem).attr('data-id');
+	  });
+	}
+	maxOrder = order.length+1;
+	
+	$.ajax({
+		url: gblAdminPath +'/lms/evaluation/qson/evaluationQsonSave',
+		type: 'POST',
+		data: {'evIdx': evIdx, '_csrf':csrf,'evqIdx':evqIdx, 'poqOrder':maxOrder,},
+		dataType: 'json',
+	}).done(function (d) {
+		evaluation_qson_ul(evIdx);
+		$('#evaluation_qson_ul').animate({scrollTop: $("#evaluation_qson_ul")[0].scrollHeight}, 300);
+		toast('저장완료');
+	}).fail(function () {
+		toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+}
+</script>

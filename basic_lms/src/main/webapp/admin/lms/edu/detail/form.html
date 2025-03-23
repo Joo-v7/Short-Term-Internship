@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+
+<script src="/assets/js/dropzone.js"></script>
+<script src="/assets/js/common.js"></script>
+<link rel="stylesheet" href="/assets/css/dropzone.css">
+<link rel="stylesheet" href="/assets/css/dropzone.ext.css">
+
+<script>
+//# sourceURL=/admin/lms/edu/detail/form.html
+
+	$(function() {
+		$('.tooltipped').tooltip();
+		
+		// 파일
+		var fileTarget = $('.file-upload-input');
+		fileTarget.on('change', function(){
+			if(window.FileReader){
+				var filename = $(this)[0].files[0].name;
+			} else {
+				var filename = $(this).val().split('/').pop().split('\\').pop();
+			}	
+			$(this).siblings('.select-file-name-box').val(filename);
+		});
+	});
+
+	function set_edu_list(){
+		
+			$.ajax({
+				url: gblAdminPath + '/lms/edu/detail/eduList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#pop_modal').html(data);
+	
+				var staff_modal = $("#pop_modal").modal();
+				staff_modal.modal('open');
+				$('#pop_modal').css({'height':'80%', 'width':'50%'});
+			  
+			}).fail(function () {
+				toast('네트워크 또는 시스템 장애입니다.', 4000);
+			});
+			return false;
+			
+	}
+	
+	function set_member_list() {
+
+		$.ajax({
+			url: gblAdminPath + '/lms/edu/memberList',
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal3').html(data);
+
+			var staff_modal = $("#pop_modal3").modal();
+			staff_modal.modal('open');
+			$('#pop_modal3').css({'height': '80%', 'width': '50%', 'overflow-y': 'scroll'});
+
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+	/** 만족도조사 선택 모달 팝업 */
+	function set_pol_list(){
+		$.ajax({
+			url: gblAdminPath + '/lms/edu/detail/polList',
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var pop_modal = $("#pop_modal").modal();
+			pop_modal.modal('open');
+			$('#pop_modal').css({'height':'80%', 'width':'40%'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+	/** 만족도조사 선택 초기화 */
+	function set_pol_reset(){
+		$("[name='poIdx']", "#frmForm").val("");
+		$("[name='poSubject']", "#frmForm").val("");
+	}
+	
+	/** 사후평가 선택 모달 팝업 */
+	function set_ev_list(){
+		$.ajax({
+			url: gblAdminPath + '/lms/edu/detail/evList',
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var pop_modal = $("#pop_modal").modal();
+			pop_modal.modal('open');
+			$('#pop_modal').css({'height':'80%', 'width':'40%'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+	/** 사후평가 선택 초기화 */
+	function set_ev_reset(){
+		$("[name='evIdx']", "#frmForm").val("");
+		$("[name='evSubject']", "#frmForm").val("");
+	}
+	
+// 	function delete_file(arg){
+// 		var id = "#"+arg;
+		
+// 		if(confirm("첨부파일을 삭제하시겠습니까?\n저장시 적용됩니다.")){
+// 			$(id).siblings(".select-file-btn").removeAttr("disabled");
+// 			$(id).siblings(".select-file-name-box").val("");
+// 			$(id).siblings("a").css("display","none");
+// 			$(id).siblings("button").css("display","none");
+			
+// 			$(id).attr("type","file");
+// 		}
+// 	}
+	//썸네일 삭제
+	function thumbnailDelete(detailIdx) {
+		if (!detailIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '썸네일 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/lms/edu/detail/thumbnailDelete',
+						type: 'get',
+						data: {
+							'detailIdx': detailIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							$('.uploaded-thumbnail-text').val(null);
+							$('.uploaded-thumbnail-value').val(null);
+							$('.uploaded-thumbnail-btn').css('display', 'none');
+// 							$('.sidenav').sidenav('close');
+// 							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							toast("정상적으로 처리되었습니다.");
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function () {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+	//학습자료 삭제
+	function fileDelete(detailIdx) {
+		if (!detailIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '학습자료 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: gblAdminPath + '/lms/edu/detail/fileDelete',
+						type: 'get',
+						data: {
+							'detailIdx': detailIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							$('.uploaded-file-text').val(null);
+							$('.uploaded-file-value').val(null);
+							$('.uploaded-file-btn').css('display', 'none');
+// 							$('.sidenav').sidenav('close');
+// 							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							toast("정상적으로 처리되었습니다.");
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function () {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+	// 삭제
+	function dataDelete() {
+		var detailIdx = $("[name='detailIdx']", '#frmForm').val();
+		
+		if (!detailIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : '훈련 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/lms/edu/detail/delete',
+						type : 'get',
+						data : {
+							'detailIdx' : detailIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							$('.sidenav').sidenav('close');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+	
+	function limitValue(){
+		$('#eduLimitCnt').val((parseInt($('#eduLimitCnt1').val()) + parseInt($('#eduLimitCnt2').val()) + parseInt($('#eduLimitCnt3').val()) + parseInt($('#eduLimitCnt4').val()))*parseInt($('#eduTeamCnt').val()));
+	}
+</script>
+
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/lms/edu/detail/save(adminPath=${@environment.getProperty('global.admin-path')})}" enctype="multipart/form-data">
+		<div class="top pop-title">
+			<div class="row pd_box2">
+				<div class="col s12">
+					<a onclick="side_close('#side_view');" class="btn grey lighten-1 waves-effect waves-light"><i class="material-icons">clear</i></a>
+					<div class="float_r">
+						<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button" th:if="${!#strings.isEmpty(vo?.detailIdx)}" th:onclick="dataDelete();">삭제<i class="material-icons left">delete</i></button>
+						<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장 <i class="material-icons left">check</i></button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<ul id="main_tabs" class="tabs">
+				<li class="tab col s2"><a href="#default_info">기본정보</a></li>
+				<li class="tab col s2"><a href="#edu_schedule">훈련일정</a></li>
+			</ul>
+		</div>
+		
+		<div class="row pd_box m0">
+			<div class="input-field col s12 m12 l6 xl6">
+				<input type="text" name="trainTitle" id="trainTitle" th:value="${vo?.trainTitle}" />
+				<label for="trainTitle" class="req">훈련명</label>
+			</div>
+			<div class="input-field col s12 m6 l3 xl3" th:if="${session.memberRole == 'SUPER'}">
+				<label for="teacherNm" class="req">교수자</label>
+				
+				<input type="text" name="teacherNm" id="teacherNm"
+					th:value="${vo?.teacherIdx != null ? vo?.teacherNm : session?.memberName}"
+					th:onclick="set_member_list(); return false;" readonly="readonly" />
+				
+				<input type="hidden" name="teacherIdx" id="teacherIdx"
+					th:value="${vo?.teacherIdx != null ? vo?.teacherIdx : session?.memberIdx}" />
+					
+				<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light"
+					onclick="set_member_list(); return false;"><i class="material-icons">search</i></a>
+			</div>
+			<div class="input-field col s12 m6 l3 xl3" th:if="${session.memberRole != 'SUPER'}">
+				<label for="memberNm" class="req">교수자</label>
+				
+				<input type="text" name="teacherNm" id="teacherNm"
+					th:value="${vo?.teacherIdx != null ? vo?.teacherNm : session?.memberName}" readonly="readonly" />
+				
+				<input type="hidden" name="teacherIdx" id="teacherIdx"
+					th:value="${vo?.teacherIdx != null ? vo?.teacherIdx : session?.memberIdx}" />
+			</div>
+			<div class="input-field col s12 m6 l3 xl3" th:if="${session.memberRole == 'SUPER'}">
+				<label for="detailState">승인상태</label>
+				<select id="detailState" name="detailState">
+					<option th:value="1" th:utext="승인대기" th:selected="1 == ${vo?.detailState}" ></option>
+					<option th:value="2" th:utext="승인완료" th:selected="2 == ${vo?.detailState}" ></option>
+					<option th:value="3" th:utext="승인반려" th:selected="3 == ${vo?.detailState}" ></option>
+					<option th:value="4" th:utext="승인취소" th:selected="4 == ${vo?.detailState}" ></option>
+				</select>
+			</div>
+			<div class="input-field col s2" th:if="${session.memberRole == 'ADMIN'}">
+					<input name="detailState" type="hidden" th:value="${vo?.detailState}" />
+					<label for="detailState">승인상태</label>
+					<th:block th:switch="${vo?.detailState}">
+						<span th:case="1">승인대기</span>
+						<span th:case="2">승인완료</span>
+						<span th:case="3">승인반려</span>
+						<span th:case="4">승인취소</span>
+						<span th:case="*">-</span>
+					</th:block>
+			</div>
+		</div>
+		
+		<div class="row pd_box m0">
+			<div class="input-field col s9">
+				<label for="eduTitle" class="req">훈련 콘텐츠</label>
+				<input type="text" name="eduTitle" id="eduTitle" th:value="${vo?.eduTitle}" th:onclick="set_edu_list(); return false;" readonly="readonly" />
+				<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="set_edu_list(); return false;"><i class="material-icons">search</i></a>
+			</div>
+			<div class="input-field col s3">
+			    <label for="eduOrder">정렬 순서</label>
+			    <input type="number" name="eduOrder" id="eduOrder" th:value="${vo?.eduOrder != null && !#strings.isEmpty(vo?.eduOrder) ? vo?.eduOrder : 1}"/>
+			</div>
+		</div>
+		
+		<div class="row pd_box">
+			<div id="default_info" class="row">
+				<input type="hidden" name="detailIdx" id="detailIdx" th:value="${#strings.equals(param?.copy, 'y') ? '' : vo?.detailIdx}" />
+				<input type="hidden" name="eduIdx" id="eduIdx" th:value="${vo?.eduIdx}" />
+				
+				<div class="row">
+					<div class="input-field col s4 m3 l3 xl3">
+						<label for="eduNumeral" class="">기수</label>				
+						<input id="eduNumeral" name="eduNumeral" type="text" th:value="${#strings.equals(param?.copy, 'y') ? '' : vo?.eduNumeral}">
+					</div>
+					<div class="input-field col s8 m6 l6 xl6">
+						<input name="eduTarget" id="eduTarget" class="materialize-input" th:value="${vo?.eduTarget}">
+						<label for="eduTarget" class="">훈련대상</label>
+					</div>
+					<div class="input-field col s12 m3 l3 xl3">
+						<label for="eduAcceptAuto" class="req tooltipped" data-tooltip="사용자가 수강신청시 자동으로 승인하거나, 관리자가 직접 수동 승인" data-position="top">수강신청방식</label>
+						<select id="eduAcceptAuto" name="eduAcceptAuto">
+							<option th:value="n" th:utext="수동승인" th:selected="n == ${vo?.eduAcceptAuto}" ></option>
+							<option th:value="y" th:utext="자동승인" th:selected="y == ${vo?.eduAcceptAuto}" ></option>
+						</select>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="input-field col s6 m4 l4 xl2">
+						<label for="eduLimitCnt" class="req">정원(명)</label>
+						<input id="eduLimitCnt" name="eduLimitCnt" type="text" th:value="${vo?.eduLimitCnt}" readonly="readonly">
+					</div>
+					<div class="input-field col s6 m4 l4 xl2">
+						<label for="eduTeamCnt">팀 수</label>
+						<select id="eduTeamCnt" name="eduTeamCnt" onchange="limitValue()">
+							<option th:each="num : ${#numbers.sequence(1,20)}" th:value="${num}" th:utext="${num}" th:selected="${num} == ${vo?.eduTeamCnt}"></option>
+						</select>
+					</div>
+					<div class="input-field col s6 m4 l4 xl2">
+						<label for="eduLimitCnt1">주작업자</label>
+						<select id="eduLimitCnt1" name="eduLimitCnt1" onchange="limitValue()">
+							<option th:value="0" th:utext="0"></option>
+							<option th:each="num : ${#numbers.sequence(1,5)}" th:value="${num}" th:utext="${num}" th:selected="${num} == ${vo?.eduLimitCnt1}"></option>
+						</select>
+					</div>
+					<div class="input-field col s6 m4 l4 xl2">
+						<label for="eduLimitCnt2">보조작업자</label>
+						<select id="eduLimitCnt2" name="eduLimitCnt2" onchange="limitValue()">
+							<option th:value="0" th:utext="0"></option>
+							<option th:each="num : ${#numbers.sequence(1,5)}" th:value="${num}" th:utext="${num}" th:selected="${num} == ${vo?.eduLimitCnt2}"></option>
+						</select>
+					</div>
+					<div class="input-field col s6 m4 l4 xl2">
+						<label for="eduLimitCnt3">지상작업자</label>
+						<select id="eduLimitCnt3" name="eduLimitCnt3" onchange="limitValue()">
+							<option th:value="0" th:utext="0"></option>
+							<option th:each="num : ${#numbers.sequence(1,5)}" th:value="${num}" th:utext="${num}" th:selected="${num} == ${vo?.eduLimitCnt3}"></option>
+						</select>
+					</div>
+					<div class="input-field col s6 m4 l4 xl2">
+						<label for="eduLimitCnt4">작업책임자</label>
+						<select id="eduLimitCnt4" name="eduLimitCnt4" onchange="limitValue()">
+							<option th:value="0" th:utext="0"></option>
+							<option th:each="num : ${#numbers.sequence(1,5)}" th:value="${num}" th:utext="${num}" th:selected="${num} == ${vo?.eduLimitCnt4}"></option>
+						</select>
+					</div>
+					
+					<div class="notice_title col"><i class="material-icons left">sms_failed</i>팀 수, 역할별 인원 수는 초기 관리목적으로 사용되며, 훈련장에서 교수자가 직접 학습자별 팀, 역할을 배정</div>
+				</div>
+				
+				<div class="row">
+					<div class="input-field col s12">
+						<textarea name="eduGoal" id="eduGoal" class="materialize-textarea" style="height: 72px;">[[${vo?.eduGoal}]]</textarea>
+						<label for="eduGoal" class="req">목표</label>
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field col s12">
+						<textarea name="eduDesc" id="eduDesc" class="materialize-textarea" style="height: 72px;">[[${vo?.eduDesc}]]</textarea>
+						<label for="eduDesc" class="req">내용</label>
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field col s12">
+						<textarea name="eduCriteria" id="eduCriteria" class="materialize-textarea" style="height: 72px;">[[${vo?.eduCriteria}]]</textarea>
+						<label for="eduCriteria" class="req">평가방법 및 수료기준</label>
+					</div>
+				</div>
+				
+				<!--/* 
+				<div class="row" style="display:none;">
+					<div class="input-field file-upload">
+						<label>첨부파일</label>
+					<div class="file_info">
+						<div class="dropzone" id="fileDropzone"></div>
+						<div class="table table-striped files" id="previews">
+							<div id="template" class="file-row dz-image-preview">
+							   
+							</div>
+						</div>
+					</div>
+					</div>
+					<span class="disc">
+						최대 업로드 파일 개수 : 5개<br>
+						전체 업로드 용량 제한 : 50MB 이하<br>
+						파일 설명은 웹표준 및 웹전근성에 의해 입력하는 것을 권장합니다.
+					</span>
+					<div class="row m0">
+						<div class="input-field file-upload">
+							<label class="select-file-btn btn" for="eduFile2" th:disabled="${!#strings.isEmpty(vo?.eduFile2)}">파일선택</label>
+							<input class="select-file-name-box" type="text" th:value="${vo?.eduFile2}" disabled>
+							<input id="eduFile2" name="eduFile2" th:type="${!#strings.isEmpty(vo?.eduFile2) ? 'hidden' : 'file'}" class="file-upload-input" th:value="${vo?.eduFile2}">
+							<button th:if="${!#strings.isEmpty(vo?.eduFile2)}" class="waves-effect waves-light btn red" type="button" onclick="delete_file('eduFile2')">삭제</button>
+						</div>
+					</div>
+					<div class="row m0">
+						<div class="input-field file-upload">
+							<label class="select-file-btn btn" for="eduFile3" th:disabled="${!#strings.isEmpty(vo?.eduFile3)}">파일선택</label>
+							<input class="select-file-name-box" type="text" th:value="${vo?.eduFile3}" disabled>
+							<input id="eduFile3" name="eduFile3" th:type="${!#strings.isEmpty(vo?.eduFile3) ? 'hidden' : 'file'}" class="file-upload-input" th:value="${vo?.eduFile3}">
+							<button th:if="${!#strings.isEmpty(vo?.eduFile3)}" class="waves-effect waves-light btn red" type="button" onclick="delete_file('eduFile3')">삭제</button>
+						</div>
+					</div>
+					<div class="row m0">
+						<div class="input-field file-upload">
+							<label class="select-file-btn btn" for="eduFile4" th:disabled="${!#strings.isEmpty(vo?.eduFile4)}">파일선택</label>
+							<input class="select-file-name-box" type="text" th:value="${vo?.eduFile4}" disabled>
+							<input id="eduFile4" name="eduFile4" th:type="${!#strings.isEmpty(vo?.eduFile4) ? 'hidden' : 'file'}" class="file-upload-input" th:value="${vo?.eduFile4}">
+							<button th:if="${!#strings.isEmpty(vo?.eduFile4)}" class="waves-effect waves-light btn red" type="button" onclick="delete_file('eduFile4')">삭제</button>
+						</div>
+					</div>
+					<div class="row m0">
+						<div class="input-field file-upload">
+							<label class="select-file-btn btn" for="eduFile5" th:disabled="${!#strings.isEmpty(vo?.eduFile5)}">파일선택</label>
+							<input class="select-file-name-box" type="text" th:value="${vo?.eduFile5}" disabled>
+							<input id="eduFile5" name="eduFile5" th:type="${!#strings.isEmpty(vo?.eduFile5) ? 'hidden' : 'file'}" class="file-upload-input" th:value="${vo?.eduFile5}">
+							<button th:if="${!#strings.isEmpty(vo?.eduFile5)}" class="waves-effect waves-light btn red" type="button" onclick="delete_file('eduFile5')">삭제</button>
+						</div>
+					</div>
+				</div>
+				*/-->
+				<div class="row">
+					<div class="input-field file-upload col s12">
+						<label>과정 이미지</label>
+						<label class="select-file-btn btn" for="eduImage1">파일선택</label>
+						<input class="select-file-name-box uploaded-thumbnail-text" type="text" th:value="${vo?.eduImage1}" disabled>
+						<input id="eduImage1" name="eduImage1" type="file" class="file-upload-input uploaded-thumbnail-value" th:value="${vo?.eduImage1}">
+						<a class="btn uploaded-thumbnail-btn" th:if="${!#strings.isEmpty(vo?.eduImage1)}" th:href="|/admin/lms/edu/detail/download?fileOrigin=${vo?.eduImage1}&fileName=${vo?.eduImage1}|" style="padding: 0 5px;">다운로드</a>
+						<button th:if="${!#strings.isEmpty(vo?.eduImage1)}" class="uploaded-thumbnail-btn waves-effect waves-light btn red" type="button" th:onclick="thumbnailDelete('[[${vo?.detailIdx}]]')">삭제</button>
+						
+					</div>
+					
+					<div class="notice_title col"><i class="material-icons left">sms_failed</i>사용자에게 노출되는 과정(훈련) 대표 사진으로 720x450px(8:5 비율) 10MB이하로 등록. 허용 확장자: jpg, png, gif, bmp</div>
+				</div>
+				<div class="row">
+					<div class="input-field file-upload  col s12">
+						<label>학습자료</label>
+						<label class="select-file-btn btn" for="eduFile1">파일선택</label>
+						<input class="select-file-name-box uploaded-file-text" type="text" th:value="${vo?.eduFile1}" disabled>
+						<input id="eduFile1" name="eduFile1" type="file" class="file-upload-input uploaded-file-value" th:value="${vo?.eduFile1}">
+						<a class="btn uploaded-file-btn" th:if="${!#strings.isEmpty(vo?.eduFile1)}" th:href="|/admin/lms/edu/detail/download?fileOrigin=${vo?.eduFile1}&fileName=${vo?.eduFile1}|" style="padding: 0 5px;">다운로드</a>
+						<button th:if="${!#strings.isEmpty(vo?.eduFile1)}" class="uploaded-file-btn waves-effect waves-light btn red" type="button" th:onclick="fileDelete('[[${vo?.detailIdx}]]')">삭제</button>
+					</div>
+					<div class="notice_title col"><i class="material-icons left">sms_failed</i>사용자에게 노출되는 과정(훈련) 학습자료로 500MB이하로 등록. 허용 확장자: zip, pdf, doc, xls, ppt</div>
+				</div>
+
+				<div class="row">
+					<div class="input-field col s12">
+						<label for="evIdx" class="">사후평가</label>
+						<input type="hidden" name="evIdx" id="evIdx" th:value="${vo?.evIdx}">
+						<input type="text" name="evSubject" id="evSubject" th:value="${vo?.evSubject}" readonly>
+						<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="set_ev_list();"><i class="material-icons">search</i></a>
+						<a class="btn red accent-4 z-depth-0 waves-effect waves-light" onclick="set_ev_reset();"><i class="material-icons">close</i></a>
+					</div>
+					<div class="notice_title col"><i class="material-icons left">sms_failed</i>학습자가 훈련 종료 후, 온라인을 통해 수행할 사후평가를 선택</div>
+				</div>
+				
+				<div class="row">
+					<div class="input-field col s12">
+						<label for="poIdx" class="">만족도조사</label>
+						<input type="hidden" name="poIdx" id="poIdx" th:value="${vo?.poIdx}">
+						<input type="text" name="poSubject" id="poSubject" th:value="${vo?.poSubject}" readonly>
+						<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="set_pol_list();"><i class="material-icons">search</i></a>
+						<a class="btn red accent-4 z-depth-0 waves-effect waves-light" onclick="set_pol_reset();"><i class="material-icons">close</i></a>
+					</div>
+					<div class="notice_title col"><i class="material-icons left">sms_failed</i>학습자가 훈련 종료 후, 온라인을 통해 수행. 만족도조사가 존재할 경우 만족도조사 참여 후 수료증 출력 가능</div>
+				</div>
+				
+			</div>
+		
+			<div id="edu_schedule" class="row">
+				<div class="row">
+					<div class="input-field col s6 m6 l6 xl6">
+						<input id="eduAcceptBgnDate" name="eduAcceptBgnDate" type="date" th:value="${vo?.eduAcceptBgnDate}">
+						<label for="eduAcceptBgnDate" class="req">신청시작일자</label>				
+					</div>
+<!-- 					<div class="input-field col s6 m6 l3 xl3"> -->
+						<input id="eduAcceptBgnTime" name="eduAcceptBgnTime" type="hidden" maxlength="2" value="00">
+<!-- 						<label for="eduAcceptBgnTime">시작시간</label> -->
+<!-- 					</div> -->
+					<div class="input-field col s6 m6 l6 xl6">
+						<input id="eduAcceptEndDate" name="eduAcceptEndDate" type="date" th:value="${vo?.eduAcceptEndDate}">
+						<label for="eduAcceptEndDate" class="req">신청종료일자</label>				
+					</div>
+<!-- 					<div class="input-field col s6 m6 l3 xl3"> -->
+						<input id="eduAcceptEndTime" name="eduAcceptEndTime" type="hidden" maxlength="2" value="00">
+<!-- 						<label for="eduAcceptEndTime">종료시간</label> -->
+<!-- 					</div> -->
+				</div>
+				<div class="row">
+					<div class="input-field col s6">
+						<input id="eduTrainBgnDate" name="eduTrainBgnDate" type="date" th:value="${vo?.eduTrainBgnDate}">
+						<label for="eduTrainBgnDate" class="req">훈련기간 시작</label>		
+					</div>
+					<div class="input-field col s6">
+						<input id="eduTrainEndDate" name="eduTrainEndDate" type="date" th:value="${vo?.eduTrainEndDate}">
+						<label for="eduTrainEndDate" class="req">훈련기간 종료</label>		
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field col s12">
+						<input type="text" name="eduDateDesc" id="eduDateDesc" th:value="${vo?.eduDateDesc}"/>
+						<label for="eduDateDesc" class="">훈련기간 설명</label>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+
+<script>
+	
+	/* 23-10-16 필요없어 보이므로 임시 주석 추후 삭제
+	function get_edu_list(){
+		$.ajax({
+		  url: admin_page+'/lms/edu/list',
+		  type: 'GET',
+		  dataType: 'html',
+		}).done(function(data) {
+		  //$('#modal_view').html(data);
+		  $('#new_modal').html(data);
+		  var new_modal = $("#new_modal").modal({
+			complete: function() {
+			} // Callback for Modal close
+		  });
+		  new_modal.modal('open');
+		  $('#new_modal').css({'min-height':'400px', 'height':'80%', 'max-width':'480px'});
+		}).fail(function() {
+		  toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+	*/
+	$(function() {
+		$("select", "#frmForm").formSelect();
+		$('#main_tabs').tabs();
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			var form = $('#frmForm')[0];
+			var data = new FormData(form);
+			
+			if ($("input[name='trainTitle']", $frm).val() == "") {
+				toast("훈련명은 필수입력 입니다.");
+				$("input[name='trainTitle']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='eduTitle']", $frm).val() == "") {
+				toast("훈련 콘텐츠를 선택해주세요.");
+				$("input[name='eduTitle']", $frm).focus();
+				return;
+			}
+			
+//			if($("input[name='evIdx']", $frm).val() == "") {
+//				toast("사후평가를 선택해주세요.");
+//				$("input[name='evIdx']", $frm).focus();
+//				return;
+//			}
+			
+//			if($("input[name='poIdx']", $frm).val() == "") {
+//				toast("만족도조사를 선택해주세요.");
+//				$("input[name='poIdx']", $frm).focus();
+//				return;
+//			}
+			
+			if($("input[name='eduAcceptBgnDate']", $frm).val() == "") {
+				toast("훈련 신청시작일자를 선택해주세요.");
+				$("input[name='eduAcceptBgnDate']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='eduAcceptEndDate']", $frm).val() == "") {
+				toast("훈련 신청종료일자를 선택해주세요.");
+				$("input[name='eduAcceptEndDate']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='eduTrainBgnDate']", $frm).val() == "") {
+				toast("훈련기간 시작일자를 선택해주세요.");
+				$("input[name='eduTrainBgnDate']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='eduTrainEndDate']", $frm).val() == "") {
+				toast("훈련기간 종료일자를 선택해주세요.");
+				$("input[name='eduTrainEndDate']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: data,
+				contentType: false,
+				processData: false,
+ 				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.data.imageFail == 1) {toast("이미지 파일 확장자를 확인해주세요."); return false;}
+				if(data.data.imageFail == 2) {toast("이미지 파일 크기를 확인해주세요."); return false;}
+				if(data.data.fileFail == 1) {toast("자료 파일 확장자를 확인해주세요."); return false;}
+				if(data.data.fileFail == 2) {toast("자료 파일 크기를 확인해주세요."); return false;}
+				
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					$('.sidenav').sidenav('close');
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					M.toast({
+						html: xhr.responseJSON.message,
+						classes: 'red darken-2',
+						displayLength: 2000
+					});
+				}
+			});
+		});
+	});
+</script>
+</html>

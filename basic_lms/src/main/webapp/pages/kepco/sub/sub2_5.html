@@ -1,0 +1,78 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+<div class="sub-container" data-aos="fade-down" data-aos-duration="1200">
+<!-- * 카카오맵 - 지도퍼가기 -->
+<!-- 1. 지도 노드 -->
+<div id="daumRoughmapContainer1684482203586" class="root_daum_roughmap root_daum_roughmap_landing" style="width: 100%; height:500px;"></div>
+<!--
+	2. 설치 스크립트
+	* 지도 퍼가기 서비스를 2개 이상 넣을 경우, 설치 스크립트는 하나만 삽입합니다.
+-->
+<script charset="UTF-8" class="daum_roughmap_loader_script" src="https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js"></script>
+
+<!-- 3. 실행 스크립트 -->
+<script charset="UTF-8">
+	new daum.roughmap.Lander({
+		"timestamp" : "1684482203586",
+		"key" : "2euqk",
+		"mapHeight" : "500"
+	}).render();
+</script>
+
+
+
+<table class="table_type2 mt_50 come_to_here_info" summary="오시는길에 관한 내용입니다.">
+<caption>오시는길 안내표</caption>
+<colgroup>
+	<col width="16%">
+	<col width="10%">
+	<col width="32%">
+	<col width="10%">
+	<col width="32%">
+</colgroup>
+	<tbody>
+		<tr>
+			<th class="tit" rowspan="2">회사정보</th>
+			<th>주소</th>
+			<td colspan="3">01793 서울특별시 노원구 노원로 130 (공릉동, 한국전력인재개발원)</td>
+		</tr>
+		<tr>
+			<th>TEL</th>		
+			<td>02-970-3321</th>
+			<th>FAX</th>		
+			<td>02-970-3349</td>
+		</tr>
+		<tr>
+			<th class="tit" rowspan="4">교통안내</th>
+			<th>버스</th>		
+			<td>1,6호선 석계역 4번 출구에서 1132번 버스 이용</td>
+			<th>버스</th>		
+			<td>6호선 화랑대역 1번출구에서 1132번 버스 및 택시 이용</td>
+		</tr>
+		<tr>
+			<th>버스</th>		
+			<td>6,7호선 태릉입구역 7번출구에서 1132번 버스 및 택시 이용</th>
+			<th>버스</th>		
+			<td>7호선 공릉역에서 1136번 버스 이용 (원자력병원에서 하차 후 도보 5분 소요)</td>
+		</tr>
+	</tbody>
+</table>
+
+
+
+</div>
+
+
+
+
+
+
+
+</th:block>
+
+
+

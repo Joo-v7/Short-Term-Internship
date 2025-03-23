@@ -1,0 +1,261 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}"
+	>
+<th:block layout:fragment="content">
+
+<link rel="stylesheet" href="/assets/css/board.css"><!-- 게시판css -->
+
+<script th:inline="javascript">
+	function applyCancel(applyIdx,vodIdx) {
+		var site = /*[[${req?.site}]]*/;
+		var mn = /*[[${req?.mn}]]*/;
+		
+		if(confirm("해당 과정을 취소하시겠습니까?")){
+			if (!applyIdx) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url  : '/lms/vod/apply/cancel',
+				type : 'get',
+				data : {
+					'applyIdx' : applyIdx,
+					'vodIdx' : vodIdx,
+				},
+				dataType : 'json',
+			}).done(function(data) {
+				if(data.data.resultCnt == 1) {
+					alert("취소되었습니다.");
+					location.href="/lms/vod/apply/myList?site="+site+"&mn="+mn;
+				}
+				else {
+					alert('시스템 오류로 처리할 수 없습니다.');
+				}
+			}).fail(function() {
+				alert('시스템 오류로 처리할 수 없습니다.');
+			});
+		}
+	}
+</script>
+
+<style>
+.regist_tabs { display: inline-block;  margin: 0 auto; margin-bottom: 30px;  width: 100%; }
+.regist_tabs ul {max-width: 1500px;text-align: center;/* border-top: 2px solid #e3e3e3; */position: relative;margin: 0 auto;}
+.regist_tabs ul a {color: #838383;cursor: pointer;width: calc(100% / 2);float: left;border: 1px solid #2a2a2a;height: 64px;text-align: center;line-height: 61px;transition: .25s ease-in-out;border-right: 0;font-weight: 600;}
+.regist_tabs ul a:last-child{border-right: 1px solid #2a2a2a;}
+.regist_tabs ul a.current {border-top: 3px solid #2b64f9;color: #fff;}
+.traning_current_situation_list_wrap .edu_detail dl dd a.cancel_btn{
+	padding: 4px 10px 4px 8px;
+    margin-left: 8px;
+    text-align: center;
+    border-radius: 3px;
+    background: #dd2d2d;
+}
+.traning_current_situation_list_wrap .list_info_box.result_box .result_point p.app-state{font-size: 32px;font-weight: 600;} 
+
+.my_edu_btn {
+    display: inline-flex;
+    width: auto;
+    height: 24px;
+    border-radius: 4px;
+    background-color: #323232;
+    justify-content: center;
+    align-items: center;
+    margin-left: 20px;
+    color: #fff;
+    padding: 0 20px;
+    border: 0;
+    font-size: 15px;
+}
+
+
+
+@media screen and (max-width: 1300px){
+	.traning_current_situation_list_wrap .list_info_box.result_box .result_point p.app-state{font-size: 24px;}
+}
+@media screen and (max-width: 800px){
+	.traning_current_situation_list_wrap .list_info_box.result_box .result_point p.app-state{font-size: 20px;}
+}
+@media screen and (max-width: 500px){
+	.traning_current_situation_list_wrap .list_info_box.result_box .result_point p.app-state{font-size: 18px;}
+}
+
+</style>
+
+
+
+<div class="sub-container">
+	<!-- 게시판 검색 영역 -->
+	<div class="scon-tit">
+		수강신청현황
+		<span>수강신청현황에 대한 요약정보 입니다.</span>
+	</div>
+
+	<div class="regist_tabs">
+		<ul>
+			<li class="tab-link " data-tab="tab-1"><a href="/lms/edu/regist/myList?site=kepco&mn=0401">실감훈련</a></li>
+			<li class="tab-link " data-tab="tab-2"><a class="current" href="/lms/vod/apply/myList?site=kepco&mn=0422">영상교육</a></li>
+		</ul>
+	</div>
+
+	<div id="board_search">
+		<div class="board_search_form text-center">
+			<form id="board_search_form" action="/lms/vod/apply/myList" method="get">
+				<input type="hidden" name="site" th:value="${req?.site}"/>
+				<input type="hidden" name="mn" th:value="${req?.mn}"/> 
+				<input type="hidden" name="pageNum" th:value="${req?.pageNum}"/> 
+				
+				<div class="input_box select float-none input_category">
+					<select name="scKey1" title="검색분류" id="" class="select_type">
+						<option value="">신청상태</option>
+						<option value="1" th:selected="${#strings.equals(param?.scKey1,'1')}">대기</option>
+						<option value="2" th:selected="${#strings.equals(param?.scKey1,'2')}">승인</option>
+						<option value="3" th:selected="${#strings.equals(param?.scKey1,'3')}">취소</option>
+					</select>
+				</div>
+				<div class="input_box select float-none input_category">
+					<select name="scKey2" title="검색분류" id="" class="select_type">
+						<option value="">교육상태</option>
+						<option value="1" th:selected="${#strings.equals(param?.scKey2,'1')}">수강중</option>
+						<option value="2" th:selected="${#strings.equals(param?.scKey2,'2')}">완료</option>
+					</select>
+				</div>
+				<div class="input_box search float-none">
+				  <input type="text" title="검색어" name="scWord" id="search_keyword" class="search_keyword input_type" th:value="${req?.scWord}" placeholder="검색어를 입력해주세요" /> 
+				  <input type="submit" value="검색" title="검색" class="btn_serach">
+				</div>
+			</form>
+		</div>
+	</div>
+	<!-- //게시판 검색 영역 -->
+	<div id="list_total_count">
+		전체 : <strong th:text="${listTotal}"></strong>,
+		페이지 : <strong id="page_num" th:text="${req?.pageNum}"></strong>/<span data-th-text="${#numbers.formatInteger(listTotal/15, 2, 'COMMA')}+1"></span>
+	</div>
+
+	<div class="traning_apply_status_wrap">
+		<table>
+			<colgroup>
+				<col width="365px">
+				<col width="auto">
+				<col width="140px">
+				<col width="140px">
+				<col width="140px">
+			</colgroup>
+			<thead>
+				<tr>
+					<th colspan="2">교육과정</th>
+					<th>신청상태</th>
+					<th>교육상태</th>
+					<th>비고</th>
+				</tr>
+			</thead>
+			<tr th:if="${#lists.isEmpty(list)}">
+				<td colspan="5" class="t_center">
+					데이터가 존재하지 않습니다.
+				</td>
+			</tr>
+			<tr th:each="list : ${list}">
+				<td>
+					<div class="img_box">
+						<img th:src="|/lms/vod/file?vodIdx=${list?.vodIdx}|" onerror="this.src='/pages/kepco/img/sub/vod_none.jpg'"/>
+					</div>
+				</td>
+				<td>
+					<div class="list_info_cont_box">
+						<ul class="edu_cate_list">
+							<li th:each="vodKeyword,idx : ${#strings.setSplit(list?.vodKeyword,',')}" th:class="|ca${idx.count}|" th:text="${vodKeyword}">
+						</ul>
+						<h6 class="edu_tit_box">
+							<a th:href="|/lms/vod/view/?site=${req?.site}&mn=${req?.mn}&vodIdx=${list?.vodIdx}|">[[${list.vodTitle}]]</a>
+						</h6>
+						<dl class="edu_info_box">
+							<dt>수강신청일자</dt>
+							<dd>
+								<th:block th:if="!${#strings.isEmpty(list?.insertDate)}" th:with="insertDate = ${#temporals.createDateTime(list?.insertDate, 'yyyy-MM-dd HH:mm:ss')}">
+									[[${#temporals.format(insertDate, 'yyyy-MM-dd HH:mm')}]]
+								</th:block>
+							</dd>
+						</dl>
+						<dl th:if="${list?.applyState == '3'}" class="edu_info_box">
+							<dt>수강취소일자</dt>
+							<dd>
+								<th:block th:if="!${#strings.isEmpty(list?.applyDate)}" th:with="applyDate = ${#temporals.createDateTime(list?.applyDate, 'yyyy-MM-dd HH:mm:ss')}">
+									[[${#temporals.format(applyDate, 'yyyy-MM-dd HH:mm')}]]
+								</th:block>
+							</dd>
+						</dl>
+					</div>
+				</td>
+				<td>
+					<div class="result_info">
+						<p class="app-state" th:if="${list?.applyState == '1'}">
+							<i class="result_icon result_0"></i>
+							승인대기
+						</p>
+						<p class="app-state" th:if="${list?.applyState == '2'}">
+							<i class="result_icon result_1"></i>
+							승인완료
+						</p>
+						<p class="app-state" th:if="${list?.applyState == '3'}">
+							<i class="result_icon result_2"></i>
+							수강취소
+						</p>
+					</div>
+				</td>
+				<td>
+					<div class="result_info">
+						<p class="app-state" th:if="${list?.learnState != '1' and list?.learnState != '2'}">
+							<i class="result_icon result_0"></i>
+							교육대기
+						</p>
+						<p class="app-state" th:if="${list?.learnState == '1'}">
+							<i class="result_icon result_0"></i>
+							교육진행
+						</p>
+						<p class="app-state" th:if="${list?.learnState == '2'}">
+							<i class="result_icon result_1"></i>
+							교육완료
+						</p>
+					</div>
+				</td>
+				<td>
+					<div class="btn_wrap">
+<!-- 						<th:block th:if="!${#strings.isEmpty(list?.eduAcceptEndDate)}" th:with="eduAcceptEndDate = ${list?.eduAcceptEndDate}"> -->
+<!-- 							<th:block th:if="!${#dates.create(#strings.substring(eduAcceptEndDate,0,4),#strings.substring(eduAcceptEndDate,5,7),#strings.substring(eduAcceptEndDate,8,10),list?.eduAcceptEndTime,'00').before(#dates.createNow())}"> -->
+								<a th:if="${list?.applyState} == 1" th:href="|javascript:applyCancel(${list?.applyIdx},${list?.vodIdx});|" class="btn cancel_btn">신청 취소</a>
+<!-- 							</th:block> -->
+<!-- 						</th:block> -->
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<div id="paginate_complex" class="mt20 clear" th:if="${!#lists.isEmpty(list)}">
+		<p class="btn_page">
+			<a class="first_back" th:href="@{/lms/vod/apply/myList?site=kepco&(mn = ${req?.mn},  pageNum=1, scKey=${req.scKey}, scWord=${req.scWord})}">
+				<span class="hidden">처음페이지</span>
+			</a>
+			<a th:if="${paging.startPage-1} != 0" class="prev_back" th:href="@{/lms/vod/apply/myList?site=kepco&(mn = ${req?.mn}, pageNum=${paging.startPage-1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+				<span class="hidden">이전페이지</span>
+			</a>
+			<a th:attr="class=${req?.pageNum} == ${num} ? 'on' : ''"
+			th:href="@{/lms/vod/apply/myList?site=kepco&(mn = ${req?.mn}, pageNum=${num}, scKey=${req.scKey}, scWord=${req.scWord})}" 
+			th:each="num : ${#numbers.sequence(paging.startPage,paging.endPage)}" th:text="${num}">
+			</a>
+			<a th:if="${paging.endPage+1} <= ${#numbers.formatInteger(listTotal/15, 2, 'COMMA')}+1" class="next_back" th:href="@{/lms/vod/apply/myList?site=kepco&(mn = ${req?.mn},  pageNum=${paging.endPage+1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+				<span class="hidden">다음페이지</span>
+			</a>
+			<a class="last_back" th:href="@{/lms/vod/apply/myList?site=kepco&(mn = ${req?.mn}, pageNum=${#numbers.formatInteger(listTotal/15, 2, 'COMMA')}+1, scKey=${req.scKey}, scWord=${req.scWord})}">
+				<span class="hidden">마지막페이지</span>
+			</a>
+		</p>
+	</div>
+
+</div>
+</body>
+</html>

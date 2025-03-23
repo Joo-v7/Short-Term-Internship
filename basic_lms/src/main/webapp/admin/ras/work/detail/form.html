@@ -1,0 +1,145 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<form id="frmForm" method="post" th:action="@{/{adminPath}/ras/work/detail/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+	<div class="top">
+		<div class="row">
+			<div class="col s12 right-align">
+				<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button" th:if="${!#strings.isEmpty(vo?.rwdIdx)}" th:onclick="dataDelete();">삭제<i class="material-icons left">delete</i></button>				
+				<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit" value="저장">저장 <i class="material-icons left">check</i></button>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col s12">
+			<div class="row">
+				<input name="rwdIdx" id="rwdIdx" type="hidden"  th:value="${vo?.rwdIdx}">
+				<input name="rwuIdx" id="rwuIdx" type="hidden"  th:value="${vo?.rwuIdx}">
+
+				<div class="row">
+					<div class="input-field col s10">
+						<input type="text" name="detailNm" id="detailNm"  th:value="${vo?.detailNm}">
+						<label for="detailNm" class="req">세부작업명</label>
+					</div>
+					<label for="">사용여부</label>
+					<div class="check_list_box col s2">
+						<label for="useYn">
+						<input id="useYn" name="useYn" type="checkbox" class="filled-in" title="사용여부" value="y" th:checked="${vo?.useYn eq 'y'}">
+						<span>사용</span></label>
+					</div>
+				</div>
+
+				<div class="input-field col s12 m12 l12 xl6">
+					<input type="text" id="unitNm" th:value="${vo?.unitNm}">
+					<label for="unitNm">단위작업</label>
+					<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="rwm_modal();" ><i class="material-icons">search</i></a>
+				</div>
+
+				<div class="input-field col s12 m12 l6 xl3">
+					<input type="text" name="detailLoad" id="detailLoad"  th:value="${vo?.detailLoad}">
+					<label for="detailLoad" class="req">작업부하</label>
+				</div>
+				<div class="input-field col s12 m12 l6 xl3">
+					<input type="text" name="detailOrder" id="detailOrder"  th:value="${vo?.detailOrder}">
+					<label for="detailOrder" class="req">정렬순서</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12">
+					<input name="detailDesc" id="detailDesc" type="text" th:value="${vo?.detailDesc}">
+					<label for="detailDesc" class="">세부작업 설명</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12 m12 l6 xl3">
+					<input id="insertDate" type="text" th:value="${#dates.format(vo?.insertDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+					<label for="insertDate">등록일시</label>
+				</div>
+				<div class="input-field col s12 m12 l6 xl3">
+					<input id="updateDate" type="text" th:value="${#dates.format(vo?.updateDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+					<label for="updateDate">수정일시</label>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</form>
+<script>
+//# sourceURL=/admin/ras/work/detail/form.html
+	$(function() {
+		
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='detailNm']", $frm).val() == "") {
+				toast("세부작업명은 필수입력 입니다.");
+				$("input[name='detailNm']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='rwuIdx']", $frm).val() == "") {
+				toast("단위작업은 필수입력 입니다.");
+				$("input[id='unitNm']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	});
+	
+	function dataDelete() {
+		var rwdIdx = $("[name='rwdIdx']", '#frmForm').val();
+		
+		var $frm = $(this);
+		
+		$.ajax({
+			type: "get",
+			url: "delete",
+			data: "rwdIdx="+rwdIdx,
+			dataType: "json",
+			beforeSend: function(xhr) {
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				dataForm();
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			}
+		});
+		
+	}
+	
+</script>

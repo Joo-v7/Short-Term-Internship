@@ -1,0 +1,5 @@
+/* 메뉴 사용안함 */
+li.jstree-node.use_yn_n > a.jstree-anchor {
+	text-decoration:line-through;
+	color:red;
+}

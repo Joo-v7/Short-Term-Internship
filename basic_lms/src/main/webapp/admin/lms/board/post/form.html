@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+	<script src="/assets/js/dropzone.js"></script>
+	<script src="/assets/js/common.js"></script>
+	<link rel="stylesheet" href="/assets/css/dropzone.css">
+	<link rel="stylesheet" href="/assets/css/dropzone.ext.css">
+</head>
+
+<body>
+	<style>
+		#border_view .border_view_con .title {
+			background: #f9f9f9;
+			line-height: 24px;
+			font-size: 15px;
+			font-weight: 600;
+			color: #000;
+			box-sizing: border-box;
+			padding: 20px
+		}
+
+		#border_view .border_view_con .title .info {
+			font-size: 13px;
+			font-weight: normal;
+			position: relative;
+			top: -25px;
+			right: 0
+		}
+
+		#border_view .border_view_con .info {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 5px 20px;
+			line-height: 18px;
+			text-align: right
+		}
+
+		#border_view .border_view_con .txtbox {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 30px;
+			min-height: 300px;
+			margin-bottom: 100px;
+			font-size: 14px;
+			line-height: 26px;
+			background: #fff;
+		}
+
+		#border_view .border_view_con .txtbox .txt_top {
+			border-bottom: 1px solid #ddd;
+			padding: 20px 0;
+			box-sizing: border-box;
+			margin-bottom: 20px
+		}
+
+		#border_view .border_view_con .txtbox p span {
+			font-weight: 700;
+			color: #000
+		}
+
+		#border_view .border_view_con .txtbox p.s_title {
+			background: #f5f5f5;
+			padding: 10px 15px;
+			clear: both;
+			margin-top: 30px;
+			display: inline-block;
+			width: 100%
+		}
+
+		#border_view .border_view_con .txtbox p.metting_p {
+			display: inline-block;
+			border: 1px solid #ddd;
+			padding: 4px 15px;
+			float: left;
+			border-radius: 17px;
+			margin-right: 4px;
+		}
+
+		#border_view .border_view_con .txtbox img {
+			display: block;
+			max-width: 100%;
+			margin: 0 auto;
+			padding: 15px 0;
+			width: 100% !important;
+			height: auto !Important;
+		}
+
+		#border_view .border_view_con .file {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 20px 30px 15px 30px;
+			border-bottom: 1px dotted #ccc;
+			border-top: 1px dotted #ccc
+		}
+
+		#border_view .border_view_con .file a {
+			display: block;
+			widtH: 100%;
+			padding-bottom: 7px;
+			color: #0893b3;
+			font-size: 13px;
+			font-weight: bold
+		}
+
+		#border_view .border_view_con .file a:hover {
+			color: #000
+		}
+	</style>
+
+	<div id="border_view">
+		<div class="top pop-title">
+			<div class="row pd_box2">
+				<div class="col s12">
+					<a onclick="side_close('#side_view');" class="btn grey lighten-1 waves-effect waves-light"
+						name="action"><i class="material-icons">clear</i></a>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<ul id="main_tabs" class="tabs row">
+				<li class="tab col s6 m6 l6 xl6"><a href="#b_content">본문</a></li>
+				<li th:if="${!#strings.isEmpty(vo?.postIdx)}" class="tab col s6 m6 l6 xl6"><a href="#comment">댓글</a></li>
+			</ul>
+		</div>
+
+		<form th:id="frmForm" method="post"
+			th:action="@{/{adminPath}/lms/board/post/save(adminPath=${@environment.getProperty('global.admin-path')})}"
+			enctype="multipart/form-data">
+			<!-- 		게시글  -->
+			<div id="b_content" class="row " style="top: 102px;">
+				<input type="hidden" name="upload_count" id="upload_count" value="">
+				<input type="hidden" name="postIdx" id="postIdx" th:value="${vo?.postIdx}" />
+				<input type="hidden" name="boardIdx" id="boardIdx" th:value="${vo?.boardIdx}" />
+				<input type="hidden" name="newPostIdx" id="newPostIdx" th:value="${postvo?.postIdx}" />
+
+				<div class="row pd_box">
+					<div class="row">
+						<div class="input-field col s12 m12 l6 xl6">
+							<input type="text" name="postTitle" id="postTitle" th:value="${vo?.postTitle}" />
+							<label for="postTitle" class="req">게시글명</label>
+						</div>
+						<div class="input-field col s12 m6 l3 xl3">
+							<label for="postName" class="req">작성자</label>
+							<input type="text" name="postName" id="postName"
+								th:value="${vo?.insertIdx != null ? vo?.postName : session?.memberName}"
+								readonly="readonly" />
+							<input type="hidden" name="insertIdx" id="insertIdx"
+								th:value="${vo?.insertIdx != null ? vo?.insertIdx : session?.memberIdx}" />
+						</div>
+
+						<div class="input-field col s12 m6 l3 xl3">
+							<label for="boardId">게시판유형</label>
+							<select name="boardId" id="boardId">
+								<option th:each="boardList : ${boardList}" th:value="${boardList?.boardId}"
+									th:selected="${boardList?.boardIdx} == ${vo?.boardIdx}" th:utext="${boardList.boardId}">
+								</option>
+							</select>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col s12">
+							<div class="input-field">
+								<label for="postContent">게시글 내용</label>
+								<textarea id="postContent" name="postContent" class="materialize-textarea" style="min-height: 150px;">[[${vo?.postContent}]]</textarea>
+							</div>
+						</div>
+					</div>
+					<div class="row upload_wrap">
+						<div class="input-field file-upload">
+							<label>파일</label>
+
+							<div class="file_info">
+								<div class="dropzone" id="fileDropzone">
+								</div>
+
+								<div class="table table-striped files" id="previews">
+									<div id="template" class="file-row dz-image-preview">
+
+									</div>
+								</div>
+							</div>
+						</div>
+						<span class="disc f_alert">
+							전체 업로드 용량은 50MB 이하
+
+							<!--<br /> 파일설명은 웹표준 및 웹접근성에 의해 입력하는 것을 권장합니다. -->
+						</span>
+						<div class="row">
+							<div id="file_list" class="bbs_file_area" th:if="!${#lists.isEmpty(fileVo)}">
+								<div th:each="fileVo : ${fileVo}">
+									<div class="bbs_file_item" th:classappend="|bbs_item_${fileVo?.fileSort}|">
+										<div class="bbs_file_del2">
+											<label th:for="|file_del_label_${fileVo?.fileIdx}|">
+												<input th:id="|file_del_label_${fileVo?.fileIdx}|"
+													th:value="${fileVo?.fileIdx}" name="fileDel" type="checkbox"
+													class="check_type" title="파일삭제"> 파일삭제
+											</label>
+											<a title=""
+												th:href="|/admin/lms/board/download?boardId=${boarVo?.boardId}&fileIdx=${fileVo?.fileIdx}|"
+												target="_blank">[[${fileVo?.fileOriginName}]]</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="float_r">
+							<button id="btn-upload-file"
+								class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0">저장 <i
+									class="material-icons left">check</i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 		댓글 -->
+			<div th:if="${!#strings.isEmpty(vo?.postIdx)}" id="comment" class="row modal_scroll pd_box">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<div class="row">
+							<div class="col s12">
+<!--								<form id="commentList" method="get" onsubmit="return false">-->
+<!--									<div class="col search_bar">-->
+<!--										<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">-->
+<!--										<input type="hidden" name="postIdx" th:value="${vo?.postIdx}" />-->
+<!--										<a onclick="commentList()"-->
+<!--											class="waves-effect waves-light btn grey darken-2 z-depth-0 left">-->
+<!--											<i class="material-icons md-18 left">search</i> 검색-->
+<!--										</a>-->
+<!--										<div class="title left">-->
+<!--											전체 : <b id="commentTotCnt">0건</b>-->
+<!--										</div>-->
+<!--									</div>-->
+
+<!--								</form>-->
+								<div class="right">
+									<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light"
+										onclick="commentForm();">
+										<i class="material-icons left">create</i>등록
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col s12">
+							<div class="table_type3">
+								<table class="striped centered highlight" id="commentTable" style="min-width:800px">
+									<colgroup>
+										<col width="80px">
+										<col width="140px">
+										<col width="140px">
+										<col width="auto">
+									</colgroup>
+									<thead>
+										<tr>
+											<th>번호</th>
+											<th>등록자</th>
+											<th>등록일</th>
+											<th>내용</th>
+										</tr>
+									</thead>
+									<tbody>
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+
+
+</body>
+
+<script>
+	$(function () {
+/*
+		//목록
+		$('#commentList').submit(function (e) {
+			e.preventDefault();
+			commentList();
+		});
+*/
+		//검색
+		//$('#commentList').submit();
+		commentList();
+		//탭
+		$(document).ready(function () {
+			$('ul.tabs').tabs();
+		});
+	});
+
+	// 목록
+	function commentList() {
+		postIdx = $("input[name='postIdx']").val();
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#commentTable').DataTable({
+			
+			ajax: {
+				type: 'get',
+				url: gblAdminPath + '/lms/board/post/commentList?postIdx=' + postIdx,
+				dataType: "json",
+				dataSrc: "data.list",
+				contentType:'x-www-form-urlencoded; charset=UTF-8',
+			},
+			select: {
+				style: 'multi',
+			},
+			order: [0, 'desc'],
+			initComplete: commentInit,
+			columns: [
+				{
+					targets: 1, className: 'dt-body-center',
+					render: function (data, type, row, meta) {
+						return meta.row + 1;
+					},
+				},
+				{data: 'memberNm', className: 'dt-body-center'},
+				{data: 'insertDate', className: 'dt-body-center'},
+				{data: 'commentContent', className: 'dt-body-center'},
+			],
+		});
+	}
+
+	// 데이터테이블 initComplete
+	function commentInit(settings, json) {
+		$('#commentTotCnt').text($('#commentTable').DataTable().data().count());
+		if ($('#commentTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+
+	function commentForm() {
+		//모든 Toast 메세지 제거
+		M.Toast.dismissAll();
+
+		$.ajax({
+			url: gblAdminPath + "/lms/board/post/commentForm?" + $('#frmForm').serialize(),
+			type: 'GET',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var pop_modal = $("#pop_modal").modal({
+				complete: function () {
+					reload_comment_table();
+				} // Callback for Modal close
+			});
+			pop_modal.modal('open');
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	function reload_comment_table() {
+		comment_table.ajax.reload(null, false);
+		$('#pop_modal').modal('close');
+	}
+
+	var frmForm = "#frmForm";
+	var $frm = $(frmForm);
+
+	$(function () {
+
+		$("select", frmForm).formSelect();
+
+		// 파일
+		var fileTarget = $('.file-upload-input');
+		fileTarget.on('change', function () {
+			if (window.FileReader) {
+				var filename = $(this)[0].files[0].name;
+			} else {
+				var filename = $(this).val().split('/').pop().split('\\').pop();
+			}
+			$(this).siblings('.select-file-name-box').val(filename);
+		});
+
+		Dropzone.autoDiscover = false;
+
+		var cf_ext_file = 'zip|rar|doc|hwp|pdf|ppt|xls|pptx|docx|xlsx|txt|psd|pptm';
+		var cf_ext_image = 'gif|jpg|jpeg|png|bmp';
+		var cf_ext_multimedia = 'asx|asf|wmv|wma|mpg|mpeg|mov|avi|swf|mp4';
+		var cf_file_cnt = '1';
+
+		String.prototype.replaceAll = function (org, dest) {
+			return this.split(org).join(dest);
+		}
+
+		$(".file-dropzone").on('dragover', handleDragEnter);
+		$(".file-dropzone").on('dragleave', handleDragLeave);
+		$(".file-dropzone").on('drop', handleDragLeave);
+
+
+		function handleDragEnter(e) {
+			this.classList.add('drag-over');
+		}
+
+		function handleDragLeave(e) {
+			this.classList.remove('drag-over');
+		}
+
+		var c = 0;
+		var d = 0;
+		var e = 0;
+
+		var previewNode = document.querySelector("#template");
+		previewNode.id = "";
+		var previewTemplate = previewNode.parentNode.innerHTML;
+		previewNode.parentNode.removeChild(previewNode);
+
+
+		$('#fileDropzone').dropzone({
+			url: gblAdminPath + '/lms/board/post/file_save',
+			uploadMultiple: true,
+			maxFilesize: 52428800,
+			thumbnailWidth: 180,
+			thumbnailHeight: 120,
+			parallelUploads: 5,
+			autoProcessQueue: false,
+			paramName: "fileSaveName",
+			previewsContainer: "#previews", // Define the container to 
+			maxFiles: 1,
+			addRemoveLinks: true,
+			acceptedFiles: '.' + cf_ext_file.replaceAll("|", ",.") + ',.' + cf_ext_image.replaceAll("|", ",.") + ',.' + cf_ext_multimedia.replaceAll("|", ",."),
+			success: function (data, xhr) {
+				if (xhr.data.fail == 1) {
+					M.toast({
+						html: '파일 확장자를 확인해주세요.',
+						classes: 'red darken-2',
+						displayLength: 2000
+					});
+					return false;
+				} else if (xhr.data.fail == 2) {
+					M.toast({
+						html: '파일 크기를 확인해주세요.',
+						classes: 'red darken-2',
+						displayLength: 2000
+					});
+					return false;
+				}
+
+				myDropzone = this;
+				c++;
+				if (c == $('#upload_count').val()) { //성공 메시지 출력 후 이동
+					c = 0;
+					M.toast({
+						html: '정상적으로 처리되었습니다.',
+						displayLength: 2000
+					});
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					$('.sidenav').sidenav('close')
+
+				}
+			},
+			accept: function (file, done) {
+				done();
+				myDropzone = this;
+				var myDropzone = this;
+				var i = 0;
+
+				//파일 중복검사
+				for (var j = 0; j < myDropzone.files.length; j++) {
+					if (file.name == myDropzone.files[j].name) {
+						i++;
+						if (i > 1) {
+							alert('' + myDropzone.files[j].name + '는 중복파일이름입니다. 이름을 바꿔서 등록해주시기바랍니다.');
+							myDropzone.removeFile(myDropzone.files[j]);
+							myDropzone.files.splice(j, 1);
+						}
+					}
+				}
+				//최대 갯수제한 경고창
+				if (onlyNumber(myDropzone.files.length) - 1 >= onlyNumber(cf_file_cnt)) {
+					d++;
+					if (d == 1) {
+						alert('최대 : ' + cf_file_cnt + '개까지 업로드가 가능합니다.');
+					}
+					myDropzone.removeFile(file);
+
+				}
+			},
+			init: function () {
+				myDropzone = this;
+				_this = this;
+				//파일이 추가 될 때
+				//파일 확장자, 용량 검사
+				this.on("addedfile", function (file) {
+					var acceptCheck = 0;
+					myDropzone.options.acceptedFiles.split(',').forEach(function (idx) {
+						if (file.name.indexOf(idx) > 0) {
+							acceptCheck = 1;
+						}
+					});
+					if (acceptCheck == 0) {
+						alert('파일 확장자를 확인해주세요.');
+						myDropzone.removeFile(file);
+					} else if (myDropzone.options.maxFilesize < file.size) {
+						alert('파일 크기를 확인해주세요.');
+						myDropzone.removeFile(file);
+					}
+				});
+				var submitButton = document.querySelector('#btn-upload-file');
+				submitButton.addEventListener("click", function () {
+					$('#upload_count').val(myDropzone.files.length);
+					$(frmForm).ajaxForm({
+						dataType: 'json',
+						success: function (data) {
+							$("#postIdx").val(data.data.postVo.postIdx);
+							$("#boardIdx").val(data.data.boardVo.boardIdx);
+							$("#newPostIdx").val(data.data.postVo.postIdx);
+							if (data.status == 200) { //성공 메시지 출력 후 이동
+								myDropzone.processQueue(); //업로드
+								myDropzone.removeAllFiles(); //업로드한 파일 목록에서 제거
+								if (0 == $('#upload_count').val()) {
+									$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+									$('.sidenav').sidenav('close');
+									M.toast({
+										html: '정상적으로 처리되었습니다.',
+										displayLength: 2000
+									});
+								}
+							} else if (data.status == 402) {
+								$.each(data.message, function (k, v) {
+									$('#' + k).focus();
+									return false;
+								});
+							} else {
+								alert('네트워크 및 시스템 에러');
+							}
+
+						},
+						error: function (data) {
+							toast('네트워크 또는 시스템 장애입니다.', 4000);
+						}
+					});
+				});
+				var data = '';
+				//값 넘길때 form값 처리
+				this.on("sending", function (file, xhr, formData) {
+					e++; //값을 한번 처리
+					if (e == 1) {
+						$.each($(frmForm).serializeArray(), function (key, val) {
+							formData.append(val['name'], val['value']);
+						});
+					}
+				});
+
+				//최대 갯수제한 파일제거
+				this.on("maxfilesexceeded", function (file) {
+					myDropzone = this;
+					var myDropzone = this;
+					var count = myDropzone.options.maxFiles;
+					myDropzone.removeFile(file);
+				});
+
+				//삭제할때 처리
+				this.on("removedfile", function (file) {
+					var d = 0;
+				});
+				this.on("complete", function (file) {
+					myDropzone = this;
+					var myDropzone = this;
+					myDropzone.removeFile(file);
+				});
+			},
+		});
+
+	});
+
+	// 삭제
+	function dataDelete() {
+		var postIdx = $("[name='postIdx']", frmForm).val();
+
+		if (!postIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme: 'supervan',
+			title: '콘텐츠 삭제',
+			content: '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons: {
+				확인: function () {
+					$.ajax({
+						url: '/admin/lms/board/post/delete',
+						type: 'get',
+						data: {
+							'postIdx': postIdx
+						},
+						dataType: 'json',
+					}).done(function (data) {
+						if (data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							$('.sidenav').sidenav('close');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function () {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소: function () {
+				}
+			}
+		});
+	}
+
+</script>
+
+</html>

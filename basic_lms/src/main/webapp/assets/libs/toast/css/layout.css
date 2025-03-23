@@ -1,0 +1,128 @@
+@charset "utf-8";
+
+body{background:url('../img/mainbg.gif') center 0 no-repeat}
+
+/* header_wrap */
+#header_wrap{width:100%;top:0;position:fixed;height:80px;background:#fff;z-index:10;opacity:0.97}
+#header_wrap .header_box{width:98%;max-width:1600px;margin:0 auto;position:relative}
+#header_wrap h1 a{display:block;width:82px;height:31px;background:url('../img/logo.png') 0 0 no-repeat;position:Absolute;top:25px;left:0}
+#header_wrap nav{float:right;padding-top:22px}
+#header_wrap nav li{display:inline;padding-left:35px}
+#header_wrap nav li a{font-size:15px;font-weight:900;line-height:40px;padding-bottom:5px}
+#header_wrap nav li a.on{border-bottom:5px solid #00b962}
+#header_wrap li a,#header_wrap li a:visited,#header_wrap li a:hover,#header_wrap li a:active{-webkit-backface-visibility:hidden;backface-visibility:hidden;position:relative;transition:0.5s color ease;	text-decoration:none;color:#000}
+#header_wrap li a:hover{color:#00b962}
+#header_wrap li a.before:before, #header_wrap li a.after:after{content: "";transition:0.5s all ease;-webkit-backface-visibility:hidden;backface-visibility:hidden;position:absolute}
+#header_wrap li a.before:before{top:-0.25em}
+#header_wrap li a.after:after{bottom:-0.25em}
+#header_wrap li a.before:before,a.after:after{height:5px;height:0.35rem;width:0;background:#00b962}
+#header_wrap li a.first:after{left:0}
+#header_wrap li a.before:hover:before,a.after:hover:after{width:100%}
+
+
+/* ie 나중에 레이아웃에 추가 */
+@font-face {font-family: 'Noto Sans KR';font-style: normal;font-weight: 100;src: url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Thin.woff2) format('woff2'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Thin.woff) format('woff'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Thin.otf) format('opentype');}
+@font-face {font-family: 'Noto Sans KR';font-style: normal;font-weight: 300;src: url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Light.woff2) format('woff2'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Light.woff) format('woff'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Light.otf) format('opentype');}
+@font-face {font-family: 'Noto Sans KR';font-style: normal;font-weight: 400;src: url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Regular.woff2) format('woff2'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Regular.woff) format('woff'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Regular.otf) format('opentype');}
+@font-face {font-family: 'Noto Sans KR';font-style: normal;font-weight: 500;src: url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Medium.woff2) format('woff2'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Medium.woff) format('woff'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Medium.otf) format('opentype');}
+@font-face {font-family: 'Noto Sans KR';font-style: normal;font-weight: 700;src: url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Bold.woff2) format('woff2'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Bold.woff) format('woff'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Bold.otf) format('opentype');}
+@font-face {font-family: 'Noto Sans KR';font-style: normal;font-weight: 900;src: url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Black.woff2) format('woff2'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Black.woff) format('woff'),url(//fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Black.otf) format('opentype');}
+/* ie 나중에 레이아웃에 추가 */
+
+#login_wrap{position:absolute;width:100%;height:100%;overflow:hidden}
+
+#login_wrap .l_container{position:absolute;width:50%;height:100%;overflow:hidden;top:0;left:0;background:#fff;box-sizing:border-box;padding:10% 8%;border-right:1px solid #000}
+#login_wrap .l_container h1{display:block;width:118px;height:79px;background:url('/pages/customer/img/logo_footer.png') 0 0 no-repeat;margin-left:20px}
+#login_wrap .l_container h1 span{display:none}
+#login_wrap .l_container h2{color:#000;font-weight:900;font-size:90px; transform: rotateX(90deg);position:absolute;-ms-transform: rotate(90deg);-webkit-transform: rotate(90deg);transform: rotate(90deg);position:absolute;left:70px;top:105px}
+#login_wrap .l_container ul.info{padding:100px 0 50px 20px;color:#000;font-size:16px;line-height:1.5}
+#login_wrap .l_container ul.info li:nth-child(2){padding-top:8px}
+#login_wrap .l_container ul.info li b{font-size:42px;line-height:50px;font-weight:900;letter-spacing:-2px}
+#login_wrap .l_container ul.info li span{font-size:13px;font-weight:700}
+#login_wrap .l_container ul.info li:nth-child(3){padding-top:40px;font-weight:600;font-size:28px;color:#000;letter-spacing:-1px}
+
+#login_wrap .r_container{position:absolute;width:50%;height:100%;overflow:hidden;top:0;right:0;background:#fff;box-sizing:border-box;padding:13% 10%}
+.r_container form ul{padding-bottom:50px}
+.r_container form label{display:block;width:100%;font-size:15px;color:#000;font-weight:900;padding:40px 0 10px 0}
+.r_container form input{border:0;border-bottom:5px solid #000;font-size:30px;padding:10px 15px;font-weight:900}
+.r_container form button{border:0;background:#fff;font-size:40px;font-weight:900;letter-spacing:-3px;cursor:pointer; padding:10px 0;}
+
+#login_wrap a.btn_nt{text-align:center;display:block;width:200px;height:60px;background:#222;color:#fff;margin-left:20px;line-height:60px;font-size:15px;font-weight:600;position:fixed;top:20px;right:20px;z-index:1}
+#login_wrap a.btn_nt:hover{background:#000}
+
+/* footer */
+#foorer{width:100%;clear:both;margin:0 auto;padding:125px 0; 200px 0;background:#fff}
+.footer_box{width:1300px;margin:0 auto;overflow:hidden;position:relative}
+.footer_box address{font-style:normal;color:#000;letter-spacing:0}
+address li{display:inline-block;width:450px;height:150px;font-size:12px;font-weight:400;color:#333}
+address li span{font-size:15px;font-weight:900;color:#000;padding-bottom:15px;display:block;width:100%}
+address li b{color:#000;font-weight:900}
+.footer_box p.copyright{position:absolute;right:0;bottom:50px;color:#fff;letter-spacing:0.4px;font-size:12px;color:#757a80}
+.footer_box h1 a{display:block;width:82px;height:31px;background:url('../img/main/logo.png') 0 0 no-repeat;position:absolute;bottom:85px;right:0}
+
+#sub_container{max-width:1600px; width:98%; top:160px; margin:0 auto;position:relative;}
+#sub_container h3.sub_title{position:absolute;font-size:40px;z-index:3;top:-30px}
+
+#contact_wrap{width:100%;margin:0 auto}
+
+#loader_active {position: fixed; top: 40%; left: 50%;z-index: 9999; display: none;}
+#overlay {
+     position: fixed;
+     z-index: 9999;
+     top: 0%;
+     left: 0;
+     bottom: 0;
+     right: 0;
+     height: 125%;
+     width: 100%;
+     background-color: #000;
+     will-change: opacity;
+     opacity: 0.7;
+     display: none;
+ }
+
+
+.loading {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.bar div {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    height: 40px;
+    margin: auto;
+    background-color: rgba(255, 255, 255, 0.7);
+    animation: bar 1s infinite linear;
+}
+
+.circle div {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 76px;
+    height: 76px;
+    margin: auto;
+    border: 10px solid;
+    border-color: rgba(255, 255, 255, 1) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3);
+    border-radius: 48px;
+    animation: circle 1s linear infinite;
+}
+
+@keyframes circle {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

@@ -1,0 +1,206 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<th:block layout:fragment="content">
+	<script>
+		$(function () {
+			get_module_list();
+			// 검색
+			$("#frmModuleList").submit(function () {
+				setTimeout(function () {
+					var formData = $("#frmModuleList").serialize();
+					get_module_list(formData);
+				}, 40);
+
+				return false;
+			});
+
+		});
+
+		function module_onSubmit() {
+			var param = $("#frmModuleList").serialize();
+			get_module_list(param);
+		}
+
+
+		// 	function select(idx,name) {
+
+		// 		document.getElementById("eduModule").value += idx+",";
+
+		// 		$("#moduleIn").append(
+		// 			"<div >"+idx + "" + name + "</div>"			
+		// 		);
+
+		// 		var staff_modal = $("#pop_modal").modal();
+		// 		staff_modal.modal('close');
+		// 	}
+
+
+		// 목록
+		function get_module_list(formData) {
+
+			// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+			$('#moduleTable').DataTable({
+				ajax: {
+					type: 'get',
+					url: gblAdminPath + '/lms/edu/module/listJson?' + $('#frmModuleList').serialize(),
+					dataType: "json",
+					dataSrc: "data.list",
+				},
+				select: {
+					'style': 'multi'
+				},
+				'columnDefs': [
+					{
+						'width': '40px',
+						'searchable': false,
+						'orderable': true,
+						'targets': 0,
+						render: function (data, type, row, meta) {
+							return meta.row + meta.settings._iDisplayStart + 1;
+						},
+					}],
+				order: [0, 'desc'],
+				initComplete: dataTableInit,
+				columns: [
+					{data: 'rn', className: 'dt-body-center'},
+					{data: 'moduleCd', className: 'dt-body-center'},
+					{data: 'moduleTitle', className: 'dt-body-left'},
+					{data: 'moduleTime', className: 'dt-body-center'},
+					{data: 'insertDate', className: 'dt-body-center', render: $.fn.dataTable.render.datetime()},
+					//수정 
+					{
+						data: null, searchable: false, orderable: false, className: 'dt-body-center',
+						render: function (data, type, row, meta) {
+							return `<button onclick="select('${row.moduleIdx}');" class="waves-effect waves-light btn cyan"><i class="material-icons left">edit</i>선택</button>`;
+						}
+					},
+				],
+			});
+
+		}
+
+		// 데이터테이블 initComplete
+		function dataTableInit(settings, json) {
+			$('#moduleTableTotCnt').text($('#moduleTable').DataTable().data().count());
+			if ($('#moduleTable').DataTable().data().count() == 10000) {
+				toast('데이터 조회를 10,000건으로 제한합니다.');
+			}
+		}
+
+	</script>
+
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal3');" class="btn grey lighten-1 waves-effect waves-light"
+					name="action"><i class="material-icons">clear</i></a>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<!-- // 그룹 -->
+		<div class="col s12 pd_box">
+			<div class="basic">
+				<div class="basic_top_searchbox left">
+					<div class="row">
+						<form id="frmModuleList" method="get">
+							<!-- 검색창 -->
+							<div class="col search_bar">
+								<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+								<input type="hidden" name="eduIdx" id="eduIdx" th:value="${param?.eduIdx}" />
+
+								<button type="submit" class="waves-effect waves-light btn cyan accent-4 z-depth-0 left">
+									<i class="material-icons md-18 left">search</i> 검색
+								</button>
+								<div class="title left">
+									전체 : <b id="moduleTableTotCnt">0</b>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				<!--23-10-16 훈련 콘텐츠 검색에서 콘텐츠 등록 추가(임시)-->
+				<div>
+					<button type="button" onclick="moduleForm();"
+						class="waves-effect waves-light btn cyan accent-4 z-depth-0 left">
+						모듈 등록
+					</button>
+				</div>
+				<!--//-->
+				<div class="table_type3">
+					<table id="moduleTable" class="striped centered highlight">
+						<thead>
+							<tr>
+								<th width="30px">NO</th>
+								<th width="50px">모듈코드</th>
+								<th width="200px">모듈명</th>
+								<th width="50px">훈련시간(분)</th>
+								<th width="80px">등록일시</th>
+								<th width="80px">기능</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+
+		function select(moduleIdx) {
+			var eduIdx = '[[${param?.eduIdx}]]';
+			if (!eduIdx) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url: gblAdminPath + '/lms/edu/pack/save',
+				type: 'get',
+				data: {
+					'eduIdx': eduIdx,
+					'moduleIdx': moduleIdx
+				},
+				dataType: 'json',
+			}).done(function (data) {
+				if (data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					var staff_modal = $("#pop_modal").modal();
+					staff_modal.modal('close');
+					pack_ul(eduidx);
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function () {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			});
+		}
+
+		// 모듈 modal 등록폼
+		function moduleForm(moduleIdx) {
+			var depth = 3;
+			if (moduleIdx==undefined) {
+				moduleIdx = '';
+       		}
+			$.ajax({
+				url: gblAdminPath + "/lms/edu/module/form?moduleIdx=" + moduleIdx + "&depth=" + depth,
+				type: 'GET',
+				dataType: 'html',
+				success: function (data) {
+					$('#pop_modal4').html(data);
+					var staff_modal = $("#pop_modal4").modal();
+					staff_modal.modal('open');
+					$('#pop_modal4').css({'height': '80%', 'width': '40%', 'overflow-y': 'scroll'});
+				},
+				error: function (data) {
+					toast('네트워크 또는 시스템 장애입니다.', 4000);
+				}
+			});
+		}
+	</script>
+
+</html>

@@ -1,0 +1,302 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>무제 문서</title>
+<link rel="stylesheet" href="/assets/css/board.css"><!-- 게시판css -->
+
+<link rel="stylesheet" href="/pages/kepco/css/basic.css"><!-- 공통css -->
+<link rel="stylesheet" href="/pages/kepco/css/layout.css"><!-- 공통css -->
+<link th:if="${currMenuNode?.data?.mn}" rel="stylesheet" href="/pages/kepco/css/sub.css"><!-- 공통css -->
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css"><!-- 애니메이션 -->
+<script src="/assets/libs/fontawesome/fontawesome.js" crossorigin="anonymous"></script><!-- 폰트어썸 -->
+<link href="/assets/libs/aos/aos.css" rel="stylesheet"><!-- aos 애니메이션 -->
+<script src="/assets/libs/aos/aos.js"></script><!-- aos 애니메이션 -->
+
+<script src="/assets/js/jquery-3.5.1.min.js"></script><!-- fullpage 제이쿼리 링크 -->
+<script src="/pages/kepco/js/fullpage.js"></script><!-- fullpage 제이쿼리 링크 -->
+<link rel="stylesheet" href="/pages/kepco/css/fullpage.min.css"><!-- fullpage js css 링크 -->
+
+<script src="/assets/libs/swiperjs/swiper-bundle.min.js" ></script><!-- 비주얼 -->
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<link rel="stylesheet" href="/assets/libs/swiperjs/swiper-bundle.min.css" /><!-- 슬라이드 -->
+
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<script src="/pages/kepco/js/script.js" ></script><!-- 컨텐츠 스크립트 -->
+<script src="/pages/kepco/js/mouse_interaction.js" ></script><!-- 마우스 인터랙션 스크립트 -->
+
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" /><!-- 4페이지 슬라이드 -->
+
+<style>
+#gnb .gnbw .logo a{
+	background-color: transparent;
+    background-image: url(/pages/kepco/img/logo-on.svg);
+    width: 85px;
+    height: 150px;
+}
+</style>
+</head>
+
+
+
+<body>
+<script> 
+	AOS.init(); // 자바스크립트로 init()을 해야 동작한다.
+</script>
+
+<header>
+	<nav>
+		<div id="gnb">
+			<div class="gnbw">
+				<div class="logo"><a href=""></a></div>
+				<ul>
+					<li><a href="">교육과정</a></li>
+					<li><a href="">교육원</a></li>
+					<li><a href="">커뮤니티</a></li>
+					<li><a href="">나의강의실</a></li>
+				</ul>
+				<div class="snsbox">
+					<a href="" class="fb"><i class="fa-brands fa-facebook-f"></i></a>
+					<a href="" class="yt"><i class="fa-brands fa-youtube"></i></a>
+					<!-- <a href="" class="ts"><span class="hidden">티스토리</span></a> -->
+				</div>
+				<div class='toggle modalLink'>
+				  <span></span>
+				  <span></span>
+				  <span></span>
+				</div>
+				<script>
+				//사이트맵 아이콘
+				$('.toggle').click(function(){
+				   $(this).toggleClass('active');
+				});	
+				</script>
+			</div>
+		</div>
+	</nav>  
+</header>
+ 
+
+<div class="sub_wrap">
+        <div id="sub_content">
+            <div class="content_box">
+                <!-- contents -->
+                <div id="contents">
+					<div id="contents_wrap" class="conStyle">
+						<div id="page_content"><!-- 페이지영역 -->
+							<h3>공지사항</h3>
+							<form id="bbs_form" method="post" enctype="multipart/form-data" action="/board/save/">
+								<div id="board_write">
+									<table>
+										<tbody>
+											<tr>
+												<th scope="row"><label for="notice_chk2">공지여부</label></th>
+												<td>
+													<input id="notice_chk" name="post_notice" value="Y" type="checkbox" class="check_type" title="공지여부">
+													<label for="notice_chk">공지</label>
+													<span id="bs_notice_date" style="display:none;">
+														<label for="post_notice_sdate"></label>
+														<input name="post_notice_sdate" id="post_notice_sdate" value="" type="text" title="시작일" placeholder="시작일" class="input_type hasDatepicker" autocomplete="off" readonly=""> ~
+														<label for="post_notice_edate"></label>
+														<input name="post_notice_edate" id="post_notice_edate" value="" type="text" title="종료일" placeholder="종료일" class="input_type hasDatepicker" autocomplete="off" readonly="">
+														</span>
+														<p class="f_alert">체크시 공지사항으로 게시물 최상단에 출력됩니다.(정렬기준: 최근게시물) <br>게시기간 미 입력시 상시로 게시됩니다. </p>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row"><label for="bs_secret_label">비밀글</label></th>
+												<td>
+													<div class="input_box checkbox">
+													  <input id="bs_secret_label" name="post_secret"  type="checkbox" class="check_type" title="비밀글 여부" value="Y" />
+													  <label for="bs_secret_label">
+														<span class="design"></span>
+														<span class="text">체크시 비밀글로 등록되어 본인과 관리자외에는 조회할 수 없습니다.</span>
+													  </label>
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row"><label for="bs_writer_name_label">작성자 <span class="star">*</span></label></th>
+												<td>
+													<input type="hidden" name="member_id" value="s_admin">
+													<div class="input_box text">
+														<input id="bs_writer_name_label" name="member_name" value="" type="text" title="작성자" class="input_type">
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row"><label for="post_password_label">비밀번호 <span class="star">*</span><label></th>
+												<td>
+													<div class="input_box text">
+														<input id="post_password_label" name="post_password" value="" type="password" size="20" title="비밀번호" class="input_type" autocomplete="off" />
+													</div>
+													<span class="f_alert ">수정,삭제시 확인 목적으로 사용됩니다.</span>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row"><label for="post_datetime_label">등록일</label></th>
+												<td>
+													<div class="input_box date">
+														<input type='text' id="post_datetime_label" name="post_datetime" class="input_type" value="" title="등록일자" autocomplete="off" />
+													</div>
+													<span class="f_alert ">공란으로 입력시 현재일자로 저장됩니다.</span>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row"><label for="post_title_label">제목<span class="star">*</span></label></th>
+												<td>
+													<div class="input_box text w-100per">
+														<input id="post_title_label" style="width:100%;" name="post_title" value="" type="text" title="제목" class="input_type wfull_95" />
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<th scope="row">내용<span class="star">*</span></th>
+												<td>
+													<label for="post_content_type_label"></label>
+													<textarea name="post_content" class="ckEditor" id="post_content" title="내용" ></textarea>
+												</td>
+											</tr>
+											
+											<tr>
+												<th scope="row" colspan="2" class="tip bdr-none">
+													<div class="bbs_file_tip">
+														<ul>
+															<li>에디터로 이미지 첨부시 이미지 설명을 적어주시기 바랍니다.</li>
+															<li>jpg나 이미지 파일인 경우 파일설명을 입력해주세요</li>
+															<li>pdf나 hwp 파일이 이미지 기반일 경우 텍스트로 변환후 첨부해주세요!</li>
+														</ul>
+													</div>
+												</th>
+											</tr>
+											<tr>
+												<th scope="row"><label for="">파일첨부</label></th>
+												<td>
+													<div class="bbs_file_info">
+														<div class="bbs_file_ctl">
+															<input id="bbs_file_add" type="button" value="파일 추가" title="파일추가" />
+															<label for="bbs_file_add" class="bbs_file_add_label">파일 추가하기</label>
+														</div>
+														<div id="file_list" class="bbs_file_area">
+															<div class="bbs_file_item bbs_item_0">
+																<!--
+																<div class="bbs_file_del">
+																	<label for="file_del_label_0">
+																		<input name="file_del[0]" id="file_del_label_0" type="checkbox" class="check_type" value="" title="파일삭제"> 파일삭제
+																	</label>
+																	<a title="" href="/board/download/" target="_blank">다운로드</a>
+																</div>
+																-->
+																<input id="bs_file_label_0" name="bs_file[0]" type="file" title="파일첨부" class="input_type wfull_95 file_upload" onchange="fileUpload(0)" />
+																<label for="bs_file_label_0">파일 업로드</label>
+																<input id="bf_name_label_0" class="file_upload_name" type="text" value="" title="업로드 파일명" disabled />
+																<div class="input_box text file_info_text">
+																	<input id="bf_memo_label_0" name="file_memo[0]" type="text" value="" title="파일설명" placeholder="파일설명" class="input_type wfull_95 " />
+																</div>
+																<!--
+																<input id="bbs_file_del_0" class="bbs_file_del none" type="button" value="" title="파일 업로드 개수 빼기" onclick="bbs_file_del(0); return false;" />
+																
+																<label for="bbs_file_del_0" class="bbs_file_del_label"></label>
+																-->
+															</div>
+														</div>
+														<span class="f_alert ">
+															최대 5개 파일 업로드 가능. 전체 업로드 용량은 50MB 이하<br />
+															파일설명은 웹표준 및 웹접근성에 의해 입력하는 것을 권장합니다.
+														</span>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+
+								<div id="board_btn">
+									<div class="fl">
+
+										<input type="button" value="취소" title="취소" class="button_type4" onclick="history.back(); return false;" />
+									</div>
+									<div class="fr">
+										<input type="submit" value="저장" title="저장" class="button_type3 btn_submit" />
+									</div>
+								</div>
+							</form>
+
+						</div><!--// 페이지영역 -->
+					</div>
+				</div>
+                <!-- contents -->
+            </div>
+        </div>
+    </div>
+
+<script>
+$(function(){
+
+	var bbs_max_file_cnt = 5;
+	var bbs_max_file_size = 10000;
+
+	$("#bbs_form input[name='post_datetime']").datepicker();
+
+	//파일항목 추가
+	$("#bbs_file_add").click(function() {
+		if ($(".bbs_file_item").length >= bbs_max_file_cnt) {
+			alert("첨부가능한 파일은 최대 " + bbs_max_file_cnt + "개 입니다.");
+			return false;
+		}
+		var bf_sort = /\[(\d+)\]/.exec($(".bbs_file_item:last").find("input[name^='bs_file']").attr("name"));
+
+		bf_sort = bf_sort[1];
+		bf_sort = parseInt(bf_sort, 10) + 1;
+
+		var html = '<div class="bbs_file_item bbs_item_' + bf_sort + '">' +
+			' <input id="bs_file_label_' + bf_sort + '" name="bs_file[' + bf_sort + ']" type="file" title="파일첨부" class="input_type wfull_95 file_upload" onchange="fileUpload(' + bf_sort + ')">' +
+			' <label for="bs_file_label_' + bf_sort + '">파일 업로드</label>' +
+			' <input id="bf_name_label_' + bf_sort + '" class="file_upload_name" type="text" value="" title="업로드 파일명" disabled="">' +
+			' <div class="input_box text file_info_text"><input id="bf_memo_label_' + bf_sort + '" name="file_memo[' + bf_sort + ']" type="text" value="" title="파일설명" placeholder="파일설명" class="input_type wfull_95"></div>' +
+			' <input id="bbs_file_del_' + bf_sort + '" class="bbs_file_del none" type="button" value="" title="파일감소" onclick="bbs_file_del(' + bf_sort + '); return false;" />' +
+			' <label for="bbs_file_del_' + bf_sort + '" class="bbs_file_del_label" ></label></div>';
+		$(".bbs_file_area").append(html);
+
+	});
+
+	if(typeof CKEDITOR === "undefined"){
+
+		var headTag = document.getElementsByTagName("head")[0];
+		var newScript = document.createElement('script');
+		newScript.type = 'text/javascript';
+		newScript.src = '/assets/editor/ckeditor/ckeditor.js';
+		headTag.appendChild(newScript);
+		newScript.onload = function(){
+			newScript2 = document.createElement('script');
+			newScript2.type = 'text/javascript';
+			newScript2.onload = function() {
+				for(name in CKEDITOR.instances)
+				{
+					CKEDITOR.instances[name].destroy(true);
+				}
+				CKEDITOR.replaceAll('ckEditor');
+			};
+			newScript2.src = '/assets/editor/ckeditor/config.js';
+			headTag.appendChild(newScript2);
+		}
+	}
+	else{
+		for(name in CKEDITOR.instances)
+		{
+			CKEDITOR.instances[name].destroy(true);
+		}
+		CKEDITOR.replaceAll('ckEditor');
+	}
+
+});
+
+function bbs_file_del(i) {
+	$('.bbs_item_' + i).remove();
+}
+
+</script>
+</body>
+</html>

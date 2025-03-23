@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<link href="//cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="/css/default.css" rel="stylesheet"/>
+    <script src="//code.jquery.com/jquery-3.6.1.min.js"></script>
+</head>
+<body>
+<div class="container">
+<table class="table table-bordered table-striped table-hover">
+	<thead>
+	<tr>
+		<th class="text-center">userNm</th>
+		<th class="text-center">userEmail</th>
+		<th class="text-center">userAge</th>
+		<th class="text-center">userBirth</th>
+		<th class="text-center">userGender</th>
+		<th class="text-center">insertDate</th>
+		<th class="text-center">기능</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr th:each="v : ${pageInfo.list}">
+		<td th:text="${v.userNm}"></td>
+		<td th:text="${v.userEmail}"></td>
+		<td th:text="${v.userAge}"></td>
+		<td th:text="${v.userBirth}"></td>
+		<td th:text="${v.userGender}"></td>
+		<td th:text="${v.insertDate}"></td>
+		<td th:classappend="${v.crudIdx}">
+			<a th:href="@{'/zzz/crud/dto/form?crudIdx='+${v.crudIdx}}" >수정</a>
+			<a th:href="@{'/zzz/crud/dto/del?crudIdx='+${v.crudIdx}}" >삭제</a>
+		</td>
+	</tr>
+	</tbody>
+</table>
+
+<nav>
+  <ul class="pagination justify-content-center">
+    <li class="page-item" th:classappend="${!pageInfo.hasPreviousPage} ? 'disabled'">
+      <span th:if="${!pageInfo.hasPreviousPage}" class="page-link">이전</span>
+      <a th:if="${pageInfo.hasPreviousPage}" class="page-link" th:href="@{'?pageNum='+${pageInfo.prePage}}">이전</a>
+    </li>
+    <li class="page-item" th:each="n : ${pageInfo.navigatepageNums}" th:classappend="${n == pageInfo.pageNum} ? 'active'">
+      <a class="page-link" th:href="@{'?pageNum='+${n}}" th:text="${n}"></a>
+    </li>
+    <li class="page-item" th:classappend="${!pageInfo.hasNextPage} ? 'disabled'">
+      <span th:if="${!pageInfo.hasNextPage}" class="page-link">다음</span>
+      <a th:if="${pageInfo.hasNextPage}" class="page-link" th:href="@{'?pageNum='+${pageInfo.nextPage}}">다음</a>
+    </li>
+  </ul>
+</nav>
+
+<a th:href="@{'/zzz/crud/dto/form'}">등록</a>
+
+</div>
+<!-- // .container -->
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+<form name="frm_evaluation" id="frm_evaluation" method="post" enctype="multipart/form-data"
+      th:action="@{/{adminPath}/lms/evaluation/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+
+    <div class="top pop-title">
+        <div class="row">
+            <div style="float:left; margin-top: 6px; margin-left:5px;">
+                <a href="#" onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light"
+                   name="action">
+                    <i class="material-icons">clear</i>
+                </a>
+                <h4>평가관리</h4>
+            </div>
+            <div class="col right-align pd_box2 float_r">
+
+
+                <a style="margin-right: 5px;" class="btn waves-effect z-depth-0 red lighten-1 left" th:if="${vo?.evIdx}"
+                   th:onclick="set_evaluation_delete([[${vo.evIdx}]],'설문조사');">
+                    <i class="material-icons left">delete</i>삭제
+                </a>
+
+                <button style=" " class="btn waves-effect waves-light right  blue-grey darken-4 z-depth-0"
+                        type="submit">저장 <i class="material-icons left">check</i></button>
+            </div>
+        </div>
+    </div>
+    <input type="hidden" name="evIdx" id="evIdx" th:value="${vo?.evIdx}"/>
+    <div class="row modal_defalt_scroll_d pd_box">
+        <div class="col s12 m6 l6">
+            <fieldset class="row mt5 ">
+                <legend>기본정보</legend>
+                <div class="input-field col s12 m6 l6">
+                    <input type="number" id="evTime" name="evTime" th:value="${vo?.evTime}">
+                    <label for="evTime" class="active req">평가시간(분단위)</label>
+                </div>
+                <div class="input-field col s12 m6 l6">
+                    <input type="text" name="evSubject" id="evSubject" title="제목" th:value="${vo?.evSubject}">
+                    <label for="evSubject" class="active req">제목 </label>
+                </div>
+                <div class="input-field col s12">
+					<textarea name="evContent" id="evContent" title="아랫글 HTML" class="materialize-textarea"
+                              placeholder="평가 설명" style="    height: 100%;
+	   min-height: 252px;
+	   max-height: 252px;
+	   overflow-y: auto;" th:utext="${vo?.evContent}"></textarea>
+                </div>
+            </fieldset>
+        </div>
+        <div class="col sideline2 s12 m6 l6 pd_box" style="margin-top: -12px;">
+            <fieldset class="row  ">
+                <legend>기본설정</legend>
+
+                <div>
+                    <label for="evUseState">
+                        <input name="evUseState" type="checkbox" value="Y" id="evUseState"
+                               th:checked="${vo?.evUseState eq 'Y'}">
+                        <span>평가 사용여부</span>
+                    </label>
+                </div>
+
+            </fieldset>
+            <!--<fieldset class="row ">-->
+            <!--    <legend>권한설정</legend>-->
+            <!--    <div class="col  s12">-->
+            <!--        <div class="row" style="background: #e8eff2">-->
+            <!--            <div class="col s4 center" style="line-height:171px; border-right: 1px solid #f1c40f">-->
+            <!--                설문참여 권한-->
+            <!--            </div>-->
+            <!--            <div class="input-field col s8">-->
+            <!--                <ul>-->
+            <!--                    <li></li>-->
+            <!--                </ul>-->
+            <!--            </div>-->
+            <!--        </div>-->
+            <!--    </div>-->
+            <!--    <div class="col s12">-->
+            <!--        <div class="row" style="background: #e8eff2">-->
+            <!--            <div class="col s4 center" style="line-height:200px; border-right: 1px solid #f1c40f">-->
+            <!--                결과열람 권한-->
+            <!--            </div>-->
+            <!--            <div class="input-field col s8">-->
+            <!--                <ul>-->
+            <!--                    <li></li>-->
+            <!--                </ul>-->
+            <!--            </div>-->
+            <!--        </div>-->
+            <!--    </div>-->
+            <!--</fieldset>-->
+        </div>
+    </div>
+</form>
+
+<script>
+    $(function () {
+        ini_set();
+        M.textareaAutoResize($('#evContent'));
+        $('#frm_evaluation').ajaxForm({
+            dataType: 'json',
+            success: function (response) {
+                if (response.status == 200) { //성공 메시지 출력 후 이동
+                    toast('저장완료', 3000);
+                    modal_close('#pop_modal');
+                    evaluation_table.ajax.reload(null, false);
+                } else {
+                    $.each(response.message, function (k, v) {
+                        $('#' + k).focus();
+                        toast(v, 3000);
+                        return false;
+                    });
+                }
+            },
+            error: function (result, status, error) {
+                toast(result.responseJSON.message, 3000);
+            },
+        });
+    });
+
+
+    function set_evaluation_delete(evIdx, subject) {
+        $.confirm({
+            theme: 'supervan', // 'material', 'bootstrap'
+            title: subject + ' 삭제',
+            content: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+            buttons: {
+                확인: function () {
+                    $.ajax({
+                        url: gblAdminPath + '/lms/evaluation/delete',
+                        type: 'POST',
+                        data: {'evIdx': evIdx},
+                        dataType: 'json',
+                    }).done(function (d) {
+                        modal_close('#pop_modal');
+                        toast(d.message);
+                        visual_table.ajax.reload(null, false);
+                    }).fail(function () {
+                        toast('네트워크 또는 시스템 장애입니다.', 4000);
+                    });
+                },
+                취소: function () {
+                }
+            }
+        });
+    }
+
+</script>
+

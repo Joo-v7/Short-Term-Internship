@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+
+<head>
+	<link href="/assets/libs/jstree/themes/default/style.css" rel="stylesheet"/>
+	<link href="/assets/libs/jstree/jstree.ext.css" rel="stylesheet"/>
+	<script src="/assets/libs/jstree/jstree.min.js"></script>
+</head>
+
+<th:block layout:fragment="content">
+	<div class="row m0 h100">
+		<!-- // 그룹 -->
+		<!-- 트리 -->
+		<div id="menu_tree" class="col s12 m12 l4 xl4 sideline pd_box">
+			<div class="row">
+				<div class="col s12 m6 l6 xl4 left-align input-field select_m0">
+					<select id="site" name="site" onchange="getTreeJson()">
+						<option th:value="${site?.site}" th:each="site : ${siteList}" >[[${site?.siteNm}]]</option>
+					</select>
+					<label for="site">사이트</label>
+				</div>
+				<div class="col s12 m6 l6 xl8 left-align">
+					<div class="search_tree input-field">
+						<input id="scWord" name="scWord" type="text" placeholder="메뉴명 검색"> <label for="scWord" th:value="${vo?.scWord}">메뉴검색</label>
+					</div>
+				</div>
+			</div>
+			<div id="tree_menu" style="max-height: 700px; overflow-y: scroll;">
+				<ul>
+					<li>메뉴1
+						<ul>
+							<li>메뉴1-1</li>
+							<li>메뉴1-2</li>
+						</ul>
+					</li>
+					<li>메뉴2</li>
+				</ul>
+			</div>
+		</div>
+		<!-- //트리 -->
+
+		<!-- 폼 -->
+		<div class="col s12 m12 l8 xl8 scroll_defalt pd_box bg_lightblue h100" id="areaForm"></div>
+		<!-- //폼 -->
+	</div>
+	
+	<script>
+	$(function() {
+		getTreeJson();
+		
+		
+		
+	});
+	
+	function dataForm(menuIdx) {
+		
+		var site = $("#site").val();
+		if( site == "" ) {
+			toast("사이트를 확인할 수 없습니다.");
+			return;
+		}
+		
+		if( menuIdx == null ) {
+			// 하위 메뉴 추가. 트리의 선택된 노드를 부모 메뉴로 가정
+			var node = $('#tree_menu').jstree('get_selected', true);
+			if(node.length != 1) {
+				return;
+			}
+			
+			if(node[0].parents.length >= 4) {
+				toast("메뉴깊이 초과로 하위메뉴를 추가할 수 없습니다.");
+				return;
+			}
+			
+			var parentMenuIdx = node[0].id;
+			
+			$("#areaForm").load(gblAdminPath + "/cms/menu/form?parentMenuIdx=" + parentMenuIdx + "&site="+ site);
+			return;
+		}
+		
+		// 트리의 노드 선택시 기본 동작
+		$("#areaForm").load(gblAdminPath + "/cms/menu/form?menuIdx=" + menuIdx + "&site="+ site);
+	}
+	
+	function getTreeJson() {
+		
+		$.ajax(
+			{url : gblAdminPath + '/cms/menu/treeJson?' + $('#site').serialize() }
+		)
+		.done(function (res) {
+			var treeList = [];
+			
+			// 최상위에 메뉴를 추가할 수 있도록 ROOT 노드 추가
+			treeList.push(
+				{
+					"id": ""+0, 
+					"parent": "#", 
+					"text": "ROOT"
+				}
+			);
+			
+			res.data.menuList.forEach(function(v) {
+				var my_class = "";
+				if(v.useYn != 'y') {
+					my_class = "use_yn_n";
+				}
+				var node = {
+					"id": ""+v.menuIdx, 
+					"parent": ""+v.parentMenuIdx, 
+					"text": v.menuNm,
+					"li_attr" : {
+						"class" : my_class
+					}
+				};
+				treeList.push(node);
+			});
+			
+			createTree(treeList);
+		});
+	}
+	
+	function createTree(treeList) {
+		$('#tree_menu').jstree({
+			"core" : {
+				"animation" : 1,
+				"multiple" : false,
+				"themes" : {
+					"stripes" : true
+				},
+	 			"data" : treeList,
+				"themes" : {
+					"responsive" : false
+				}
+			},
+			"types" : {
+				"#" : {
+					"max_children" : 4,
+					"max_depth" : 6,
+					"valid_children" : [ "root" ]
+				},
+				"root" : {
+					"icon" : "glyphicon glyphicon-folder",
+					"valid_children" : [ "default" ]
+				},
+				"default" : {
+					"valid_children" : [ "default", "file" ]
+				},
+				"file" : {
+					"icon" : "glyphicon glyphicon-file",
+					"valid_children" : [ "file" ]
+				}
+			},
+			"plugins" : [ "contextmenu", "dnd", "search", "state", "types", "html_data" ],
+			"contextmenu": {
+	            "items": function(node) {
+	                return {};  // 빈 객체를 반환하여 우클릭 메뉴 비활성화
+	            }
+	        }
+		});
+		
+		$('#tree_menu').bind("select_node.jstree", function(event, data) {
+			dataForm(data.node.id);
+		});
+		
+		$('#tree_menu').bind("loaded.jstree", function(event, data) {
+			$(this).jstree("open_node", "#");
+		});
+		var to = false;
+		$('#scWord').keyup(function() {
+			if (to) { clearTimeout(to); }
+			to = setTimeout(function() {
+				var v = $('#scWord').val();
+				$('#tree_menu').jstree(true).search(v);
+			}, 250);
+		});
+		
+		$('#tree_menu').jstree(true).settings.core.data = treeList;
+		$('#tree_menu').jstree(true).refresh();
+		
+	}
+	
+	
+	</script>
+</th:block>

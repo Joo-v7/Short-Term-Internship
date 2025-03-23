@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+	<link href="//getbootstrap.com/docs/5.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+
+
+<body>
+	
+	<!-- header -->
+	<header th:replace="cms/layout/case2_header :: header"></header>
+	<!-- //header -->
+	
+	<div layout:fragment="content"></div>
+	
+	<!-- footer -->
+	<footer th:replace="cms/layout/case2_footer :: footer"></footer>
+	<!-- //footer -->
+</body>
+
+</html>

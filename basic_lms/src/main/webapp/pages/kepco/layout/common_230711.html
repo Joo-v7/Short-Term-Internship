@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="utf-8">
+<title>[[${siteVo.homeTitle}]] > [[${#strings.listJoin(menuTree.getParentMenuList(currMenuNode).![menuNm], ' > ')}]]</title>
+<link rel="stylesheet" href="/pages/kepco/css/basic.css"><!-- 공통css -->
+<link rel="stylesheet" href="/pages/kepco/css/layout.css"><!-- 공통css -->
+<link rel="stylesheet" href="/pages/kepco/css/sub.css"><!-- 공통css -->
+
+<!-- <script  src="./script.js"></script>공통js -->
+
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"> -->
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css" rel="stylesheet" /><!-- 애니메이션 -->
+
+<script src="https://kit.fontawesome.com/0a93cf96a7.js" crossorigin="anonymous"></script><!-- 폰트어썸 -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"><!-- aos 애니메이션 -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script><!-- aos 애니메이션 -->
+
+<script src="https://code.jquery.com/jquery-3.5.1.js" ></script><!-- fullpage 제이쿼리 링크 -->
+<script src="/pages/kepco/js/fullpage.js"></script><!-- fullpage 제이쿼리 링크 -->
+<link rel="stylesheet" href="/pages/kepco/css/fullpage.min.css"><!-- fullpage js css 링크 -->
+
+<script src="https://unpkg.com/swiper@6.3.2/swiper-bundle.min.js" ></script><!-- 비주얼 -->
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.0/gsap.min.js" ></script> -->
+<script src="/assets/libs/gsap/gsap.min.js"></script><!-- 비주얼 -->
+
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" /><!-- 4페이지 슬라이드 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" /><!-- 4페이지 슬라이드 -->
+
+<script src="https://unpkg.co/gsap@3/dist/gsap.min.js" ></script><!-- 비주얼 -->
+
+<script src="/pages/kepco/js/script.js" ></script><!-- 컨텐츠 스크립트 -->
+
+<script>
+$(function(){
+	
+});
+</script>
+</head>
+
+
+
+<body>
+<script> 
+	AOS.init(); // 자바스크립트로 init()을 해야 동작한다.
+</script>
+
+<header>
+	<nav>
+		<div id="gnb">
+			<div class="gnbw">
+				<div class="logo"><a href="/"></a></div>
+				<div class="hd_menu_wrap">
+					<ul class="hd_menu_box">
+						<li th:each="treeNode : ${menuTree.root.children}">
+							<a th:if="${treeNode.data.useYn == 'y'}"  th:href="@{${treeNode.data.menuUrl}}" th:classappend="${treeNode.active} ? on">[[${treeNode.data.menuNm}]]</a>
+							<ul class="hd_depth_box">
+								<li th:each="treeNode2 : ${treeNode.children}">
+									<a th:href="@{${treeNode2.data.menuUrl}}" th:title="${treeNode2.data.menuNm}" th:classappend="${treeNode2.active} ? on">
+										<span>[[${treeNode2.data.menuNm}]]</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+					<ul class="hd_user_menu_box">
+						<li sec:authorize="isAnonymous()">
+							<a href="/cms/page/?site=kepco&mn=1001"><i class="fa-regular fa-circle-user"></i><span class="hidden">로그인</span></a>
+						</li>
+						<li sec:authorize="isAuthenticated()">
+							<a href="/cms/member/auth/logout"><i class="fa-solid fa-circle-user"></i><span class="hidden">로그아웃</span></a>
+						</li>
+					</ul>
+				</div>
+				
+				
+				<div class='toggle modalLink'><i class="fa-solid fa-bars-staggered"></i></div>
+				<script>
+				//사이트맵 아이콘
+				$('.toggle').click(function(){
+				   $(this).toggleClass('active');
+				});	
+				</script>
+			</div>
+		</div>
+	</nav>  
+</header>
+<style>
+
+
+</style>
+<script>
+$(function() {
+	$("#web_location .location_dept_a").on('click',function(){
+        $(this).next('ul').slideToggle();
+        return false;
+    });
+});
+</script>
+					<div class="web_location" id="web_location">
+						<div class="web_location_box">
+							<ul>
+								<li class="home">
+									<a th:href="@{/cms/main(site=${siteVo.site})}" class="home" title="메인으로"><i class="fa-solid fa-house"></i></a>
+								</li>
+								<li class="mn">
+									<a href="#" class="location_dept_a">[[${currMenuNode?.data?.menuNm}]]<i class="fa-solid fa-sort-down lc-icon"></i></a>
+									<ul class="location_dept depth_box1">
+										<th:block th:each="treeNode : ${menuTree.getDepth2NodeList()}">
+										<li class="mn">
+											<a th:href="@{${treeNode.data.menuUrl}}" th:title="${treeNode.data.menuNm}" th:classappend="${treeNode.active} ? on">
+												<span>[[${treeNode.data.menuNm}]]</span>
+											</a>
+										</li>
+										</th:block>
+									</ul>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+<div class="sub_wrap">
+        <div id="sub_content">
+            <div class="content_box">
+                <!-- contents -->
+                <div id="contents">
+					<!--
+					<div class="contents_top">
+						<div class="contents_top_txt">
+							<h3 class="subtop_title" data-aos="fade-up" data-aos-duration="1500" data-aos-delay="100">[[${currMenuNode?.data?.menuNm}]]</h3>
+							<p class="subtop_title2" data-aos="fade-up" data-aos-duration="1500">korea electric power corporation</p>
+						</div>
+					</div>
+					-->
+
+					<div id="contents_wrap" class="conStyle">
+						<div id="page_content"><!-- 페이지영역 -->
+							<!-- <div class="page-tit">
+								<h3 class="title">[[${currMenuNode?.data?.menuNm}]]</h3>
+								<p class="subtitle">VR 기술을 활용한 가상훈련시스템 초실감 안전 교육 프로그램</p>
+
+							</div> -->
+
+<div layout:fragment="content"></div>
+
+
+						</div><!--// 페이지영역 -->
+					</div>
+				</div>
+                <!-- contents -->
+            </div>
+        </div>
+    </div>
+
+<div id="footer">
+			<div id="footer_wrap">
+				<div class="logo"></div>
+				<div class="address_box">
+					<div class="footer_info">
+						<ul>
+							<li><a href=""><span>개인정보처리방침</span></a></li>
+							<li><a href=""><span>영상정보처리기기운영관리방침</span></a></li>
+							<li><a href=""><span>오시는길</span></a></li>
+						</ul>
+					</div>
+					<div class="footer_address">
+						<address>01793 서울특별시 노원구 노원로 130 (공릉동, 한국전력인재개발원) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TEL. 02-970-3321(평일 9:00 ~ 18:00) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FAX. 02-970-3349<br>COPYRIGHT © KEPCO 인재개발원. ALL RIGHTS RESERVED.</address>
+					</div>
+				</div>
+				<div class="f-sns">
+					<ul>
+						<li><a href="https://www.youtube.com/@e-4367" target="_blank"><span class="hidden">유튜브</span></a></li>
+						<li><a href="https://www.instagram.com/e_mobility_expo/" target="_blank"><span class="hidden">인스타그램</span></a></li>
+						<li><a href="https://www.facebook.com/mobilityexpo" target="_blank"><span class="hidden">페이스북</span></a></li>
+						<li><a href="https://blog.naver.com/emobilityexpo" target="_blank"><span class="hidden">블로그</span></a></li>
+					</ul>	
+				</div>
+			</div>
+		</div>
+<!--
+    <div id="footer">
+        <div id="footer_wrap">
+            <div class="address_box">Copyright © KEPCO. ALL RIGHTS RESERVED.</div>
+        </div>
+    </div>
+-->
+
+
+</body>
+</html>

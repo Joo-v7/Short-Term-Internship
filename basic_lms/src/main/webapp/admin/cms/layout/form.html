@@ -1,0 +1,214 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<link rel="stylesheet" href="/assets/libs/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="/assets/libs/codemirror/addon/hint/show-hint.css">
+<link rel="stylesheet" href="/assets/libs/codemirror/theme/material.css">
+<script src="/assets/libs/codemirror/lib/codemirror.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/show-hint.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/xml-hint.js"></script>
+<script src="/assets/libs/codemirror/addon/hint/html-hint.js"></script>
+<script src="/assets/libs/codemirror/mode/xml/xml.js"></script>
+<script src="/assets/libs/codemirror/mode/javascript/javascript.js"></script>
+<script src="/assets/libs/codemirror/mode/css/css.js"></script>
+<script src="/assets/libs/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+
+<style>
+.co_m1 .CodeMirror { height:420px !important; }
+</style>
+
+<form name="frmForm" id="frmForm" method="post" th:action="@{/{adminPath}/cms/layout/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+	<div class="top">
+		<div class="row">
+			<div class="col s12 m12 l12 xl12 right-align">
+				<button type="button" class="btn waves-effect z-depth-0 red lighten-1 left" th:if="${vo.layoutIdx} > 0" th:onclick="dataDelete();">삭제<i class="material-icons left">delete</i></button>				
+				<button type="button" class="btn waves-effect waves-light  blue-grey accent-4 z-depth-0 " th:if="${vo.layoutIdx} > 0" th:onclick="|set_layout_log(${vo?.layoutIdx});return false;|" data-position="bottom">로그기록 <i class="material-icons left fs1">playlist_add_check</i></button>
+				<button type="submit" class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0">저장 <i class="material-icons left">check</i></button>
+				
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col s12 m12 l12 xl12">
+			<input id="layoutIdx" name="layoutIdx" type="hidden" th:value="${vo?.layoutIdx}">
+			<div class="row">
+				<div class="input-field col col s12 m4 l4 xl4">
+					<input id="site" name="site" title="사이트코드" type="text" th:value="${vo?.site}">
+					<label for="site" class="req">사이트코드</label>
+				</div>
+				<div class="input-field col col s12 m4 l4 xl4">
+					<input id="layoutNm" name="layoutNm" title="레이아웃명" th:value="${vo?.layoutNm}" type="text">
+					<label for="layoutNm" class="req">레이아웃명</label>
+				</div>
+				<div class="input-field col col s12 m4 l4 xl4">
+					<input id="layoutCd" name="layoutCd" title="레이아웃 코드" th:value="${vo?.layoutCd}"  th:onkeyup="$(this).val(input_regexp(this,/[0-9a-z.;\_]/))" type="text">
+					<label for="layoutCd" class="req">레이아웃 코드</label>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="input-field col s12 m6 l6 xl3">
+					<input id="layoutPath" name="layoutPath" title="레이아웃 경로" th:value="${vo?.layoutPath}" readonly type="text">
+					<label for="layoutPath">레이아웃 경로</label>
+				</div>
+				<div class="input-field col s12 m6 l6 xl3">
+					<input id="insertDate" type="text" th:value="${#dates.format(vo?.insertDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+					<label for="insertDate">등록일시</label>
+				</div>
+				<div class="input-field col s12 m6 l6 xl3">
+					<input id="updateDate" type="text" th:value="${#dates.format(vo?.updateDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+					<label for="updateDate">수정일시</label>
+				</div>
+				<div class="input-field col s12 m6 l6 xl3">
+					<input id="fileUpdateDate" th:value="${#dates.format(fileUpdateDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+					<label for="fileUpdateDate">파일 수정일시</label>
+				</div>
+			</div>
+			
+			<div class="row mb0" th:if="${isFileContent}">
+				<div class="input-field col s12">
+				<span class="chk_red">※ 데이터베이스보다 파일의 수정일자가 최신이므로 실제 파일 내용을 가져왔습니다.</span>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="input-field col s12 co_m1">
+					<textarea name="layoutContent" id="layoutContent" class="x-materialize-textarea" style="height:400px; margin-top:10px; background: #000; color: #fff; padding: 10px;">[[${vo?.layoutContent}]]</textarea>
+					<label for="layoutContent" class="req">레이아웃 내용</label>
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+<script>
+
+	$(function() {
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='layoutNm']", $frm).val() == "") {
+				toast("레이아웃명은 필수입력 입니다.");
+				$("input[name='layoutNm']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='layoutCode']", $frm).val() == "") {
+				toast("레이아웃코드는 필수입력 입니다.");
+				$("input[name='layoutCode']", $frm).focus();
+				return;
+			}
+			
+			var layoutContent = editor1.getValue();
+			$("#layoutContent").val(layoutContent);
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm('');
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+		
+		editor1 = CodeMirror.fromTextArea($('#layoutContent')[0], {
+            mode: "text/html",
+            lineNumbers: true,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "F11": function(cm) {
+                    setFullScreen(cm, !isFullScreen(cm));
+                },
+                "Esc": function(cm) {
+                    if (isFullScreen(cm)) setFullScreen(cm, false);
+                }
+            },
+
+            value: document.documentElement.innerHTML
+        });
+		
+		// 레이아웃경로 고정
+		setLayoutPath();
+		
+// 		M.textareaAutoResize($("#layoutContent"));
+	});
+	
+	function dataDelete() {
+		if(!confirm("삭제하시겠습니까?")) {
+			return false;
+		}
+		
+		var layoutIdx = $("[name='layoutIdx']", '#frmForm').val();
+		
+		var $frm = $(this);
+		
+		$.ajax({
+			type: "get",
+			url: "delete",
+			data: "layoutIdx="+layoutIdx,
+// 			contentType: "application/x-www-form-urlencoded",
+			dataType: "json",
+			beforeSend: function(xhr) {
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				dataForm('');
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				toast("HTTP "+xhr.status+ " 에러 입니다.");
+			}
+		});
+		
+	}
+	 
+	function set_layout_log(layout_idx){
+		$.ajax({
+			url: gblAdminPath + '/cms/layout/log/list?type=layout_log_data&layout_idx='+layout_idx,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var pop_modal = $("#pop_modal").modal();
+			pop_modal.modal('open');
+			$('#pop_modal').css({'max-width':'1280px', 'height':'80%'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+	function setLayoutPath() {
+		var site = $("[name='site']", $("#frmForm")).val();
+		var layoutPath = "/pages/" + site + "/layout/";
+		
+		$("[name='layoutPath']", $("#frmForm")).val(layoutPath);
+	}
+</script>

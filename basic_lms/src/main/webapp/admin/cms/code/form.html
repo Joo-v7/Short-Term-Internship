@@ -1,0 +1,137 @@
+<jsp:useBean id="webUtil" class="kepco.util.WebUtil"/>
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<head>
+</head>
+<body>
+
+<!-- <form id="frmForm" class="frm_code" method="post" th:action="@{{gblAdminPath}/cms/code/save}"> -->
+<form id="frmForm" class="frm_code" method="post" th:action="@{/{adminPath}/cms/code/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+	<input id="insert" name="insert" type="hidden" th:value="${vo?.code == null ? '' : 1}" />
+	<div class="top">
+		<div class="row">			
+			<div class="col s2 left-align">
+				<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="button" th:onclick="dataForm(); return false;">하위코드 추가 <i class="material-icons left">check</i></button>
+			</div>
+			<div class="col s10 right-align">
+				<button type="button" th:if="${!#strings.isEmpty(vo?.code)}" class="btn waves-effect z-depth-0 red lighten-1" th:onclick="dataDelete([[${vo?.code}]])">삭제<i class="material-icons left">delete</i></button>				
+				<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit"value="저장">저장 <i class="material-icons left">check</i></button>
+			</div>
+		</div>
+	</div>
+			
+	<div class="row">
+		<div class="input-field col s12 m4 l4 xl4">
+			<input id="code" name="code" type="text" title="코드" th:value="${vo?.code}" />
+			<label for="codeCd" class="req">코드</label>
+		</div>
+		<div class="input-field col s12 m4 l4 xl4">
+			<input id="codeNm" name="codeNm" type="text" title="코드명" th:value="${vo?.codeNm}" />
+			<label for="codeNm" class="req">코드명</label>
+		</div>
+		<div class="input-field col s12 m4 l4 xl4">
+			<input id="codeOrder" name="codeOrder" type="text" title="순서" th:value="${vo?.codeOrder}" />
+			<label for="codeOrder">순서</label>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="input-field col s6 m8 l9 xl10">
+			<input id="codeParent" name="codeParent" type="text" title="부모코드" th:value="${param?.codeParent != null ? param?.codeParent : vo?.codeParent}" readonly="readonly" />
+			<label for="codeParent">부모코드</label>
+		</div>
+		
+		<label for="useYn">사용여부</label>
+		<div class="col s6 m4 l3 xl2 check_list_box">					
+			<label for="useYn" class="grey-text text-darken-1">
+				<input type="checkbox" class="filled-in" name="useYn" id="useYn" title="사용여부" value="y" th:checked="${vo?.useYn eq 'y'}">
+				<span>사용</span>
+			</label>
+		</div>
+	</div>
+</form>
+
+<script>
+	$(function() {
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='code']", $frm).val() == "") {
+				toast("코드는 필수입력 입니다.");
+				$("input[name='code']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='codeNm']", $frm).val() == "") {
+				toast("코드명은 필수입력 입니다.");
+				$("input[name='codeNm']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					getTreeJson();
+					$("#ROOT_anchor").trigger("click");
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					if(xhr.responseJSON.message.indexOf("Duplicate") > 0){
+						toast("코드가 중복됩니다.");
+					}else{
+						toast(xhr.responseJSON.message);
+					}
+				}
+			});
+		});
+	});
+	
+	function dataDelete(code) {
+		
+		if(confirm("코드를 삭제하시겠습니까?")){
+			
+			if (!code) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url  : gblAdminPath + '/cms/code/delete',
+				type : 'get',
+				data : {
+					'code' : code
+				},
+				dataType : 'json',
+			}).done(function(data) {
+				if(data.code == 0) {
+					getTreeJson();
+					$("#ROOT_anchor").trigger("click");
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function() {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			});
+		}
+	}
+	
+</script>
+</body>
+</html>

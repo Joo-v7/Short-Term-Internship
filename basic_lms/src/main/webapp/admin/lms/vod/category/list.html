@@ -1,0 +1,186 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<th:block layout:fragment="content">
+<script>
+	$(function () {
+		get_category_list();
+		
+	});
+	
+	// 목록
+	function get_category_list() {
+		
+		$('#categoryTable').DataTable({
+			ajax: {
+				type : 'get',
+				url : gblAdminPath + '/lms/vod/category/listJson',
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select: {
+				'style': 'multi'
+			},
+			'columnDefs': [
+				{
+				  'width': '40px',
+				  'searchable': false,
+				  'orderable': true,
+				  'targets': 0,
+				  render: function(data, type, row, meta) {
+					return meta.row + meta.settings._iDisplayStart + 1;
+				  },
+				}],
+			order: [0, 'asc'],
+			initComplete: dataTableInit,
+			columns : [
+				{ data : 'rn', className : 'dt-body-center' },
+				{ data : 'categoryNm', className : 'dt-body-center' },
+				{ data : 'useYn', className : 'dt-body-center' },
+				{ data : 'categoryOrder', className : 'dt-body-center' },
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `
+						<button onclick="categoryForm(${row.vodCategoryIdx}, this)" class="waves-effect waves-light btn teal accent-4"><i class="material-icons left">edit</i>수정</button>
+						<button onclick="deleteAtList(${row.vodCategoryIdx}, '${row.categoryNm}')" class="waves-effect waves-light btn red"><i class="material-icons left">delete</i>삭제</button>
+						`;
+					}
+				},
+				//삭제 
+				// {
+				// 	data : null, searchable : false, orderable : false, className : 'dt-body-center',
+				// 	render : function(data, type, row, meta) {
+				// 		return `<button onclick="deleteAtList(${row.vodCategoryIdx}, '${row.categoryNm}')" class="waves-effect waves-light btn red"><i class="material-icons left">delete</i>삭제</button>`;
+				// 	}
+				// },
+			],
+		});
+
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#categoryTableTotCnt').text( $('#categoryTable').DataTable().data().count());
+		if ($('#categoryTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+	// 카테고리 신규 등록 폼
+	function categoryForm(vodCategoryIdx, ts) {
+		
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+
+		if (vodCategoryIdx==undefined) {
+			vodCategoryIdx = '';
+        }
+        
+        $.ajax({
+            url: gblAdminPath + "/lms/vod/category/form?vodCategoryIdx="+vodCategoryIdx,
+            type: 'GET',
+            dataType: 'html',
+        }).done(function (data) {
+            $('#pop_modal3').html(data);
+            	var pop_modal_contents = $("#pop_modal3").modal({
+			complete: function() {
+			} // Callback for Modal close
+		  });
+		  pop_modal_contents.modal('open');
+		  $('#pop_modal3').css({'min-height':'150px', 'height':'auto', 'min-width':'500px', 'width':'30%', 'top':'30%'});
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+	}
+	
+	// 삭제
+	function deleteAtList(vodCategoryIdx, categoryNm) {
+		if (!vodCategoryIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		/*
+		if (contentsCnt > 0) {
+			toast('해당 콘텐츠를 사용중인 훈련이 있으므로 삭제할 수 없습니다.');
+			return false;
+		}
+		*/
+		$.confirm({
+			theme : 'supervan',
+			title : categoryNm + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/lms/vod/category/delete',
+						type : 'get',
+						data : {
+							'vodCategoryIdx' : vodCategoryIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							get_category_list();
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+</script>
+
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light" name="action"><i class="material-icons">clear</i></a>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		
+		<div class="col s12 pd_box">
+			<div class="basic">
+				
+				<div class="right">
+					<div class="input-field col select_m0">
+						<button type="button" onclick="categoryForm();" class="waves-effect waves-light btn cyan accent-4 z-depth-0 right">
+							<i class="material-icons left">add_box</i>등록
+						</button>
+					</div>
+				</div>
+				<!--//-->
+				
+				<div class="table_type3">
+					<table id="categoryTable" class="striped centered highlight" style="min-width: 480px">
+						<thead>
+							<tr>
+								<th width="40px">NO</th>
+								<th width="auto">카테고리명</th>
+								<th width="100px">사용여부</th>
+								<th width="100px">순서</th>
+								<th width="180px">비고</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		
+	</div>	
+	
+</html>

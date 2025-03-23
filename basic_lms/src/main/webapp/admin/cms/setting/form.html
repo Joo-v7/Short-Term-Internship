@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<head>
+</head>
+
+<body>
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/cms/setting/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+		<div class="top">
+			<div class="row">
+				<div class="col s12 right-align">
+					<button th:if="${!#strings.isEmpty(vo?.settingIdx)}"class="btn waves-effect waves-light  red z-depth-0 left" type="button" th:onclick="dataDelete();">삭제 <i class="material-icons left">delete</i></button>
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장 <i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s12">
+				<input type="hidden" name="settingIdx" id="settingIdx" th:value="${vo?.settingIdx} ? ${vo?.settingIdx} : ''" />
+				<div class="row">
+					<div class="input-field col s6">
+						<input id="settingKey" name="settingKey" type="text" title="항목코드" th:value="${vo?.settingKey}" />
+						<label for="settingKey" class="req">항목코드</label>
+					</div>
+					<div class="input-field col s6 select_m0">
+						<select id="settingType" name="settingType" >
+		        	        <option value="기타" th:selected="${vo?.settingType} == 기타">기타</option>
+		        	        <option value="보안" th:selected="${vo?.settingType} == 보안">보안</option>
+		        	        <option value="금칙어" th:selected="${vo?.settingType} == 금칙어">금칙어</option>
+						</select>
+		                <label for="settingType" class="req active">구분</label>
+					</div>
+				</div>
+				<div class="row">
+					
+				</div>
+				<div class="row">	
+					<div class="input-field">
+<!-- 						<input id="settingValue" name="settingValue" type="text" title="항목값" "/>
+ -->						<textarea class="materialize-textarea" id="settingValue" name="settingValue" title="항목값" th:value="${vo?.settingValue}" style="min-height: 200px;" placeholder="항목값"th:utext="${vo?.settingValue}"></textarea>
+						<label for="settingValue" class="req">항목값</label>
+					</div>
+				</div>
+								
+				<div class="row">
+					<div class="input-field col s6">
+						<input id="insertDate" type="text" th:value="${vo?.insertDate}" readonly />
+						<label for="insertDate" class="">등록일시</label>
+					</div>
+					<div class="input-field col s6">
+						<input id="updateDate" type="text" th:value="${vo?.updateDate}" readonly />
+						<label for="updateDate" class="">수정일시</label>
+					</div>
+				</div>
+			</div>
+		</div>	
+		
+		<br/>
+	</form>
+</body>
+
+<script>
+//# sourceURL=/admin/cms/setting/form.html
+
+	$(function() {
+		$("#settingType").formSelect();
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='settingKey']", $frm).val() == "") {
+				toast("키는 필수입력 입니다.");
+				$("input[name='settingKey']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='settingValue']", $frm).val() == "") {
+				toast("값은 필수입력 입니다.");
+				$("input[name='settingValue']", $frm).focus();
+				return;
+			}
+			
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	});
+	
+	
+	// 삭제
+	function dataDelete() {
+		if(!confirm("삭제하시겠습니까?")) {
+			return false;
+		}
+		
+		var settingIdx = $("[name='settingIdx']", '#frmForm').val();
+		
+		var $frm = $(this);
+		
+		$.ajax({
+			type: "get",
+			url: "delete",
+			data: "settingIdx="+settingIdx,
+// 			contentType: "application/x-www-form-urlencoded",
+			dataType: "json",
+			beforeSend: function(xhr) {
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				dataForm('');
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				toast("HTTP "+xhr.status+ " 에러 입니다.");
+			}
+		});
+	}
+</script>
+</html>

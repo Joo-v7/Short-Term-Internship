@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+<script>
+
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			$("#memAll").prop("checked", false);
+			e.preventDefault();
+			dataList();
+		});
+		// 검색
+		$('#frmList').submit();
+		
+		$("#memAll").click(function(){
+			var checked = $("#memAll").is(":checked");
+			
+			if(checked) {
+				$("input:checkbox").prop("checked", true);
+			}else{
+				$("input:checkbox").prop("checked", false);
+			}
+		});
+		
+		$("#memberTable_paginate").click(function(){
+			$("#memAll").prop("checked", false);
+		});
+	});
+	
+	// 목록
+	function dataList() {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#dataTable').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : false,
+			paging : true,
+			pageLength : 10,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/vod/apply/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [1,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ targets : 1, searchable : false, orderable : false, className : 'dt-body-center',
+        			render: function(data, type, row, meta){
+	                return `
+		                <label for='mem${meta.row+1}'>
+	                	<input type='checkbox' class='filled-in' id='mem${meta.row+1}' name='memList' value='${row.applyIdx}'/>
+	                	<span></span>
+	                	</label>
+	                	`;
+	            }
+	       	 	},
+				{ targets : 1, className : 'dt-body-center',
+        			render: function(data, type, row, meta){
+	                	return meta.row+1;
+	            	}
+	        	},
+				{ data : 'vodTitle', className : 'dt-body-left' },
+				{ data : 'memberId', className : 'dt-body-center' },
+				{ data : 'memberNm', className : 'dt-body-center' },
+				//승인변경
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center', 
+					render : function(data, type, row, meta) {
+						
+						var select1 = "grey";
+						var select2 = "grey";
+						var select3 = "grey";
+						
+						if(row.applyState == 1) {select1 = "blue";}
+						if(row.applyState == 2) {select2 = "blue";}
+						if(row.applyState == 3) {select3 = "blue";}
+
+						return `
+							<a class="btn ${select1}" href="#" onclick="stateUpdate(${row.applyIdx},this);return false;" value="1">대기</a>
+							<a class="btn ${select2}" href="#" onclick="stateUpdate(${row.applyIdx},this);return false;" value="2">승인</a>
+							<a class="btn ${select3}" href="#" onclick="stateUpdate(${row.applyIdx},this);return false;" value="3">취소</a>
+						` ;
+					}
+				},
+				//교육상태
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						var txt = "";
+						if(row.vodLearnCnt > 0) { txt = "교육중"; }
+						if(row.learnState == 1) { txt = "교육중"; }
+						if(row.learnState == 2) { txt = "완료<br/>" + "(" + row.learnDate.substring(0,16) + ")"; }
+						
+						return `
+							${txt}
+						` ;
+					}
+				},
+				{ data : 'insertDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+	// 삭제
+	function dataDelete(postIdx, title) {
+		if (!postIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : title + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/lms/vod/apply/delete',
+						type : 'get',
+						data : {
+							'postIdx' : postIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							dataForm('');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+
+	// 추가,수정 폼
+	function dataForm(applyIdx) {
+		location.href = gblAdminPath + "/lms/vod/apply/form?vodIdx=" + applyIdx;
+	}
+
+	function apply(applyIdx) {
+		
+		if(confirm("해당 과정을 신청하시겠습니까?")){
+				
+			if (!applyIdx) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url  : gblAdminPath + '/lms/vod/apply/save',
+				type : 'get',
+				data : {
+					'applyIdx' : applyIdx,
+				},
+				dataType : 'json',
+			}).done(function(data) {
+
+				if(data.data.applyState != 2){
+					toast("승인된 훈련이 아닙니다.");
+					return false;
+				}
+				if(data.data.check == "n"){
+					toast("훈련 신청시간이 아닙니다.");
+					return false;
+				}
+				if(data.data.check == "o"){
+					toast("정원을 초과했습니다.");
+					return false;
+				}
+				if(data.data.duplicateCnt > 0){
+					toast("중복신청입니다.");
+					return false;
+				}
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				} else if(xhr.status != 200) {
+					toast('시스템 오류로 처리할 수 없습니다.');
+				}
+				
+			});
+		}
+	}
+	
+	function memberList(applyIdx){
+		$.ajax({
+			url: gblAdminPath + '/lms/vod/apply/memberList?applyIdx='+applyIdx,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var staff_modal = $("#pop_modal").modal();
+			staff_modal.modal('open');
+			$('#pop_modal').css({'height':'80%', 'width':'50%'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+	
+	function stateUpdate(applyIdx,value) {
+		$.ajax({
+			url  : gblAdminPath + '/lms/vod/apply/save',
+			type : 'get',
+			data : {
+				'type': 'stateUpdate',
+				'applyIdx' : applyIdx,
+				'applyState' : $(value).attr('value')
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				value.classList.remove('grey');
+				value.classList.add('blue');
+				$(value).siblings().addClass('grey');
+				//$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function() {
+			toast('시스템 오류로 처리할 수 없습니다.');
+		});
+	}
+	
+	function stateAllUpdate(value) {
+		var memberList = [];
+		
+		$("input:checkbox[name=memList]:checked").each(function(i,val){
+			memberList.push(val.value);
+		});
+		
+		if(memberList.length != 0){
+			memberList.forEach(function(applyIdx){
+				$.ajax({
+					url  : gblAdminPath + '/lms/vod/apply/save',
+					type : 'get',
+					data : {
+						'type': 'stateUpdate',
+						'applyIdx' : applyIdx,
+						'applyState' : value
+					},
+					dataType : 'json',
+				}).done(function(data) {
+					if(data.code == 0) {
+						//var staff_modal = $("#pop_modal").modal();
+						//staff_modal.modal('close');
+					}
+					else {
+						toast(data.message);
+					}
+				}).fail(function() {
+					toast('시스템 오류로 처리할 수 없습니다.');
+				});
+			});
+			toast("정상적으로 처리되었습니다.");
+			$("#memAll").prop("checked", false);
+			$("#applyAllState option:eq(0)").prop("selected", true);
+			setTimeout(function () {
+				dataList();
+			}, 40);
+		}else{
+			$("#applyAllState option:eq(0)").prop("selected", true);
+			toast("체크박스를 확인해주세요.");
+		}
+	}
+	
+	function vodList() {
+		location.href = gblAdminPath + "/lms/vod/list";
+	}
+	
+</script>
+
+	<div class="col s12 sideline pd_box bg_lightblue h100">
+		<div class="basic">
+			<form id="frmList" method="get">
+				<div class="basic_top_searchbox left">
+					<div class="row">
+						<!-- 검색창 -->
+						<div class="col s12 m12 l6 xl6 search_bar">
+							<input name="vodIdx" type="hidden" class="browser-default" th:value="${param?.vodIdx}">
+							<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}"  placeholder="영상교육명">
+							<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+									<i class="material-icons md-18 left">search</i> 검색
+							</button>
+							<div class="title left">
+								전체 : <b id="dataTableTotCnt">0</b>
+							</div>
+						</div>
+						<div class="right">
+							<div class="input-field col select_m0">
+								<button onclick="vodList();" class="waves-effect waves-light btn" style="width: 100%;">
+									<i class="material-icons left">list</i>
+									목록
+								</button>
+							</div>
+						
+							<!-- <span class="text_cnt_box"><i class="material-icons small" style="margin-bottom:-2px; margin-right:10px;">info</i>상태 일괄처리</span> -->
+							<div class="input-field col select_m0">
+								<label for="applyAllState" class="">일괄처리</label>
+								<select name="applyAllState" id="applyAllState" class="m0" onchange="stateAllUpdate(this.value);return false;" style="display:none;">
+									<option value="" selected disabled>승인상태 수정</option>
+									<option value="1">대기</option>
+									<option value="2">승인</option>
+									<option value="3">취소</option>
+								</select>	
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="table_type3">
+					<table id="dataTable" class="striped centered highlight" style="min-width: 1300px">
+						<colgroup>
+							<col width="20px">
+							<col width="80px">
+							<col width="auto">
+							<col width="140px">
+							<col width="140px">
+							<col width="220px">
+							<col width="160px">
+							<col width="140px">
+						</colgroup>
+						<thead>
+							<tr>
+								<th>
+									<label for='memAll'>
+				                		<input type='checkbox' class='filled-in' id='memAll'/>
+				                		<span></span>
+				                	</label>
+								</th>
+								<th>NO</th>
+								<th>영상교육명</th>
+								<th>아이디</th>
+								<th>성명</th>
+								<th>신청상태</th>
+								<th>교육상태</th>
+								<th>등록일시</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</form>
+		</div>
+	</div>
+</body>
+</html>

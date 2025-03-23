@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.board.post.comment.CommentMapper">
+
+	<sql id="selectWhere">
+		<where>
+			delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					comment_content LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scBoardIdx)">
+				AND board_idx = #{scBoardIdx}
+			</if>
+			
+			<if test="!@kepco.util.StrUtil@isBlank(postIdx)">
+				AND post_idx = #{postIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.board.post.comment.CommentVo">
+		SELECT
+			@RNUM := @RNUM + 1 AS rn, a.*,
+			(SELECT board_name FROM cms_board b WHERE delete_yn = 'n' and b.board_idx = a.board_idx) boardName,
+			(SELECT post_title FROM cms_board_post b WHERE delete_yn = 'n' and b.post_idx = a.post_idx) postTitle,
+			(SELECT member_nm from cms_member b where a.insert_idx = b.member_idx) insertName
+		FROM cms_board_post_comment a, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				rn asc,
+				comment_idx asc
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.board.post.comment.CommentVo">
+		SELECT *,
+			(SELECT member_nm from cms_member b where a.insert_idx = b.member_idx) member_nm
+		FROM cms_board_post_comment a
+		WHERE
+			delete_yn = 'n'
+			AND comment_idx = #{commentIdx}
+	</select>
+	
+	<select id="selectPostComment" parameterType="map" resultType="kepco.cms.board.post.comment.CommentVo">
+		SELECT a.*,
+				(select member_nm from cms_member b where a.insert_idx = b.member_idx) member_nm
+			FROM cms_board_post_comment a
+		<include refid="selectWhere"/>
+			AND post_idx = #{postIdx}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.board.post.comment.CommentVo" useGeneratedKeys="true" keyProperty="commentIdx" keyColumn="commentIdx">
+		INSERT INTO cms_board_post_comment (
+			post_idx,board_idx,comment_name,comment_title,comment_content,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{postIdx},#{boardIdx},#{commentName},#{commentTitle},#{commentContent},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.board.post.comment.CommentVo">
+		UPDATE cms_board_post_comment
+		<set>
+			comment_name=#{commentName},
+			comment_title=#{commentTitle},
+			comment_content=#{commentContent},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP,
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND comment_idx = #{commentIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.cms.board.post.comment.CommentVo">
+		UPDATE cms_board_post_comment
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND comment_idx = #{commentIdx}
+	</update>
+	
+	<update id="commentadd" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post
+		<set>
+			post_comment_count = IFNULL(post_comment_count,0)+1
+		</set>
+		WHERE post_idx = #{postIdx}
+	</update>
+	
+	<update id="commentdelete" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post
+		<set>
+			post_comment_count = IFNULL(post_comment_count,0)-1
+		</set>
+		WHERE post_idx = #{postIdx}
+	</update>
+	
+	
+
+</mapper>

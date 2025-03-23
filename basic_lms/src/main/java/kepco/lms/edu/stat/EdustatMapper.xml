@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.stat.EdustatMapper">
+
+	<sql id="selectWhere">
+		<where>
+			a.delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND a.detail_idx = #{detailIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(statIdx)">
+				AND a.stat_idx = #{statIdx}
+			</if>
+			<choose>
+				<when test="!@kepco.util.StrUtil@isBlank(scStartDate) and !@kepco.util.StrUtil@isBlank(scEndDate)">
+					<![CDATA[
+					AND insert_date BETWEEN #{scStartDate} AND #{scEndDate}
+					]]>
+				</when>
+				<when test="!@kepco.util.StrUtil@isBlank(scStartDate)">
+					<![CDATA[
+					AND insert_date >= #{scStartDate}
+					]]>
+				</when>
+				<when test="!@kepco.util.StrUtil@isBlank(scEndDate)">
+					<![CDATA[
+					AND insert_date <= #{scEndDate}
+					]]>
+				</when>
+				<otherwise>
+				
+				</otherwise>			
+			</choose>
+		</where>
+	</sql>
+	
+	<sql id="seachWhere">
+		<where>
+			1=1
+			<if test="!@kepco.util.StrUtil@isBlank(detailIdx)">
+				AND a.detail_idx = #{detailIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(statIdx)">
+				AND a.stat_idx = #{statIdx}
+			</if>
+		</where>
+	</sql>
+	
+
+	<select id="dashBoardStat" parameterType="map" resultType="map">
+		SELECT 
+			count(case when c.regist_state = 1 then 1 end) regist_1_cnt
+			,count(case when c.regist_state = 2 then 1 end) regist_2_cnt
+			,count(case when c.regist_state = 3 then 1 end) regist_3_cnt
+			,sum(case when c.regist_state > 0 then 1 end) regist_sum
+			,count(case when c.edu_state = 1 then 1 end) edu_1_cnt
+			,count(case when c.edu_state = 2 then 1 end) edu_2_cnt
+			,sum(case when c.regist_state > 0 then 1 end) regist_sum
+		    ,count(DISTINCT detail_cnt) detail_cnt
+		FROM
+			lms_edu a
+		LEFT JOIN 
+			(SELECT *, (detail_idx) detail_cnt FROM lms_edu_detail) b
+		ON a.edu_idx = b.edu_idx
+		LEFT JOIN 
+		 	lms_edu_regist c
+		ON b.detail_idx = c.detail_idx
+		WHERE 
+			a.member_idx = #{memberIdx}
+			AND a.edu_state = 2
+			AND b.detail_state = 2
+			AND c.member_idx != 0
+			AND a.delete_yn = 'n'
+			AND b.delete_yn = 'n'
+			AND c.delete_yn = 'n'
+	</select>
+	
+	<select id="dashBoardProcessList" parameterType="map" resultType="egovMap">
+		SELECT
+			a.*,
+			(SELECT edu_title FROM lms_edu b WHERE b.delete_yn = 'n' AND  a.edu_idx = b.edu_idx) edu_title,
+            (SELECT edu_keyword FROM lms_edu b WHERE b.delete_yn = 'n' AND a.edu_idx = b.edu_idx) edu_keyword,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0') edu_reg_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.edu_state = '2' AND b.member_idx != '0') edu_train_cnt,
+            (CURRENT_TIMESTAMP BETWEEN a.edu_accept_bgn_date AND a.edu_train_end_date) edu_open_state
+		FROM lms_edu_detail a
+		WHERE
+			delete_yn = 'n'
+			AND (insert_idx = #{memberIdx} OR edu_idx in (SELECT edu_idx FROM lms_edu b WHERE b.delete_yn = 'n' AND b.member_idx = #{memberIdx}))
+		ORDER BY
+		<choose>
+			<otherwise>
+				edu_train_end_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="dashBoardFamousList" parameterType="map" resultType="egovMap">
+		SELECT
+			a.*,
+			(SELECT edu_title FROM lms_edu b WHERE b.delete_yn = 'n' AND  a.edu_idx = b.edu_idx) edu_title,
+			(SELECT edu_keyword FROM lms_edu b WHERE b.delete_yn = 'n' AND a.edu_idx = b.edu_idx) edu_keyword,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0') edu_reg_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.edu_state = '2' AND b.member_idx != '0') edu_train_cnt,
+            (CURRENT_TIMESTAMP BETWEEN a.edu_accept_bgn_date AND a.edu_train_end_date) edu_open_state
+		FROM lms_edu_detail a
+		WHERE
+			delete_yn = 'n'
+			AND (insert_idx = #{memberIdx} OR edu_idx in (SELECT edu_idx FROM lms_edu b WHERE b.delete_yn = 'n' AND b.member_idx = #{memberIdx}))
+		ORDER BY
+		<choose>
+			<otherwise>
+				edu_reg_cnt DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+	<!-- 테이블List조회 -->
+	<sql id="selectPollListWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">
+					<if test="!@kepco.util.StrUtil@isBlank(scDeleteYn)">
+						AND a.delete_yn = #{scDeleteYn}
+					</if>
+				</when>
+				<otherwise>
+					AND a.delete_yn = 'n'
+				</otherwise>
+			</choose>
+			-- 훈련명 검색조건
+			<choose>
+				<when test="@kepco.util.StrUtil@toStr(searchIdx) eq 'title'">
+					AND b.train_title LIKE CONCAT('%', #{scWord}, '%')
+				</when>
+				<when test="@kepco.util.StrUtil@toStr(searchIdx) eq 'poll'">
+					AND a.po_subject LIKE CONCAT('%', #{scWord}, '%')
+				</when>
+				<when test="@kepco.util.StrUtil@toStr(searchIdx) eq 'teacher'">
+					AND c.member_nm LIKE CONCAT('%', #{scWord}, '%')
+				</when>
+			</choose>
+		</where>
+	</sql>
+
+</mapper>

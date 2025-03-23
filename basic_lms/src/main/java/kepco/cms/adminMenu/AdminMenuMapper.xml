@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.adminMenu.AdminMenuMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">
+					<if test="!@kepco.util.StrUtil@isBlank(scDeleteYn)">
+				AND delete_yn = #{scDeleteYn}
+					</if>
+				</when>
+				<otherwise>
+				AND delete_yn = 'n'
+				</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND menuNm LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.adminMenu.AdminMenuVo">
+		SELECT
+			*
+		FROM cms_admin_menu
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.adminMenu.AdminMenuVo">
+		SELECT
+			a.*,
+			(SELECT menu_nm FROM cms_admin_menu b WHERE a.parent_menu_idx = b.menu_idx) parent_menu_nm
+		FROM cms_admin_menu a
+		<where>
+			<if test='!"y".equalsIgnoreCase(scDeleteYn)'>
+				AND delete_yn = 'n'
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(menuIdx)">
+				AND menu_idx = #{menuIdx}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 추가 -->
+	<!-- 관리자는 메뉴코드(mn)를 사용치 않아 메뉴IDX(menuIdx)로 고정 -->
+	<insert id="insert" parameterType="kepco.cms.adminMenu.AdminMenuVo">
+		<selectKey resultType="int" keyProperty="menuIdx" order="BEFORE">
+			SELECT IFNULL(MAX(menu_idx),0) + 1 FROM cms_admin_menu
+		</selectKey>
+		INSERT INTO cms_admin_menu
+		(
+		menu_idx, site, parent_menu_idx, menu_depth, menu_order, mn, menu_nm, menu_url, menu_ico, menu_type, use_yn, 
+		insert_idx, insert_ip, insert_date
+		)
+		VALUES
+		(
+		#{menuIdx}, #{site}, #{parentMenuIdx}, #{menuDepth}, #{menuOrder}, #{menuIdx}, #{menuNm}, #{menuUrl}, #{menuIco}, #{menuType}, #{useYn}, 
+		#{insertIdx}, #{insertIp}, CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="kepco.cms.adminMenu.AdminMenuVo">
+		UPDATE cms_admin_menu
+		<set>
+			site = #{site}, 
+			parent_menu_idx = #{parentMenuIdx}, 
+			menu_depth = #{menuDepth}, 
+			menu_order = #{menuOrder}, 
+			mn = #{mn}, 
+			menu_nm = #{menuNm}, 
+			menu_url = #{menuUrl}, 
+			menu_ico = #{menuIco}, 
+			menu_type = #{menuType}, 
+			use_yn = #{useYn}, 
+			update_idx = #{updateIdx}, 
+			update_ip = #{updateIp}, 
+			update_date = #{updateDate}
+		</set>
+		WHERE
+			menu_idx = #{menuIdx} 
+			AND delete_yn = 'n'
+	</update>
+	
+	<!-- 삭제 -->
+	<update id="delete" parameterType="map">
+		UPDATE cms_admin_menu
+		<set>
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND menu_idx = #{menuIdx}
+	</update>
+	
+	
+	
+</mapper>

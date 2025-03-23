@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.category.CategoryMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(categoryIdx)">
+				AND category_idx = #{categoryIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(categoryNm)">
+				AND category_nm = #{categoryNm}
+			</if>
+				AND delete_yn = 'n'
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.category.CategoryVo">
+		SELECT *
+		FROM lms_edu_category
+			<include refid="selectWhere"/>
+		ORDER BY
+		category_order ASC
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.category.CategoryVo">
+		SELECT *
+		FROM lms_edu_category
+		WHERE category_idx = #{categoryIdx}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.category.CategoryVo" useGeneratedKeys="true" keyProperty="categoryIdx" keyColumn="categoryIdx">
+		INSERT INTO lms_edu_category (
+			category_idx, category_nm, category_order,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{categoryIdx}, #{categoryNm},#{categoryOrder},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.category.CategoryVo">
+		UPDATE lms_edu_category
+		<set>
+			<if test="!@kepco.util.StrUtil@isBlank(categoryNm)">
+			category_nm = #{categoryNm},
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(categoryOrder)">
+			category_order = #{categoryOrder},
+			</if>
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND category_idx = #{categoryIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.edu.category.CategoryVo">
+		UPDATE lms_edu_category
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND category_idx = #{categoryIdx}
+	</update>
+	
+</mapper>

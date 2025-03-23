@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.main.MainSearchMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			a.delete_yn = 'n'
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="menuList" parameterType="map" resultType="kepco.cms.menu.MenuVo">
+		SELECT
+			*
+		FROM cms_menu a
+		<include refid="selectWhere"/>
+			AND menu_nm LIKE CONCAT ('%',#{scWord},'%')
+			AND use_yn = 'y'
+		<choose>
+			<when test="scOrder == 2">
+				ORDER BY a.insert_date
+			</when>
+			<when test="scOrder == 3">
+				ORDER BY menu_nm ASC
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>	
+	</select>
+	
+	<select id="postList" parameterType="map" resultType="kepco.cms.board.post.PostVo">
+		SELECT
+			a.*,
+			(SELECT board_name FROM cms_board b WHERE delete_yn = 'n' and b.board_idx = a.board_idx) AS boardNm,
+			(SELECT board_id FROM cms_board b WHERE delete_yn = 'n' and b.board_idx = a.board_idx) AS boardId,
+            (SELECT COUNT(1) FROM cms_board_post_comment b WHERE delete_yn = 'n' and b.post_idx = a.post_idx) AS commentCnt,
+            (SELECT mn FROM cms_menu m WHERE m.menu_url LIKE CONCAT('%', CONCAT('boardId=', bod.board_id)) AND m.mn != '03' LIMIT 1) AS mn
+		FROM cms_board_post a
+		JOIN cms_board bod ON bod.board_idx = a.board_idx
+		<include refid="selectWhere"/>
+			AND (
+				post_title LIKE CONCAT ('%',#{scWord},'%')
+			 OR 
+				post_content LIKE CONCAT ('%',#{scWord},'%')
+			 OR 
+				post_name LIKE CONCAT ('%',#{scWord},'%')
+			)
+			AND post_secret = 'n'
+			AND board_search = 'y'
+		<choose>
+			<when test="scOrder == 2">
+				ORDER BY a.insert_date
+			</when>
+			<when test="scOrder == 3">
+				ORDER BY post_title ASC
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>		
+	</select>
+	
+	<select id="detailList" parameterType="map" resultType="kepco.lms.edu.detail.DetailVo">
+		SELECT
+			a.*, f.edu_title, f.edu_keyword, f.edu_type,
+			(SELECT member_nm FROM cms_member b WHERE b.member_idx = a.teacher_idx ) teacherNm,
+            (SELECT category_nm FROM lms_edu_category b WHERE b.category_idx = f.category_idx) eduCateNm,
+            (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx != '0' ) edu_reg_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b INNER JOIN cms_member c ON b.member_idx = c.member_idx WHERE b.delete_yn = 'n' AND c.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state = '2' AND b.member_idx != '0' ) edu_accept_cnt,
+            (SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' AND a.detail_idx = b.detail_idx AND b.regist_state != '3' AND b.member_idx = '0') edu_bot_cnt,
+            <![CDATA[
+	        CASE
+	        	WHEN (DATEDIFF(a.edu_accept_bgn_date, CURRENT_TIMESTAMP )) > 0 THEN '1'
+		        WHEN (CURRENT_TIMESTAMP BETWEEN a.edu_accept_bgn_date AND a.edu_accept_end_date) = 1 THEN '2'
+				WHEN (DATEDIFF(a.edu_accept_end_date, CURRENT_TIMESTAMP )) < 0 THEN '3'
+				ELSE '4' END AS edu_accept_state,
+			]]>
+            <![CDATA[
+	        CASE
+	        	WHEN (DATEDIFF(a.edu_train_bgn_date, CURRENT_TIMESTAMP )) > 0 THEN '1'
+		        WHEN (CURRENT_TIMESTAMP BETWEEN a.edu_train_bgn_date AND a.edu_train_end_date) = 1 THEN '2'
+				WHEN (DATEDIFF(a.edu_train_end_date, CURRENT_TIMESTAMP )) < 0 THEN '3'
+				ELSE '4' END AS edu_train_state
+			]]>
+		FROM lms_edu_detail a
+		JOIN lms_edu f ON a.edu_idx = f.edu_idx
+			<include refid="selectWhere"/>
+			AND (
+					(SELECT edu_title FROM lms_edu b WHERE b.delete_yn = 'n' AND a.edu_idx = b.edu_idx) LIKE CONCAT ('%',#{scWord},'%')
+					OR train_title LIKE CONCAT ('%',#{scWord},'%') 
+					OR edu_desc LIKE CONCAT ('%',#{scWord},'%') 
+					OR edu_goal LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			AND (
+				edu_train_end_date >= CURRENT_TIMESTAMP
+				)
+			AND detail_state = 2		
+		
+		<choose>
+			<when test="scOrder == 2">
+				ORDER BY a.insert_date
+			</when>
+			<when test="scOrder == 3">
+				ORDER BY train_title ASC
+			</when>
+			<otherwise>
+				ORDER BY detail_idx ASC
+			</otherwise>
+		</choose>	
+
+	</select>
+	
+	<select id="vodList" parameterType="map" resultType="kepco.lms.vod.VodVo">
+		SELECT
+			*,
+			(SELECT COUNT(1) FROM lms_vod_bundle b WHERE b.vod_idx = a.vod_idx) contentCnt,
+			(SELECT COUNT(1) FROM lms_vod_apply b WHERE b.delete_yn = 'n' AND a.vod_idx = b.vod_idx AND b.apply_state = '1') vod_apply_cnt
+		FROM lms_vod a
+			<include refid="selectWhere"/>
+			AND (
+					vod_title LIKE CONCAT ('%',#{scWord},'%') 
+					OR vod_desc LIKE CONCAT ('%',#{scWord},'%')
+				)
+			AND vod_state = 2
+		<choose>
+			<when test="scOrder == 2">
+				ORDER BY a.insert_date
+			</when>
+			<when test="scOrder == 3">
+				ORDER BY vod_title ASC
+			</when>
+			<otherwise>
+				ORDER BY vod_idx ASC
+			</otherwise>
+		</choose>			
+		
+	</select>
+	
+	<select id="fileList" parameterType="map" resultType="kepco.cms.board.post.file.FileVo">
+		SELECT
+			a.*, b.board_name, b.board_id, c.post_idx, c.post_title, c.post_name,
+			(SELECT mn FROM cms_menu m WHERE m.menu_url LIKE CONCAT('%', CONCAT('boardId=', b.board_id)) AND m.mn != '03' LIMIT 1) AS mn
+		FROM cms_board_post_file a
+		left join cms_board b
+        on a.board_idx = b.board_idx
+        left join cms_board_post c
+        on a.post_idx = c.post_idx
+			<include refid="selectWhere"/>
+			AND (
+					file_origin_name LIKE CONCAT ('%',#{scWord},'%') 
+					OR file_memo LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			AND b.delete_yn = 'n'
+			AND c.delete_yn = 'n'
+		<choose>
+			<when test="scOrder == 2">
+				ORDER BY a.insert_date
+			</when>
+			<when test="scOrder == 3">
+				ORDER BY post_name ASC
+			</when>
+			<otherwise>
+				ORDER BY file_idx DESC
+			</otherwise>
+		</choose>	
+	</select>
+	
+	<!-- 일간 검색기록 -->
+	<select id="dayHistory" parameterType="map" resultType="kepco.lms.main.MainSearchVo">
+		SELECT
+    	*,
+		COUNT(sc_word) AS wordCount
+		FROM main_search_history
+		WHERE insert_date >= NOW() - INTERVAL 24 HOUR
+		GROUP BY sc_word
+		ORDER BY wordCount DESC
+	</select>
+	
+	<!-- 주간 검색기록 -->
+	<select id="weekHistory" parameterType="map" resultType="kepco.lms.main.MainSearchVo">
+		SELECT
+    	*,
+		COUNT(sc_word) AS wordCount
+		FROM main_search_history
+		WHERE insert_date >= NOW() - INTERVAL 7 DAY
+		GROUP BY sc_word
+		ORDER BY wordCount DESC
+	</select>
+	
+	<insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="scHistoryIdx" keyColumn="scHistoryIdx">
+		INSERT INTO main_search_history (
+			sc_word, sc_type,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{scWord}, #{scType},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deleteOldData" parameterType="map">
+		DELETE
+		FROM main_search_history
+		WHERE insert_date &lt; DATE_SUB(NOW(), INTERVAL 1 MONTH)
+	</delete>
+</mapper>

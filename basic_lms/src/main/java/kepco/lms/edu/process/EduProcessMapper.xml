@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.edu.process.EduProcessMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					process_contents LIKE CONCAT ('%',#{scWord},'%') 
+				) 
+				OR (SELECT member_nm FROM cms_member c WHERE c.member_idx = a.insert_idx AND a.delete_yn = 'n') LIKE CONCAT('%',#{scWord},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(processIdx)">
+				AND a.process_idx = #{processIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(moduleCd)">
+				AND a.task_id LIKE CONCAT ('%',#{moduleCd},'%') 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(step)">
+				AND a.step = #{step} 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWorkRole)">
+				AND a.work_role = #{scWorkRole} 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scModuleCd)">
+				AND a.task_id LIKE CONCAT(#{scModuleCd}, '%') 
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.edu.process.EduProcessVo">
+		SELECT
+			a.*,
+			(SELECT member_nm FROM cms_member b WHERE b.member_idx = a.insert_idx ) memberNm
+<!--             (SELECT COUNT(1) FROM lms_edu_detail b WHERE b.delete_yn = 'n' AND b.process_idx = a.process_idx) detailCnt -->
+            
+		FROM lms_edu_process a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 작업 목록 -->
+	<select id="taskSelect" parameterType="map" resultType="kepco.lms.edu.process.EduProcessVo">
+		SELECT *
+				FROM lms_edu_process a
+		WHERE delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(step)">
+				AND step = #{step}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(workRole)">
+				AND task_id LIKE CONCAT ('%',#{workRole})
+			</if>
+		 	<if test="!@kepco.util.StrUtil@isBlank(moduleCd)">
+				AND task_id LIKE CONCAT ('%',#{moduleCd},'%') 
+			</if>
+	</select>
+	
+	<select id="count" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM lms_edu_process a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.edu.process.EduProcessVo">
+		SELECT 
+			*,
+			(SELECT member_nm FROM cms_member b WHERE a.insert_idx = b.member_idx) member_nm
+			<!--             (SELECT COUNT(1) FROM lms_edu_detail b WHERE b.delete_yn = 'n' AND b.process_idx = a.process_idx) detailCnt -->
+		FROM lms_edu_process a
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.edu.process.EduProcessVo" useGeneratedKeys="true" keyProperty="processIdx" keyColumn="processIdx">
+		INSERT INTO lms_edu_process (
+			task_id, ai_id, work_role,
+			process_contents, task_tool, step,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{taskId}, #{aiId}, #{workRole},
+			#{processContents}, #{taskTool}, #{step},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.edu.process.EduProcessVo">
+		UPDATE lms_edu_process
+		<set>
+			process_contents = #{processContents},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND process_idx = #{processIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.edu.process.EduProcessVo">
+		UPDATE lms_edu_process
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND process_idx = #{processIdx}
+	</update>
+	
+	<select id="idCheck" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(1) 
+			FROM lms_edu_process 
+			WHERE delete_yn = 'n' 
+			AND task_id = #{taskId}
+			<if test="!@kepco.util.StrUtil@isBlank(processIdx) and processIdx != 0">
+				AND process_idx != #{processIdx}
+			</if> 
+	</select>
+	
+	<select id="aiIdCheck" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(1) 
+			FROM lms_edu_process 
+			WHERE delete_yn = 'n' 
+			AND ai_id = #{aiId}
+			<if test="!@kepco.util.StrUtil@isBlank(processIdx) and processIdx != 0">
+				AND process_idx != #{processIdx}
+			</if> 
+	</select>
+	
+</mapper>

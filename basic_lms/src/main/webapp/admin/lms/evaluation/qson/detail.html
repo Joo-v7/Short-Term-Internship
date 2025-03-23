@@ -1,0 +1,432 @@
+<style>
+    .qson_detail_btn {
+        display: inline-block;
+        width: 100%;
+        background: #5e5e5e;
+        border: 1px dotted #dfdfdf;
+        padding: 14px 10px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: bold;
+        text-align: left;
+        color: #fff;
+    }
+
+    .select-dropdown li img {
+        width: 20px;
+        height: 20px;
+        margin-top: 16px;
+    }
+</style>
+
+<div class="row pd_box">
+    <form name="frm_evaluation_qson_detail_form_save" id="frm_evaluation_qson_detail_form_save" method="post"
+          enctype="multipart/form-data"
+          th:action="@{/{adminPath}/lms/evaluation/qson/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+        <fieldset class="row mt5 pd_box">
+            <legend>문항설정</legend>
+            <a class="btn waves-effect z-depth-0 red lighten-1 left"
+               th:onclick="set_evaluation_detail_del('[[${vo.evqIdx}]]','[[${vo.evIdx}]]'); return false;">
+                <i class="material-icons left">delete</i>삭제
+            </a>
+            <button class="btn waves-effect waves-light right  blue-grey darken-4 z-depth-0" type="submit">저장 <i
+                        class="material-icons left">check</i></button>
+            <div class="input-field col s12 mt20">
+                <input type="hidden" name="evqIdx" th:value="${vo?.evqIdx}"/>
+                <input type="text" name="evqSubject" th:value="${vo?.evqSubject}"/>
+                <label for="poq_subject" class="active req">문항제목</label>
+            </div>
+            <div class="input-field col s6 ">
+                <select name="evqType" id="evqType" tabindex="-1"
+                        th:onchange="poq_type_change('[[${vo.evqIdx}]]','[[${vo.evIdx}]]'); return false;">
+
+                    <optgroup label="객관식">
+                        <option value="A" title="객관식 질문" data-icon="/assets/img/poll_chk_A.png" class="left"
+                                th:selected="${vo?.evqType eq 'A'}">객관식 질문
+                        </option>
+
+                    </optgroup>
+                    <optgroup label="주관식">
+                        <option value="B" title="단답형" data-icon="/assets/img/poll_chk_C.png" class="left"
+                                th:selected="${vo?.evqType eq 'B'}">단답형
+                        </option>
+                        <option value="C" title="주관식" data-icon="/assets/img/poll_chk_C.png" class="left"
+                                th:selected="${vo?.evqType eq 'C'}">주관식
+                        </option>
+                        <option value="D" title="서술형" data-icon="/assets/img/poll_chk_D.png" class="left"
+                                th:selected="${vo?.evqType eq 'D'}">서술형
+                        </option>
+                    </optgroup>
+                </select>
+                <label for="evqType" class="active req">문항타입<a href="#" class="tooltipped" data-position="right"
+                                                               data-tooltip="주관식 선택식 답변설정이 다 삭제됩니다."
+                                                               style="         margin-left: 5px; float: right;">
+                        <i class="material-icons left" style="    font-size: 25px;">info</i>
+                    </a></label>
+            </div>
+            <div class="input-field col s6 mt15">
+                <label for="evqNecessary">
+                    <input type="checkbox" id="evqNecessary" name="evqNecessary" class="filled-in" value="Y"
+                           title="필수답변" th:checked="${vo?.evqNecessary eq 'Y'}">
+                    <span>필수답변</span></label>
+            </div>
+
+            <div class="input-field col s12">
+                <input type="text" name="evqContent" th:value="${vo?.evqContent}"/>
+                <label for="evqContent" class="active">문항 설명</label>
+            </div>
+
+            <div id="mix" style="display:none;">
+                <div class="input-field col s6">
+                    <input type="text" name="evqMinTxt" th:value="${vo?.evqMinTxt}"/>
+                    <label for="evqMinTxt" class="active">최소글자수</label>
+                </div>
+                <div class="input-field col s6">
+                    <input type="text" name="evqMaxTxt" th:value="${vo?.evqMaxTxt}"/>
+                    <label for="evqMaxTxt" class="active">최대글자수</label>
+                </div>
+            </div>
+            <div id="select_chk" style="display:none;">
+                <div class="input-field col s6">
+                    <input type="text" name="evqMinSelect" th:value="${vo?.evqMinSelect}"/>
+                    <label for="evqMinSelect" class="active">최소선택 갯수</label>
+                </div>
+                <div class="input-field col s6">
+                    <input type="text" name="evqMaxSelect" th:value="${vo?.evqMaxSelect}"/>
+                    <label for="evqMaxSelect" class="active">최대선택 갯수</label>
+                </div>
+            </div>
+
+            <div class="input-field col s2">
+                <input type="number" name="evqPoints" th:value="${vo?.evqPoints}"/>
+                <label for="evqPoints" class="req active">배점</label>
+            </div>
+
+            <div class="input-field col s10">
+                <th:block th:if="${vo?.evqType == 'A'}">
+                    <select id="selectEvqAnswer" name="selectEvqAnswer">
+                        <option value="">답변등록 후 정답을 추가해주세요</option>
+                        <option
+                                th:each="val:${answerList}"
+                                th:value="${val.evqdIdx}"
+                                th:text="${val.evqdText}"
+                        >
+                        </option>
+                    </select>
+                    <button type="button" class="btn waves-effect waves-light right  blue-grey darken-4 z-depth-0"
+                            style="width: 70px;" id="btn_add_answer">추가
+                    </button>
+                </th:block>
+
+                <th:block th:unless="${vo?.evqType == 'A'}">
+                    <input type="text" name="evqAnswer" th:value="${vo?.evqAnswer}"/>
+                </th:block>
+
+                <label for="evqAnswer" class="req active">답안설정(답변 저장 이후 답안을 추가하실 수 있습니다)</label>
+            </div>
+
+            <th:block th:if="${vo?.evqType == 'A'}">
+                <input type="hidden" name="evqAnswer" th:value="${vo?.getEvqAnswer}">
+
+                <div class="chip_container" id="chip_container">
+                    <div class="input-field col s12">
+                        <label class="">설정된 답안</label>
+                    </div>
+                    <th:block th:each='val:${clientAnswerList}' th:if="${clientAnswerList.size() > 0}">
+                        <div id="chip_list">
+                            <div class="input-field col s12" style="margin-top: 0px; margin-bottom: 0px;">
+                                <div class="chip" th:data-answer_idx="${val.evqdIdx}">[[${val.evqdText}]]
+                                    <i class="close material-icons" th:id="|remove_chip_${val.evqdIdx}|"
+                                       th:text="close"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+
+                    <th:block th:unless="${clientAnswerList.size() > 0}">
+                        <div id="chip_list">
+                            <div class="input-field col s12" style="margin-top: 0px; margin-bottom: 0px;">
+                                <span>답안을 설정해주세요</span>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </th:block>
+        </fieldset>
+    </form>
+
+    <fieldset class="row mt5">
+        <legend>답변설정</legend>
+        <div class="input-field col s12" id="select_btn" style="display:none;">
+            <a href="#" th:onclick="evaluation_qson_detail_insert('[[${vo.evqIdx}]]','[[${vo.evIdx}]]'); return false;"
+               class="qson_detail_btn"><i style="margin-top: -6px;" class="material-icons left">create</i>답변등록</a>
+
+            <input type="hidden" id="csrf2" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </div>
+
+
+        <div id="select_list" class="dd col s12" style="height:100%; max-height: 407px; overflow-y: auto;">
+
+        </div>
+
+        <div class="input-field col s6" id="select_btn2" style="display:none;">
+            <a href="#" th:onclick="evaluation_qson_detail_insert('[[${vo.evqIdx}]]','[[${vo.evIdx}]]'); return false;"
+               class="qson_detail_btn">행등록</a>
+        </div>
+
+
+        <div class="input-field col s6" id="select_btn3" style="display:none;">
+            <a href="#"
+               th:onclick="evaluation_qson_detail_heat_insert('[[${vo.evqIdx}]]','[[${vo.evIdx}]]'); return false;"
+               class="qson_detail_btn">열등록</a>
+        </div>
+
+
+        <div id="grid_select_list1" class="dd col s6" style="height:100%; max-height: 407px; overflow-y: auto;">
+
+        </div>
+
+        <div id="grid_select_list2" class="dd col s6" style="height:100%; max-height: 407px; overflow-y: auto;">
+
+        </div>
+    </fieldset>
+</div>
+
+<script th:inline="javascript">
+    $(function () {
+        $('select').formSelect();
+        $('.tooltipped').tooltip();
+
+
+        evq_idx = /*[[${vo.evqIdx}]]*/;
+        ev_idx = /*[[${vo.evIdx}]]*/;
+
+        poq_type_change(evq_idx, ev_idx);
+
+        $('#frm_evaluation_qson_detail_form_save').ajaxForm({
+            dataType: 'json',
+            success: function (response) {
+                if (response.status == 200) { //성공 메시지 출력 후 이동
+                    toast('저장완료', 3000);
+                    evaluation_qson_ul(ev_idx);
+                    evaluation_qson_detail_ul(evq_idx);
+                    // 등록한 답변 선택할 수 있도록 하기 form 다시 불러오기
+                    set_evaluation_detail_edit(evq_idx);
+                } else {
+                    $.each(response.message, function (k, v) {
+                        $('#' + k).focus();
+                        toast(v, 3000);
+                        return false;
+                    });
+                }
+            },
+            error: function (result, status, error) {
+                toast(result.responseJSON.message, 3000);
+            },
+        });
+
+        $('#select_list').nestable({
+            maxDepth: 1, //1개까지만
+            dropCallback: function (details) {
+                var order = new Array();
+
+                $('li[data-id=\'' + details.destId + '\']').find('ol:first').children().each(function (index, elem) {
+                    order[index] = $(elem).attr('data-id');
+                });
+
+                if (order.length === 0) {
+                    var order = new Array();
+                    $('#select_list > ol > li').each(function (index, elem) {
+                        order[index] = $(elem).attr('data-id');
+                    });
+                }
+
+
+                // don't post if nothing changed
+                var data_id = window.location.hostname + '.nestable';
+                var drag_data = JSON.stringify($('#select_list').nestable('serialize'));
+                var storage_data = localStorage.getItem(data_id);
+
+                if (drag_data === storage_data) {
+                    return false;
+                }
+                localStorage.setItem(data_id, drag_data);
+
+                csrf = $('#csrf').val();
+
+                // post data by ajax
+                $.post(gblAdminPath + '/lms/evaluation/qson/evaluationQsonDetailChange',
+                    {
+                        sourceId: details.sourceId,
+                        destinationId: details.destId,
+                        order: order,
+                        _csrf: csrf,
+                    },
+                    function (result) {
+                        evaluation_qson_detail_ul(evqIdx);
+                        toast(result.message, 3000);
+                    },
+                    'json'
+                ).fail(function (result) {
+                    toast(result.message, 3000);
+                });
+            },
+        });
+
+        $("#btn_add_answer").click(function () {
+            add_answer();
+        });
+
+        $(document).on("click", "i[id^='remove_chip_']", function () {
+            var deleteAnswerIdx = $(this).parent().data("answer_idx");
+            remove_answer(deleteAnswerIdx);
+        });
+    });
+
+    function poq_type_change(evqIdx, evIdx) {
+        evqType = $('#evqType').val()
+
+        csrf2 = $('#csrf2').val();
+
+        //객관식이나 체크박스의 경우 자동으로 하나 생성
+        if (evqType == 'A') {
+            $('#mix').hide();
+            $('#select_chk').hide();
+            $('#select_btn').show();
+            $('#select_btn2').hide();
+            $('#select_btn3').hide();
+
+            evaluation_qson_detail_ul(evqIdx);
+
+        } else if (evqType == 'B') {
+            $('#mix').show();
+            $('#select_chk').hide();
+            $('#select_btn').hide();
+        } else if (evqType == 'C') {
+            $('#mix').show();
+            $('#select_chk').hide();
+            $('#select_btn').hide();
+        } else if (evqType == 'D') {
+            $('#mix').show();
+            $('#select_chk').hide();
+            $('#select_btn').hide();
+        }
+
+    }
+
+    function evaluation_qson_detail_ul(evq_idx) {
+        evqType = $('#evqType').val();
+
+        if (!evq_idx) {
+            evq_idx = '';
+        }
+        $.ajax({
+            url: gblAdminPath + '/lms/evaluation/qson/evaluationQsonDetailUl?evqIdx=' + evq_idx,
+            type: 'GET',
+            dataType: 'html',
+        }).done(function (data) {
+            $('#select_list').html(data);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+
+    function evaluation_qson_detail_insert(evq_idx, ev_idx) {
+        evqType = $('#evqType').val();
+
+        csrf2 = $('#csrf2').val();
+
+        $.ajax({
+            url: gblAdminPath + '/lms/evaluation/qson/evaluationQsonDetailSaveIn',
+            type: 'POST',
+            data: {'evqIdx': evq_idx, 'evqType': evqType, 'evIdx': ev_idx, '_csrf': csrf2},
+            dataType: 'json',
+        }).done(function (d) {
+            evaluation_qson_detail_ul(evq_idx);
+            //toast(d.message);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+
+    /*
+    function set_evaluation_qson_detail_del(evqd_idx) {
+        $.ajax({
+            url: gblAdminPath+'/lms/evaluation/qson/evaluationQsonDetailDelete',
+            type: 'POST',
+            data: {'evqdIdx': evqd_idx },
+            dataType: 'json',
+        }).done(function (d) {
+             $('li[data-id="' + evqd_idx + '"]').remove();
+
+            //toast(d.message);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+    }
+    */
+
+    // 정답 추가
+    function add_answer() {
+        var preAnswer = $("input[name='evqAnswer']").val();
+        var addAnswer = $("select[name='selectEvqAnswer']").val();
+        var addText = $("select[name='selectEvqAnswer'] option:selected").text();
+        var answerList = preAnswer.split(",");
+
+        if (!addAnswer) {
+            toast("추가할 정답을 선택 하세요");
+            return false;
+        }
+
+        // 중복? 방지
+        if (answerList.includes(addAnswer)) {
+            toast("이미 추가된 정답 입니다");
+            return false;
+        }
+
+        // 맨 처음 값이면 그냥 value 삽입
+        if (!preAnswer) {
+            $("input[name='evqAnswer']").val(addAnswer);
+        } else {
+            answerList.push(addAnswer);
+            // ","로 구분된 문자열로 생성
+            var answerListStr = answerList.join(",");
+            // value 값 설정
+            $("input[name='evqAnswer']").val(answerListStr);
+        }
+
+
+        // 맨 처음 값이면 비우고 chip 추가
+        if(!preAnswer) {
+            $("#chip_list").empty();
+        }
+        $("#chip_list").append(
+            `
+                <div class="input-field col s12" style="margin-top: 0px; margin-bottom: 0px;">
+                    <div class="chip" data-answer_idx='${addAnswer}'>${addText}
+                        <i class="close material-icons" id="remove_chip_${addAnswer}">close</i>
+                    </div>
+                </div>
+            `
+        );
+
+    }
+
+    function remove_answer(deleteAnswerIdx) {
+        var preAnswer = $("input[name='evqAnswer']").val();
+        var deleteAnswer = deleteAnswerIdx;
+        var answerList = preAnswer.split(",");
+
+        for (var i = 0; i < answerList.length; i++) {
+            if (answerList[i] == deleteAnswer) {
+                answerList.splice(i, 1);
+            }
+        }
+
+        var answerListStr = answerList.join(",");
+
+        $("input[name='evqAnswer']").val(answerListStr);
+    }
+</script>
+
+

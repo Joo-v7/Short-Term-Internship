@@ -1,0 +1,146 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<div class="sub-container">
+	<div th:if="${#strings.equals(param?.mod,'check')}" class="top_navi">
+		<ul>
+			<li>약관동의</li>
+			<li class="on"><i class="fa-solid fa-circle-check"></i>정보입력</li>
+			<li>가입완료</li>
+		</ul>
+	</div>
+	<div class="scon-tit">본인인증</div>
+	               
+	<div id="contents" class="contents">
+		<div id="page_content">
+			
+			<div class="join_step3_box">
+				<div class="in_box_wrap">
+					<div class="in_box">
+						<div class="in_box-txt">
+							<dl>
+								<dt>I-PIN인증</dt>
+								<dd>I-PIN이란?<span>아이핀(I-PIN)은 행정안전부에서 주관하는 주민등록번호 대체수단으로 주민등록번호 대신 식별ID를 행정안전부로부터 발급받아 본인확인을 하는 서비스입니다.</span></dd>
+							</dl>
+						</div>
+						<a th:if="${#strings.equals(type,'join')}" onclick="alert('인증되었습니다.');" href="/cms/member/join?site=kepco&mn=1002&mod=form" th:text="|I-PIN 인증|" />
+-						<a th:if="${#strings.equals(type,'find')}" onclick="alert('인증되었습니다.');" th:href="|/cms/member/findIdPw?site=kepco&mn=1002&mod=findIdPw&find=${req?.find}|" th:text="|I-PIN 인증|" />
+			<!-- 			<a href="javascript:ipinCertification();">아이핀인증</a> -->
+	<!-- 					<a title="새창" onclick="javascript:fnPopup(); return fasle;" href="#">I-PIN 인증</a> -->
+					</div>
+					<div class="in_box">
+						<div class="in_box-txt">
+							<dl>
+								<dt>안심본인인증</dt>
+							</dl>
+							<ul>
+								<li>휴대폰 : 고객님의 명의로 등록된 휴대폰 번호를 통해 본인인증  과정을 거치게 됩니다.</li>
+								<li>공인인증서 : 개인용으로 유료 구입하신 범용 공인인증서를 통해 본인인증 과정을 거치게 됩니다.</li>
+							</ul>
+						</div>
+						<a th:if="${#strings.equals(type,'join')}" onclick="alert('인증되었습니다.');" href="/cms/member/join?site=kepco&mn=1002&mod=form" th:text="|안심본인인증|" />
+-						<a th:if="${#strings.equals(type,'find')}" onclick="alert('인증되었습니다.');" th:href="|/cms/member/findIdPw?site=kepco&mn=1002&mod=findIdPw&find=${req?.find}|" th:text="|안심본인인증|" />
+						
+                  <!-- 		<a href="javascript:mobileCertification();">휴대폰인증</a> -->
+						
+	<!-- 					<a title="새창" onclick="javascript:fn_checkplus(); return false;" href="#">안심본인인증</a> -->
+					</div>
+				</div>
+				
+				<div class="join_info">
+					<h4>본인인증이 되지 않는 경우</h4>
+					<ul>
+						<li><span>나이스평가정보 홈페이지</span> : <a title="새창" class="blank" href="http://www.niceinfo.co.kr" target="_blank">http://www.niceinfo.co.kr</a></li>
+						<li><span>나이스평가정보 고객센터</span> : 02-2122-4000 (상담시간 : 평일 09시 ~ 18시)</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<!-- 휴대폰 인증 관련 FORM -->
+    <form name="form_chk" method="post">
+        <input type="hidden" name="m" value="checkplusSerivce">						<!-- 필수 데이타로, 누락하시면 안됩니다. -->
+        <input type="hidden" name="EncodeData" value="AgAFRzg2NDRtr1JsxHrvWgwCDQDUC3IEUBVizJW+VNY1PZHBkwRi9IGykGAZyVt6eP1+0e/FgZiz4LivBpHlxKCc+KP+dKSAhPFfM+IcAOpuaCntcpjMv6sCOE3tb54KS4UfvrxszcZ18Lv41ZdwOgdfbo5RT7UlTVPfUgw3OFEKGu5acSJc8ZLodj6t3xVblYv/mj6qnd48+fxehmX+82+kkvRRR+hYRO6Il1WznHjJ/xVNFHuB2K2qGjYm8MnS36OleNsA0SQDSJKkfV8VfBxt5Q0yzcTnQZbjpmfDNGHf6AgbQJW/c6h7aCzilgF7YMkI9dAvua2P5C28PQpCHqJWEOlUIK8c7Ml/XrUU62qOetZiWPfM6wfhXZiNhLzu6pz4aVNUIgIEWrfR3QKRDLB05ANkcnDsattPuZHFyofQwW8n//vGMf06lkai5XP+Bg6bqdELyjIv/irqpTI6cs9eOA0LkWDTs5OHdCDfqz7OLg2KZaqZRA==">		<!-- 위에서 업체정보를 암호화 한 데이타입니다. -->
+
+        <!-- 업체에서 응답받기 원하는 데이타를 설정하기 위해 사용할 수 있으며, 인증결과 응답시 해당 값을 그대로 송신합니다.
+             해당 파라미터는 추가하실 수 없습니다. -->
+        <input type="hidden" name="param_r1" value="normal">
+        <input type="hidden" name="param_r2" value="">
+        <input type="hidden" name="param_r3" value="">
+    </form>
+
+
+    <!-- 가상주민번호 서비스 팝업을 호출하기 위해서는 다음과 같은 form이 필요합니다. -->
+    <form name="form_ipin" method="post">
+        <input type="hidden" name="m" value="pubmain">						<!-- 필수 데이타로, 누락하시면 안됩니다. -->
+        <input type="hidden" name="enc_data" value="AgEERzQ0M7mvX9Rd9wToGu0Fou3X7xOvQw5JSEGCKhn4MWo5lJ1H/4daOSwJWAZyruWJ6Fp44Ci9tc6++MCpodeL/M5Ky+EKv65f8KpsSxGm4I4wIG2iFRua71/hrmKllkil4SZSMPmFtt+dbIwCJlNfPsAGRT+t2t7wjmpuRVkvBoaROAnZzxfIh8hcZFW0kqotI053GtvrUlTWILaOwloo9e1Y+DBiGCfyEfIVJbjllxF6VdhIJWrUmRDGoiK+R2lm9d9VR3iVjM/+/1AnZTvMmYcq/msr5kE+l9QE7Be9OTox0A6u">		<!-- 위에서 업체정보를 암호화 한 데이타입니다. -->
+
+        <!-- 업체에서 응답받기 원하는 데이타를 설정하기 위해 사용할 수 있으며, 인증결과 응답시 해당 값을 그대로 송신합니다.
+             해당 파라미터는 추가하실 수 없습니다. -->
+        <input type="hidden" name="param_r1" value="normal">
+        <input type="hidden" name="param_r2" value="">
+        <input type="hidden" name="param_r3" value="">
+
+    </form>
+
+    <form name="vnoform" method="post">
+        <input type="hidden" name="sDupInfo" value="">
+        <input type="hidden" name="name" value="">
+        <input type="hidden" name="sex" value="">
+        <input type="hidden" name="sConnInfo" value="">
+        <input type="hidden" name="sNationalInfo" value="">
+        <input type="hidden" name="joinType" value="">
+    </form>
+
+
+<script>
+
+    $(document).ready(function(){
+
+        var joinType = "normal";
+        var str = (joinType == 'pw') ? '패스워드 재발급' : '아이디 찾기';
+
+        if(joinType == 'id' || joinType == 'pw'){
+            $('.typeNm').text(str);
+            $('#loginSec').show();
+        }else if(joinType == 'human'){
+            $('#humanSec').show();
+        }else{
+            $('#joinSec').show();
+        }
+
+    });
+
+    window.name ="joinCertification";
+
+    // IPIN 인증
+    function ipinCertification(){
+
+        // 팝업
+        window.open('', 'popupIPIN2', 'width=450, height=550, top=100, left=100, fullscreen=no, menubar=no, status=no, toolbar=no, titlebar=yes, location=no, scrollbar=no');
+        document.form_ipin.action = "https://cert.vno.co.kr/ipin.cb";
+        document.form_ipin.target = "popupIPIN2";
+        document.form_ipin.submit();
+
+    }
+
+    // 휴대폰 인증
+    function mobileCertification(){
+
+        // 팝업
+        window.open('', 'popupChk', 'width=500, height=550, top=100, left=100, fullscreen=no, menubar=no, status=no, toolbar=no, titlebar=yes, location=no, scrollbar=no');
+        document.form_chk.action = "https://nice.checkplus.co.kr/CheckPlusSafeModel/checkplus.cb";
+        document.form_chk.target = "popupChk";
+        document.form_chk.submit();
+
+    }
+</script>
+
+</th:block>

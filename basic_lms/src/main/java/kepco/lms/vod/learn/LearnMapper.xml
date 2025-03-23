@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.learn.LearnMapper">
+
+	<sql id="selectWhere">
+		<where>
+			1=1
+			<if test="!@kepco.util.StrUtil@isBlank(learnIdx)">
+				AND a.learn_idx = #{learnIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(vodIdx)">
+				AND a.vod_idx = #{vodIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(contentIdx)">
+				AND a.content_idx = #{contentIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(memberIdx)">
+				AND a.member_idx = #{memberIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.vod.learn.LearnVo">
+		SELECT
+			a.*
+		FROM lms_vod_learn a
+		<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				a.learn_idx ASC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.vod.learn.LearnVo">
+		SELECT a.*
+		FROM lms_vod_learn a
+		<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.vod.learn.LearnVo" useGeneratedKeys="true" keyProperty="learnIdx" keyColumn="learnIdx">
+		INSERT INTO lms_vod_learn (
+			vod_idx,content_idx,member_idx,learn_time,learn_score,learn_data,present_time,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{vodIdx},#{contentIdx},#{memberIdx},#{learnTime},#{learnScore},#{learnData},#{presentTime},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.vod.learn.LearnVo">
+		UPDATE lms_vod_learn
+		<set>
+			learn_time = learn_time + #{learnTime},
+			<if test="!@kepco.util.StrUtil@isBlank(learnScore)">
+			learn_score = #{learnScore},
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(learnData)">
+			learn_data = #{learnData},
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(presentTime)">
+			present_time = #{presentTime},
+			</if>
+			insert_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			vod_idx = #{vodIdx}
+			AND content_idx = #{contentIdx}
+			AND member_idx = #{memberIdx}
+	</update>
+	
+	<select id="graduateCal" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM lms_vod_learn a
+		LEFT JOIN lms_vod_content b ON a.content_idx = b.content_idx
+		<include refid="selectWhere"/>
+		AND a.learn_time >= b.study_time * 60
+		
+	</select>
+</mapper>

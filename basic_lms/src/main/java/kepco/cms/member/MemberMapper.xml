@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.member.MemberMapper">
+
+	<!-- TODO 회원 구분 확정지어 WHERE문 수정  -->
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					member_nm LIKE CONCAT ('%',#{scWord},'%') 
+					OR member_id LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(memberIdx)">
+				AND member_idx = #{memberIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(memberId)">
+				AND member_id = #{memberId}
+			</if>
+		</where>
+	</sql>
+	
+	<sql id="seachWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					member_nm LIKE CONCAT ('%',#{scWord},'%') 
+					OR member_id LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(memberEmail)">
+				AND member_email = #{memberEmail}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scMemberType)">
+				AND member_type2 = #{scMemberType}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scApproval)">
+				AND member_approval = #{scApproval}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scMemberRole)">
+				AND (member_role = #{scMemberRole} OR member_role = 'ROLE_USER')
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.member.MemberVo">
+		SELECT
+			a.*,
+			(SELECT COUNT(1) FROM lms_edu_regist b WHERE b.delete_yn = 'n' and  b.member_idx = a.member_idx and b.regist_state = 2) regist_cnt,
+			(SELECT COUNT(1) FROM lms_edu b WHERE b.delete_yn = 'n' and  b.member_idx = a.member_idx and b.edu_state = 2) edu_cnt
+		FROM cms_member a
+			<include refid="seachWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				member_role ASC, member_idx DESC
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<select id="login" parameterType="string" resultType="kepco.cms.member.MemberVo">
+		SELECT *
+		FROM cms_member
+		WHERE 
+			delete_yn = 'n'
+			AND member_id = #{memberId}
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.member.MemberVo">
+		SELECT *
+		FROM cms_member
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.member.MemberVo" useGeneratedKeys="true" keyProperty="memberIdx" keyColumn="memberIdx">
+		INSERT INTO cms_member (
+			member_idx,member_id,member_pw,member_nm,member_email,member_age,member_birth_type,member_birth,member_gender,member_phone,
+			member_role,member_type1,member_type2,member_di,member_ci,member_approval,insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{memberIdx},#{memberId},#{memberPw},#{memberNm},#{memberEmail},#{memberAge},#{memberBirthType},#{memberBirth},#{memberGender},#{memberPhone},
+			#{memberRole},#{memberType1},#{memberType2},#{memberDi},#{memberCi},#{memberApproval},#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.member.MemberVo">
+		UPDATE cms_member
+		<set>
+			<if test="!@kepco.util.StrUtil@isBlank(memberPw)">
+			member_pw = #{memberPw},
+			</if>
+			member_nm = #{memberNm},
+			member_email = #{memberEmail},
+			member_age = #{memberAge},
+			member_birth = #{memberBirth},
+			member_gender = #{memberGender},
+			member_phone = #{memberPhone},
+			member_role = #{memberRole},
+			member_type1 = #{memberType1},
+			member_type2 = #{memberType2},
+			<if test="!@kepco.util.StrUtil@isBlank(memberApproval)">
+			member_approval = #{memberApproval},
+			</if>
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND member_idx = #{memberIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.cms.member.MemberVo">
+		UPDATE cms_member
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND member_idx = #{memberIdx}
+	</update>
+	
+	<insert id="deleteCopy" parameterType="map" useGeneratedKeys="true" keyProperty="memberTempIdx" keyColumn="memberTempIdx">
+		INSERT INTO	cms_member_temp	( 
+				member_idx,member_id,member_pw,member_nm,member_email,member_age,member_birth_type,member_birth,member_gender,member_phone,member_role,member_type1,member_type2,member_di,member_ci,insert_idx,insert_ip,insert_date 
+		)
+			SELECT
+				member_idx,member_id,member_pw,member_nm,member_email,member_age,member_birth_type,member_birth,member_gender,member_phone,member_role,member_type1,member_type2,member_di,member_ci,delete_idx,delete_ip,delete_date
+			FROM cms_member 
+			WHERE 
+				member_idx = #{memberIdx}
+	</insert>
+	
+</mapper>

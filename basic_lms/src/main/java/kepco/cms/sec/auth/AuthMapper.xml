@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.sec.auth.AuthMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			AND delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND auth_cd LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scUserType)">
+			AND auth_cd LIKE CONCAT ('%',#{scUserType},'%')
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.sec.auth.AuthVo">
+		SELECT
+			*
+		FROM cms_sec_auth
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.sec.auth.AuthVo">
+		SELECT
+			*
+		FROM cms_sec_auth
+		WHERE 1 = 1
+			<if test="!@kepco.util.StrUtil@isBlank(authIdx)">
+				AND auth_idx = #{authIdx}
+			</if>
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="kepco.cms.sec.auth.AuthVo" useGeneratedKeys="true" keyProperty="authIdx" keyColumn="auth_idx">
+		INSERT INTO cms_sec_auth
+		(
+		auth_idx, auth_cd, auth_nm, auth_desc, 
+		insert_idx, insert_ip, insert_date, 
+		use_yn
+		)
+		VALUES
+		(
+		#{authIdx}, #{authCd}, #{authNm}, #{authDesc}, 
+		#{insertIdx}, #{insertIp}, CURRENT_TIMESTAMP(), 
+		#{useYn}
+		)
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="kepco.cms.sec.auth.AuthVo">
+		UPDATE cms_sec_auth
+		<set>
+			auth_cd = #{authCd}, 
+			auth_nm = #{authNm}, 
+			auth_desc = #{authDesc}, 
+			update_idx = #{updateIdx}, 
+			update_ip = #{updateIp}, 
+			update_date = CURRENT_TIMESTAMP(), 
+			use_yn = #{useYn}
+		</set>
+		WHERE
+			auth_idx = #{authIdx}
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="delete" parameterType="map">
+		UPDATE cms_sec_auth
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP(),
+			delete_yn = 'y'
+		</set>
+		WHERE
+			auth_idx = #{authIdx}
+	</delete>
+	
+	
+	
+</mapper>

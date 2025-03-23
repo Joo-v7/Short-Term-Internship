@@ -1,0 +1,1342 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+	<!-- AM 차트 4 -->
+	<script src="/assets/libs/amchart4/core.js"></script>
+	<script src="/assets/libs/amchart4/charts.js"></script>
+	<script src="/assets/libs/amchart4/themes/animated.js"></script>
+	<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+	<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+	<script src="/assets/libs/amchart4/plugins/forceDirected.js"></script>
+	
+<style>
+	.stat_user_transition_wrap div {height: 350px;}
+	.stat_user_transition_box2 {
+	    flex: 1;
+	    display: flex;
+	    flex-direction: column;
+	    gap: 10px;
+	}
+</style>	
+<script>
+am4core.ready(function() {
+	am4core.useTheme(am4themes_animated);
+	am4core.options.autoDispose = true;
+});
+
+// 		// Themes begin
+// 		am4core.useTheme(am4themes_animated);
+// 		// Themes end
+
+// 		// Create chart instance
+// 		var chart = am4core.create("chartdiv_period1", am4charts.XYChart);
+
+// 		// Add data
+// 		chart.data = [{
+// 			"category": "2024-01-24",
+// 			"accident": 14,
+// 			"risk_event": 120,
+// 			"rate_accident": 140,
+// 			"rate_event": 160
+// 		}, {
+// 			"category": "2024-02-16",
+// 			"accident": 150,
+// 			"risk_event": 170,
+// 			"rate_accident": 190,
+// 			"rate_event": 210
+// 		}, {
+// 			"category": "2024-03-21",
+// 			"accident": 200,
+// 			"risk_event": 220,
+// 			"rate_accident": 240,
+// 			"rate_event": 260
+// 		}, {
+// 			"category": "2024-04-11",
+// 			"accident": 200,
+// 			"risk_event": 220,
+// 			"rate_accident": 240,
+// 			"rate_event": 260
+// 		}, {
+// 			"category": "2024-05-01",
+// 			"accident": 200,
+// 			"risk_event": 220,
+// 			"rate_accident": 240,
+// 			"rate_event": 260
+// 		}];
+// 		// 그라디언트를 생성합니다.
+// 		var gradient = new am4core.LinearGradient();
+// 		gradient.addColor(am4core.color("#7c4ce6"));
+// 		gradient.addColor(am4core.color("#207bed"));
+// 		gradient.rotation = 90;
+// 		var gradient2 = new am4core.LinearGradient();
+// 		gradient2.addColor(am4core.color("#e92c8a"));
+// 		gradient2.addColor(am4core.color("#7c4ce6"));
+// 		gradient2.addColor(am4core.color("#207bed"));
+// 		gradient2.rotation = 90;
+
+
+
+// 		// Create axes
+// 		var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+// 		categoryAxis.dataFields.category = "category";
+// 		categoryAxis.renderer.labels.template.fill = am4core.color("#aaa");
+
+// 		var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+
+// 		var series1 = chart.series.push(new am4charts.ColumnSeries());
+// 		series1.dataFields.valueY = "accident";
+// 		series1.dataFields.categoryX = "category";
+// 		series1.name = "사고";
+// 		series1.fill = gradient;
+// 		series1.stroke = gradient;
+// 		series1.columns.template.width = am4core.percent(50);
+
+// 		var series2 = chart.series.push(new am4charts.ColumnSeries());
+// 		series2.dataFields.valueY = "risk_event";
+// 		series2.dataFields.categoryX = "category";
+// 		series2.name = "위험요인";
+// 		series2.fill = gradient2;
+// 		series2.stroke = gradient2;
+// 		series2.columns.template.width = am4core.percent(50);
+
+// 		var series3 = chart.series.push(new am4charts.LineSeries());
+// 		series3.dataFields.valueY = "rate_accident";
+// 		series3.dataFields.categoryX = "category";
+// 		series3.name = "사고율";
+// 		series3.stroke = am4core.color("#ff1c1c");
+
+// 		var series4 = chart.series.push(new am4charts.LineSeries());
+// 		series4.dataFields.valueY = "rate_event";
+// 		series4.dataFields.categoryX = "category";
+// 		series4.name = "위험율";
+// 		series4.stroke = am4core.color("#f8c52c");
+
+
+
+// 		// Add legend
+// 		chart.legend = new am4charts.Legend();
+// 		chart.legend.labels.template.fill = am4core.color("#f2f2f2");
+// 		chart.legend.labels.template.fontSize = 14;
+// 		chart.legend.labels.template.fontWeight = 400;
+// 		chart.legend.markers.template.width = 16;
+// 		chart.legend.markers.template.height = 16;
+// 		chart.legend.position = 'top';
+// 		chart.legend.contentAlign = 'left';
+// 	});
+// 	am4core.ready(function () {
+
+// 		// Themes begin
+// 		am4core.useTheme(am4themes_animated);
+// 		// Themes end
+
+// 		// Create chart instance
+// 		var chart = am4core.create("user_stat_role", am4charts.PieChart);
+
+// 		// Add data
+// 		chart.data = [{
+// 			"role": "주 작업자",
+// 			"value": 501,
+// 			"color": "#324675"
+// 		}, {
+// 			"role": "보조 작업자",
+// 			"value": 301,
+// 			"color": "#1a7ded"
+// 		}, {
+// 			"role": "지상 작업자",
+// 			"value": 201,
+// 			"color": "#00a7f4"
+// 		}, {
+// 			"role": "작업 책임자",
+// 			"value": 165,
+// 			"color": "#4df3fd"
+// 		}];
+// 		chart.legend = new am4charts.Legend();
+// 		chart.legend.width = 100;
+// 		chart.legend.labels.template.text = "{role}";
+// 		chart.legend.position = 'right';
+// 		chart.legend.labels.template.fill = am4core.color("#fff");
+// 		chart.legend.markers.template.width = 16;
+// 		chart.legend.markers.template.height = 16;
+// 		chart.legend.labels.template.fontSize = 12;
+// 		chart.legend.labels.template.fontWeight = 400;
+
+// 		// Add and configure Series
+// 		var pieSeries = chart.series.push(new am4charts.PieSeries());
+// 		pieSeries.dataFields.value = "value";
+// 		pieSeries.dataFields.category = "role";
+// 		pieSeries.slices.template.propertyFields.fill = "color";
+// 		pieSeries.slices.template.stroke = am4core.color("#fff");
+// 		pieSeries.slices.template.strokeOpacity = 0.3;
+// 		pieSeries.labels.template.fill = am4core.color("#fff");
+// 		pieSeries.labels.template.disabled = true;
+// 		// This creates initial animation
+// 		pieSeries.hiddenState.properties.opacity = 1;
+// 		pieSeries.hiddenState.properties.endAngle = -90;
+// 		pieSeries.hiddenState.properties.startAngle = -90;
+
+// 		chart.hiddenState.properties.radius = am4core.percent(0);
+
+
+// 	}); // end am4core.ready()
+
+// 	am4core.ready(function () {
+
+// 		// Themes begin
+// 		am4core.useTheme(am4themes_animated);
+// 		// Themes end
+// 		var chart = am4core.create('user_stat_position', am4charts.XYChart);
+// 		chart.colors.step = 2;
+
+// 		chart.data = [{
+// 			"position": "버켓",
+// 			"value": 501,
+// 		}, {
+// 			"position": "지상",
+// 			"value": 321,
+// 		}];
+
+
+// 		var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+// 		categoryAxis.dataFields.category = "position";
+// 		categoryAxis.renderer.grid.template.location = 0;
+// 		categoryAxis.renderer.minGridDistance = 30;
+// 		categoryAxis.renderer.labels.template.rotation = 0;
+// 		categoryAxis.tooltip.disabled = true;
+// 		categoryAxis.renderer.labels.template.rotation = 0;
+// 		categoryAxis.renderer.labels.template.verticalCenter = "middle";
+// 		categoryAxis.renderer.labels.template.fontSize = 12;
+// 		categoryAxis.renderer.labels.template.fontWeight = "bold";
+// 		categoryAxis.renderer.labels.template.fill = am4core.color("#f9f9f9");
+
+// 		var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+// 		yAxis.min = 0;
+
+// 		// Create series
+// 		var series1 = chart.series.push(new am4charts.ColumnSeries());
+// 		series1.dataFields.valueY = "value";
+// 		series1.dataFields.categoryX = "position";
+// 		series1.columns.template.fill = am4core.color("#008ff0");
+// 		series1.columns.template.stroke = am4core.color("#008ff0");
+// 		series1.name = "position";
+
+// 	}); // end am4core.ready()
+
+// 	am4core.ready(function () {
+// 		// Themes begin
+// 		am4core.useTheme(am4themes_animated);
+// 		// Themes end
+
+// 		// Create chart instance
+// 		var chart = am4core.create("user_stat_obj_top3", am4charts.XYChart);
+
+// 		// Add data
+// 		var data = [{
+// 			"category": "소나기",
+// 			"value": 414,
+// 		}, {
+// 			"category": "절연테이프 단말처리 미조치",
+// 			"value": 334,
+// 		}, {
+// 			"category": "정리 안된 공사물품",
+// 			"value": 310,
+// 		}];
+
+// 		data.reverse(); // 데이터 배열을 반전
+
+// 		chart.data = data;
+
+// 		// Create axes
+// 		var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+// 		categoryAxis.dataFields.category = "category";
+// 		categoryAxis.renderer.grid.template.location = 0;
+// 		// categoryAxis.renderer.inversed = true; // y축 반전
+// 		categoryAxis.renderer.minGridDistance = 50;
+// 		categoryAxis.renderer.labels.template.fontSize = 12;
+// 		categoryAxis.renderer.labels.template.fontWeight = "400";
+// 		categoryAxis.renderer.labels.template.fill = am4core.color("#fff");
+
+// 		var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+// 		valueAxis.renderer.opposite = true; // x축을 위로 이동하여 가로 막대 형태로 변환
+
+// 		var gradient = new am4core.LinearGradient();
+// 		gradient.addColor(am4core.color("#7c4ce6"));
+// 		gradient.addColor(am4core.color("#207bed"));
+// 		// Create series
+// 		var series1 = chart.series.push(new am4charts.ColumnSeries());
+// 		series1.dataFields.valueX = "value";
+// 		series1.dataFields.categoryY = "category";
+// 		series1.name = "Series 1";
+// 		series1.columns.template.fill = gradient;
+// 		series1.columns.template.stroke = gradient;
+
+// 		// Remove legend
+// 		chart.legend = null;
+// 	}); // end am4core.ready()
+
+
+	/** 기간별 훈련 현황 차트 */
+	function trainStatByPeriod() {
+		
+		$.ajax({
+			url: "/lms/edu/my/stat/trainStatByPeriod",
+			type: 'GET',
+			dataType: 'json',
+		}).done(function (data) {
+			if(false){
+				$("#chartdiv_period1").addClass("no_data");
+				return;
+			}
+			$("#chartdiv_period1").removeClass("no_data");
+			
+			var chart = am4core.create("chartdiv_period1", am4charts.XYChart);
+			chart.colors.step = 2;
+			chart.maskBullets = false;
+			
+
+			if(data.data.list.length < 1){
+				$("#chartdiv_period1").addClass("no_data");
+				return;
+			}
+			$("#chartdiv_period1").removeClass("no_data");
+
+			chart.data = [];
+			
+			 for (var i = 0; i < data.data.list.length; i++) {
+	           var chartDataItem = {
+	        		"date": data.data.list[i].startTime,
+	       		    "playCnt": data.data.list[i].playCnt,
+//	        		 	"playCnt": data.data.list[i].playCnt,
+	       		    "accidentCnt": data.data.list[i].accidentCnt,
+	       		 	"riskCnt": data.data.list[i].riskCnt
+// 	       		 	, 	       		    "sumPlayMinute": data.data.list[i].sumPlayMinute
+	           };
+
+	           chart.data.push(chartDataItem);
+	        }
+						 
+			// Create axes
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.renderer.minGridDistance = 50;
+			categoryAxis.renderer.grid.template.disabled = true;
+			categoryAxis.renderer.fullWidthTooltip = true;
+			categoryAxis.dataFields.category = "date";
+	 		categoryAxis.renderer.labels.template.fill = am4core.color("#aaa");
+			
+			var distanceAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			distanceAxis.title.text = "훈련 수";
+			//distanceAxis.renderer.grid.template.disabled = true;
+
+// 			var durationAxis = chart.yAxes.push(new am4charts.DurationAxis());
+// 			durationAxis.title.text = "훈련시간";
+// 			durationAxis.baseUnit = "minute";
+// 			//durationAxis.renderer.grid.template.disabled = true;
+// 			durationAxis.renderer.opposite = true;
+// // 			durationAxis.syncWithAxis = distanceAxis;
+// 			durationAxis.durationFormatter.durationFormat = "hh'시간' mm'분'";
+
+			var accidentCntAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			accidentCntAxis.renderer.grid.template.disabled = true;
+			accidentCntAxis.renderer.labels.template.disabled = true;
+			accidentCntAxis.syncWithAxis = distanceAxis;
+			
+			var riskCntAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			riskCntAxis.renderer.grid.template.disabled = true;
+			riskCntAxis.renderer.labels.template.disabled = true;
+// 			riskCntAxis.syncWithAxis = distanceAxis;
+
+			// Create series
+			var distanceSeries = chart.series.push(new am4charts.ColumnSeries());
+			distanceSeries.dataFields.valueY = "playCnt";
+			distanceSeries.dataFields.categoryX = "date";
+			distanceSeries.yAxis = distanceAxis;
+			distanceSeries.tooltipText = "훈련 {valueY} 회";
+			distanceSeries.tooltip.autoTextColor = false;
+			distanceSeries.tooltip.label.fill = am4core.color("#fff");
+			distanceSeries.name = "훈련 수";
+			distanceSeries.columns.template.fillOpacity = 0.7;
+			distanceSeries.columns.template.propertyFields.strokeDasharray = "dashLength";
+			distanceSeries.columns.template.propertyFields.fillOpacity = "alpha";
+			distanceSeries.showOnInit = true;
+
+			var distanceState = distanceSeries.columns.template.states.create("hover");
+			distanceState.properties.fillOpacity = 0.9;
+
+// 			var durationSeries = chart.series.push(new am4charts.LineSeries());
+// 			durationSeries.dataFields.valueY = "sumPlayMinute";
+// 			durationSeries.dataFields.categoryX = "date";
+// 			durationSeries.yAxis = durationAxis;
+// 			durationSeries.name = "훈련시간";
+// 			durationSeries.strokeWidth = 2;
+// 			durationSeries.propertyFields.strokeDasharray = "dashLength";
+// 			durationSeries.tooltipText = "{valueY.formatDuration()}";
+// 			durationSeries.showOnInit = true;
+
+// 			var durationBullet = durationSeries.bullets.push(new am4charts.Bullet());
+// 			var durationRectangle = durationBullet.createChild(am4core.Rectangle);
+// 			durationBullet.horizontalCenter = "middle";
+// 			durationBullet.verticalCenter = "middle";
+// 			durationBullet.width = 7;
+// 			durationBullet.height = 7;
+// 			durationRectangle.width = 7;
+// 			durationRectangle.height = 7;
+			
+// 			var durationLabel = durationSeries.bullets.push(new am4charts.LabelBullet());
+// //	 		durationLabel.label.text = "{playCnt}";
+// 			durationLabel.label.horizontalCenter = "left";
+// 			durationLabel.label.dx = 14;
+
+// 			var durationState = durationBullet.states.create("hover");
+// 			durationState.properties.scale = 1.2;
+
+			var accidentCntSeries = chart.series.push(new am4charts.LineSeries());
+			accidentCntSeries.dataFields.valueY = "accidentCnt";
+			accidentCntSeries.dataFields.categoryX = "date";
+			accidentCntSeries.yAxis = accidentCntAxis;
+			accidentCntSeries.name = "사고(횟수)";
+			accidentCntSeries.strokeWidth = 2;
+			accidentCntSeries.propertyFields.strokeDasharray = "dashLength";
+			accidentCntSeries.tooltipText = "사고(횟수): {valueY}";
+			accidentCntSeries.tooltip.autoTextColor = false;
+			accidentCntSeries.tooltip.label.fill = am4core.color("#fff");
+			
+			accidentCntSeries.showOnInit = true;
+
+			var accidentCntBullet = accidentCntSeries.bullets.push(new am4charts.CircleBullet());
+			accidentCntBullet.circle.fill = am4core.color("#ff0000");
+			accidentCntBullet.circle.strokeWidth = 2;
+//	 		accidentCntBullet.circle.propertyFields.radius = "accidentCnt";
+
+// 			var accidentCntState = accidentCntBullet.states.create("hover");
+// 			accidentCntState.properties.scale = 1.2;
+
+//	 		var accidentCntLabel = accidentCntSeries.bullets.push(new am4charts.LabelBullet());
+//	 		accidentCntLabel.label.text = "{accidentCnt}";
+//	 		accidentCntLabel.label.horizontalCenter = "left";
+//	 		accidentCntLabel.label.dx = 14;
+
+		var riskCntSeries = chart.series.push(new am4charts.LineSeries());
+			riskCntSeries.dataFields.valueY = "riskCnt";
+			riskCntSeries.dataFields.categoryX = "date";
+			riskCntSeries.yAxis = riskCntAxis;
+			riskCntSeries.name = "위험(횟수)";
+			riskCntSeries.strokeWidth = 2;
+			riskCntSeries.propertyFields.strokeDasharray = "dashLength";
+			riskCntSeries.tooltipText = "위험(횟수): {valueY}";
+			riskCntSeries.tooltip.autoTextColor = false;
+			riskCntSeries.tooltip.label.fill = am4core.color("#fff");
+			riskCntSeries.showOnInit = true;
+
+			var riskCntBullet = riskCntSeries.bullets.push(new am4charts.CircleBullet());
+			riskCntBullet.circle.fill = am4core.color("#ffff00");
+			riskCntBullet.circle.strokeWidth = 2;
+			
+// 	 		var riskCntLabel = riskCntSeries.bullets.push(new am4charts.LabelBullet());
+// 	 		riskCntLabel.label.text = "{riskCnt}";
+// 	 		riskCntLabel.label.horizontalCenter = "left";
+// 	 		riskCntLabel.label.dx = 14;
+			
+// 			var riskCntState = riskCntBullet.states.create("hover");
+// 			riskCntState.properties.scale = 1.2;
+
+
+	 		// Add legend
+	 		chart.legend = new am4charts.Legend();
+	 		chart.legend.labels.template.fill = am4core.color("#f2f2f2");
+	 		chart.legend.labels.template.fontSize = 14;
+	 		chart.legend.labels.template.fontWeight = 400;
+	 		chart.legend.markers.template.width = 16;
+	 		chart.legend.markers.template.height = 16;
+	 		chart.legend.position = 'top';
+	 		chart.legend.contentAlign = 'left';
+
+			// Add cursor
+			chart.cursor = new am4charts.XYCursor();
+			chart.cursor.fullWidthLineX = true;
+			chart.cursor.xAxis = categoryAxis;
+			chart.cursor.lineX.strokeOpacity = 0;
+			chart.cursor.lineX.fill = am4core.color("#000");
+			chart.cursor.lineX.fillOpacity = 0.1;
+			
+			chart.logo.disabled = true;
+			
+		}).fail(function () {
+			console.log("기간별 훈련 현황을 불러오지 못했습니다.");
+		});
+	}
+	
+	function shareByRole() { // chartdiv_shareByRole 역할별 점유율
+		
+		 $.ajax({
+	        url: "/lms/edu/my/stat/shareByRole",
+	        type: 'GET',
+	        dataType: 'json',
+	    }).done(function (data) {
+	    	
+	    	if(data.data.vo == null){
+	    		$("#chartdiv_shareByRole").addClass("no_data");
+				return;
+	    	}
+	    	if(data.data.vo.mainCnt + data.data.vo.subCnt + data.data.vo.groundCnt + data.data.vo.superCnt< 1 ){
+				$("#chartdiv_shareByRole").addClass("no_data");
+				return;
+			}
+	    	$("#chartdiv_shareByRole").removeClass("no_data");
+	    	
+			var chart = am4core.create("chartdiv_shareByRole", am4charts.PieChart);
+// 			chart.legend = new am4charts.Legend();
+// 			chart.legend.position = "right";
+
+			chart.data = [ {
+				"title": "주작업자",
+				"litery": data.data.vo.mainCnt
+			}, {
+				"title": "보조작업자",
+				"litery": data.data.vo.subCnt
+			}, {
+				"title": "지상작업자",
+				"litery": data.data.vo.groundCnt
+			}, {
+				"title": "작업책임자",
+				"litery": data.data.vo.superCnt
+			}];
+		
+			// Add and configure Series
+			var pieSeries = chart.series.push(new am4charts.PieSeries());
+			pieSeries.dataFields.value = "litery";
+			pieSeries.dataFields.category = "title";
+			pieSeries.slices.template.stroke = am4core.color("#fff");
+			pieSeries.slices.template.strokeWidth = 1;
+			pieSeries.slices.template.strokeOpacity = 1;
+
+			// This creates initial animation
+			pieSeries.hiddenState.properties.opacity = 1;
+			pieSeries.hiddenState.properties.endAngle = -90;
+			pieSeries.hiddenState.properties.startAngle = -90;
+
+
+			// Disable ticks and labels
+			pieSeries.labels.template.disabled = true;
+			pieSeries.ticks.template.disabled = true;
+
+			pieSeries.colors.list = [
+				// am4core.color("#7760f9"),
+				am4core.color("#324675"),
+				am4core.color("#1a7ded"),
+				am4core.color("#00a7f4"),
+				am4core.color("#4df3fd"),
+			];
+			
+			chart.legend = new am4charts.Legend();
+	 		chart.legend.width = 100;
+	 		chart.legend.labels.template.text = "{title}";
+	 		chart.legend.position = 'right';
+	 		chart.legend.labels.template.fill = am4core.color("#fff");
+	 		chart.legend.markers.template.width = 16;
+	 		chart.legend.markers.template.height = 16;
+	 		chart.legend.labels.template.fontSize = 12;
+	 		chart.legend.labels.template.fontWeight = 400;
+			
+	 		chart.logo.disabled = true;
+	    }).fail(function () {
+			console.log("역할별 점유율을 불러오지 못했습니다.");
+	    });
+	}
+
+	function accidentLocation() { // chartdiv_accidentLocation 사고 위치 비교
+		
+		 $.ajax({
+	        url: "/lms/edu/my/stat/accidentLocation",
+	        type: 'GET',
+	        dataType: 'json',
+	    }).done(function (data) {
+
+			if(data.data.list.length < 1){
+				$("#chartdiv_accidentLocation").addClass("no_data");
+				return;
+			}
+	    	$("#chartdiv_accidentLocation").removeClass("no_data");
+	    	
+			var chart = am4core.create("chartdiv_accidentLocation", am4charts.XYChart);
+			
+			 chart.data = [];
+			 for (var i = 0; i < data.data.list.length; i++) {
+	            
+	            var chartDataItem = {
+	            	"place": data.data.list[i].accidentLocation,
+	        		"count": data.data.list[i].accidentLocationCnt
+	            };
+
+	            chart.data.push(chartDataItem);
+	        }
+		    	
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.dataFields.category = "place";
+			categoryAxis.renderer.grid.template.disabled = true;
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.renderer.minGridDistance = 30;
+			categoryAxis.renderer.labels.template.fill = am4core.color("#999");
+			categoryAxis.renderer.labels.template.adapter.add("dy", function(dy, target) {
+			return dy;
+			});
+
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			valueAxis.renderer.grid.template.stroke = am4core.color("#999");
+			valueAxis.renderer.labels.template.fill = am4core.color("#999");
+
+			var series = chart.series.push(new am4charts.ColumnSeries());
+			series.dataFields.valueY = "count";
+			series.dataFields.categoryX = "place";
+			series.name = "count";
+			series.columns.template.tooltipText = "{categoryX}: [bold]{valueY}[/]";
+			var gradient = new am4core.LinearGradient();
+			gradient.addColor(am4core.color("#008ff6"));
+			gradient.rotation = 90;
+			series.columns.template.fill = gradient;
+			series.columns.template.stroke = gradient;
+			series.columns.template.strokeWidth = 0;
+
+			chart.logo.disabled = true;
+	    }).fail(function () {
+			console.log("사고 위치비교를 불러오지 못했습니다.");
+	    });
+	}
+	
+	/** 사고 구분 차트 */
+	function accidentType() {
+		
+		$.ajax({
+			url: "/lms/edu/my/stat/accidentType",
+			type: 'GET',
+			dataType: 'json',
+		}).done(function (data) {
+			
+			if(data.data.listSize < 1){
+				$("#chartdiv_accidentType").addClass("no_data");
+				return;
+			}
+			$("#chartdiv_accidentType").removeClass("no_data");
+			
+			var chart = am4core.create("chartdiv_accidentType", am4plugins_forceDirected.ForceDirectedTree);
+			var series = chart.series.push(new am4plugins_forceDirected.ForceDirectedSeries())
+			
+			series.data = [];
+			
+			series.dataFields.value = "value";
+			series.dataFields.name = "name";
+			series.dataFields.children = "children";
+
+			series.nodes.template.label.text = "{name}";
+			series.fontSize = 10;
+			series.minRadius = 15;
+			series.maxRadius = 40;
+
+			series.centerStrength = 0.5;
+			
+			series.nodes.template.tooltipText = "{name} : {value}";
+			
+			for (var key in data.data.list) {
+				if (!data.data.list.hasOwnProperty(key)) {
+					continue;
+				}
+				var value = data.data.list[key];
+				var children = [];
+				for (var i = 0; i < value.length; i++) {
+					var child = {"name": value[i].objectFactor,"value": value[i].objectFactorCnt};
+					children.push(child);
+				}
+				var chartDataItem = {name: key, children: children};
+				series.data.push(chartDataItem);
+				
+			}
+			chart.logo.disabled = true;			
+		}).fail(function () {
+			console.log("사고 구분을 불러오지 못했습니다.");
+		});
+	}
+	
+	function accidentReasonAnalysis() { // chartdiv_accidentReasonAnalysis 사고 원인 분석
+		
+		 $.ajax({
+	        url: "/lms/edu/my/stat/accidentReasonAnalysis",
+	        type: 'GET',
+	        dataType: 'json',
+	    }).done(function (data) {
+	    	
+	    	if(data.data.listSize < 1){
+				$("#chartdiv_accidentReasonAnalysis").addClass("no_data");
+				return;
+			}
+	    	$("#chartdiv_accidentReasonAnalysis").removeClass("no_data");
+
+			
+			var chart = am4core.create("chartdiv_accidentReasonAnalysis", am4charts.SankeyDiagram);
+			
+			chart.hiddenState.properties.opacity = 0; // this creates initial fade-in	
+			chart.data = [];
+			for (var key in data.data.roleLocationMap) {
+				var value = data.data.roleLocationMap[key];
+				for (var i = 0; i < value.length; i++) {
+					var chartDataItem = {
+							from: key,
+							to: value[i].eventLocation,
+							value: value[i].eventLocationCnt	
+		            };
+					
+					chart.data.push(chartDataItem);
+				}
+			}
+			for (var key in data.data.locationFactorMap) {
+				var value = data.data.locationFactorMap[key];
+				for (var i = 0; i < value.length; i++) {
+					var chartDataItem = {
+							from: key,
+							to: value[i].objectFactor,
+							value: value[i].objectFactorCnt	
+		            };
+					
+					chart.data.push(chartDataItem);
+				}
+			}
+			for (var key in data.data.factorTypeMap) {
+				var value = data.data.factorTypeMap[key];
+				for (var i = 0; i < value.length; i++) {
+					var chartDataItem = {
+							from: key,
+							to: value[i].accidentType,
+							value: value[i].accidentTypeCnt	
+		            };
+					chart.data.push(chartDataItem);
+				}
+			}
+
+			let hoverState = chart.links.template.states.create("hover");
+			hoverState.properties.fillOpacity = 0.6;
+
+			chart.dataFields.fromName = "from";
+			chart.dataFields.toName = "to";
+			chart.dataFields.value = "value";
+
+			// for right-most label to fit
+			chart.paddingRight = 70; //수치 작으면 우측 라벨 잘림
+			chart.paddingLeft = 10;
+			chart.paddingTop = 20;
+			chart.paddingBottom = 20;
+			chart.background.fill = am4core.color("#FFFFFF");
+			
+			// make nodes draggable
+			var nodeTemplate = chart.nodes.template;
+
+			// nodeTemplate.inert = true;
+			// nodeTemplate.readerTitle = "Drag me!";
+			nodeTemplate.showSystemTooltip = true;
+			nodeTemplate.width = 20;
+			nodeTemplate.nameLabel.label.fill = am4core.color("#fff");
+			nodeTemplate.nameLabel.label.fontWeight = "bold";
+			nodeTemplate.nameLabel.label.hideOversized = false;
+			nodeTemplate.nameLabel.label.truncate = false;
+
+			// make nodes draggable
+			// var nodeTemplate = chart.nodes.template;
+			// nodeTemplate.readerTitle = "Click to show/hide or drag to rearrange";
+			// nodeTemplate.showSystemTooltip = true;
+			// nodeTemplate.cursorOverStyle = am4core.MouseCursorStyle.pointer
+
+			chart.logo.disabled = true;
+			
+			chart.background.fill = am4core.color("#000");
+			
+	    }).fail(function () {
+			console.log("사고원인 분석을 불러오지 못했습니다.");
+	    });
+	}
+	
+
+	/** 위험요인 - 감전 */
+	function riskStatusEs() {
+		
+		$.ajax({
+			url: "/lms/edu/my/stat/riskStatusEs",
+			type: 'GET',
+			dataType: 'json',
+		}).done(function (data) {
+			
+			if(!data.data.vo){
+				$("#chartdiv_es").addClass("no_data");
+				return;
+			}
+			$("#chartdiv_es").removeClass("no_data");
+			
+			var chart = am4core.create("chartdiv_es", am4charts.XYChart);
+			var chartData = [];
+			
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.dataFields.category = "category";
+			categoryAxis.renderer.minGridDistance = 15;
+			categoryAxis.renderer.grid.template.location = 0.5;
+			categoryAxis.renderer.grid.template.strokeDasharray = "1,3";
+			categoryAxis.renderer.labels.template.horizontalCenter = "left";
+			categoryAxis.renderer.labels.template.location = 0.5;
+			categoryAxis.renderer.labels.template.fill = am4core.color("#999");
+
+			categoryAxis.renderer.labels.template.adapter.add("dx", function(dx, target) {
+				return -target.maxRight / 2;
+			});
+			
+			var chartDataItem = {
+				"category": "경고", 
+				"min": data.data.vo.minRiskCnt,
+				"avg": data.data.vo.avgRiskCnt,
+				"max": data.data.vo.maxRiskCnt
+			}
+			chartData.push(chartDataItem);
+			
+			chart.data = chartData;
+			
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			valueAxis.renderer.grid.template.stroke = am4core.color("#999");
+			valueAxis.renderer.labels.template.fill = am4core.color("#999");
+			valueAxis.tooltip.disabled = true;
+			valueAxis.renderer.ticks.template.disabled = true;
+			valueAxis.renderer.axisFills.template.disabled = true;
+			valueAxis.min = 0; // 최소값을 0으로 고정
+//	 		valueAxis.extraMin = 0.15;
+			valueAxis.extraMax = 0.05;
+			
+			
+			var series = chart.series.push(new am4charts.ColumnSeries());
+			series.dataFields.categoryX = "category";
+			series.dataFields.openValueY = "min";
+//	 		series.dataFields.valueY = "avg";
+			series.dataFields.valueY = "max";
+			series.tooltipText = "최소 : {openValueY.value}\n평균 : {avg}\n최대 : {valueY.value}";
+			series.sequencedInterpolation = true;
+			series.fillOpacity = 0;
+			series.strokeOpacity = 1;
+			series.columns.template.width = 0.01;
+			series.tooltip.pointerOrientation = "horizontal";			
+			
+			var openBullet = series.bullets.create(am4charts.CircleBullet);
+			openBullet.locationY = 1;
+
+			var closeBullet = series.bullets.create(am4charts.CircleBullet);
+			closeBullet.locationY = 0;
+			
+			var avgBullet = series.bullets.push(new am4charts.Bullet());
+			var triangle = avgBullet.createChild(am4core.Triangle);
+			triangle.width = 12;
+			triangle.height = 12;
+			triangle.horizontalCenter = "middle";
+			triangle.verticalCenter = "middle";
+			triangle.fill = chart.colors.getIndex(4);
+			triangle.stroke = chart.colors.getIndex(4);
+			
+			avgBullet.propertyFields.locationY = "locationY";
+			avgBullet.adapter.add("locationY", function(locationY, target) {
+				var ctx = target.dataItem.dataContext;
+				var avg = ctx.avg;
+				var min = ctx.min;
+				var max = ctx.max;
+				if(max == 0) return 0;
+				return (max-avg) / (max-min);
+			});
+			
+			chart.cursor = new am4charts.XYCursor();
+
+			chart.logo.disabled = true;
+
+			chart.background.fill = am4core.color("#000");
+
+			chart.series.values.fill = am4core.color("#f00");
+
+			//chart.series.getIndex(0).labels.each(function(label) {
+    		//	label.fill = "#ff0000";
+  			//});
+
+			//series.renderer.labels.template.fill = '#999';
+// 			chart.titles.getIndex(0).fill = '#999';
+				
+//	 		chart.scrollbarX = new am4core.Scrollbar();
+//	 		chart.scrollbarY = new am4core.Scrollbar();
+			
+	  }).fail(function () {
+			console.log("감전 현황을 불러오지 못했습니다.");
+	  });
+	}
+
+	/** 위험요인 - 추락 */
+	function riskStatusFall() {
+		
+		$.ajax({
+			url: "/lms/edu/my/stat/riskStatusFall",		
+			type: 'GET',
+			dataType: 'json',
+		}).done(function (data) {
+			
+			if(!data.data.vo1 && !data.data.vo2){
+				$("#chartdiv_fall").addClass("no_data");
+				return;
+			}
+			$("#chartdiv_fall").removeClass("no_data");
+			
+			var chart = am4core.create("chartdiv_fall", am4charts.XYChart);
+			var chartData = [];
+			
+			if(data.data.vo1){
+				var chartDataItem = {
+					"category": "주의", 
+					"min": data.data.vo1.minRiskCnt,
+					"avg": data.data.vo1.avgRiskCnt,
+					"max": data.data.vo1.maxRiskCnt
+				}
+				chartData.push(chartDataItem);
+			}
+			if(data.data.vo2){
+				var chartDataItem2 = {
+					"category": "위험", 
+					"min": data.data.vo2.minRiskCnt,
+					"avg": data.data.vo2.avgRiskCnt,
+					"max": data.data.vo2.maxRiskCnt
+				}
+				chartData.push(chartDataItem2);
+			}
+			
+			chart.data = chartData;
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.dataFields.category = "category";
+			categoryAxis.renderer.minGridDistance = 15;
+			categoryAxis.renderer.grid.template.location = 0.5;
+			categoryAxis.renderer.grid.template.strokeDasharray = "1,3";
+			categoryAxis.renderer.labels.template.horizontalCenter = "left";
+			categoryAxis.renderer.labels.template.location = 0.5;
+			categoryAxis.renderer.labels.template.fill = am4core.color("#999");
+			
+			categoryAxis.renderer.labels.template.adapter.add("dx", function(dx, target) {
+				return -target.maxRight / 2;
+			})
+			
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			valueAxis.tooltip.disabled = true;
+			valueAxis.renderer.grid.template.stroke = am4core.color("#999");
+			valueAxis.renderer.labels.template.fill = am4core.color("#999");
+			valueAxis.renderer.ticks.template.disabled = true;
+			valueAxis.renderer.axisFills.template.disabled = true;
+//	 		valueAxis.extraMin = 0.15;
+//	 		valueAxis.extraMax = 0.15;
+			
+			var series = chart.series.push(new am4charts.ColumnSeries());
+			series.dataFields.categoryX = "category";
+			series.dataFields.openValueY = "min";
+//		 	series.dataFields.valueY = "avg";
+			series.dataFields.valueY = "max";
+			series.tooltipText = "최소 : {openValueY.value}\n평균 : {avg}\n최대 : {valueY.value}";
+			series.sequencedInterpolation = true;
+			series.fillOpacity = 0;
+			series.strokeOpacity = 1;
+			series.columns.template.width = 0.01;
+			series.tooltip.pointerOrientation = "horizontal";
+			
+			
+			var openBullet = series.bullets.create(am4charts.CircleBullet);
+			openBullet.locationY = 1;
+
+			var closeBullet = series.bullets.create(am4charts.CircleBullet);
+			
+			var avgBullet = series.bullets.push(new am4charts.Bullet());
+			var triangle = avgBullet.createChild(am4core.Triangle);
+			triangle.width = 12;
+			triangle.height = 12;
+			triangle.horizontalCenter = "middle";
+			triangle.verticalCenter = "middle";
+			triangle.fill = chart.colors.getIndex(4);
+			triangle.stroke = chart.colors.getIndex(4);
+			
+			avgBullet.propertyFields.locationY = "locationY";
+			avgBullet.adapter.add("locationY", function(locationY, target) {
+				var ctx = target.dataItem.dataContext;
+				var avg = ctx.avg;
+				var min = ctx.min;
+				var max = ctx.max;
+				if(max == 0) return 0;
+				return (max-avg) / (max-min);
+			});
+			
+			chart.cursor = new am4charts.XYCursor();
+			chart.logo.disabled = true;
+
+			chart.background.fill = am4core.color("#000");
+
+//	 		chart.scrollbarX = new am4core.Scrollbar();
+//	 		chart.scrollbarY = new am4core.Scrollbar();
+		}).fail(function () {
+				console.log("추락 현황을 불러오지 못했습니다.");
+		});
+	}
+
+	/** 위험요인 - 부주의 */
+	function riskStatusCare() {
+		
+		$.ajax({
+			url: "/lms/edu/my/stat/riskStatusCare",				
+			type: 'GET',
+			dataType: 'json',
+		}).done(function (data) {
+			
+			if(!data.data.vo){
+				$("#chartdiv_care").addClass("no_data");
+				return;
+			}
+			$("#chartdiv_care").removeClass("no_data");
+			
+			var chart = am4core.create("chartdiv_care", am4charts.XYChart);
+			var chartData = [];
+			
+			var chartDataItem = {
+				"category": "부주의", 
+				"min": data.data.vo.minRiskCnt,
+				"avg": data.data.vo.avgRiskCnt,
+				"max": data.data.vo.maxRiskCnt
+			}
+			chartData.push(chartDataItem);
+			
+			chart.data = chartData;
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.dataFields.category = "category";
+			categoryAxis.renderer.minGridDistance = 15;
+			categoryAxis.renderer.grid.template.location = 0.5;
+			categoryAxis.renderer.grid.template.strokeDasharray = "1,3";
+			categoryAxis.renderer.labels.template.horizontalCenter = "left";
+			categoryAxis.renderer.labels.template.location = 0.5;
+			categoryAxis.renderer.labels.template.fill = am4core.color("#999");
+			
+			categoryAxis.renderer.labels.template.adapter.add("dx", function(dx, target) {
+				return -target.maxRight / 2;
+			})
+
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			valueAxis.tooltip.disabled = true;
+			valueAxis.renderer.grid.template.stroke = am4core.color("#999");
+			valueAxis.renderer.labels.template.fill = am4core.color("#999");
+			valueAxis.renderer.ticks.template.disabled = true;
+			valueAxis.renderer.axisFills.template.disabled = true;
+//	 		valueAxis.extraMin = 0.15;
+//	 		valueAxis.extraMax = 0.15;
+
+			var series = chart.series.push(new am4charts.ColumnSeries());
+			series.dataFields.categoryX = "category";
+			series.dataFields.openValueY = "min";
+//		 	series.dataFields.valueY = "avg";
+			series.dataFields.valueY = "max";
+			series.tooltipText = "최소 : {openValueY.value}\n평균 : {avg}\n최대 : {valueY.value}";
+			series.sequencedInterpolation = true;
+			series.fillOpacity = 0;
+			series.strokeOpacity = 1;
+			series.columns.template.width = 0.01;
+			series.tooltip.pointerOrientation = "horizontal";
+			
+			var openBullet = series.bullets.create(am4charts.CircleBullet);
+			openBullet.locationY = 1;
+			
+			var closeBullet = series.bullets.create(am4charts.CircleBullet);
+			
+			var avgBullet = series.bullets.push(new am4charts.Bullet());
+			var triangle = avgBullet.createChild(am4core.Triangle);
+			triangle.width = 12;
+			triangle.height = 12;
+			triangle.horizontalCenter = "middle";
+			triangle.verticalCenter = "middle";
+			triangle.fill = chart.colors.getIndex(4);
+			triangle.stroke = chart.colors.getIndex(4);
+			
+			avgBullet.propertyFields.locationY = "locationY";
+			avgBullet.adapter.add("locationY", function(locationY, target) {
+				var ctx = target.dataItem.dataContext;
+				var avg = ctx.avg;
+				var min = ctx.min;
+				var max = ctx.max;
+				if(max == 0) return 0;
+				return (max-avg) / (max-min);
+			});
+			
+			chart.cursor = new am4charts.XYCursor();
+			chart.logo.disabled = true;
+			
+			chart.background.fill = am4core.color("#000");
+			
+//			chart.scrollbarX = new am4core.Scrollbar();
+//			chart.scrollbarY = new am4core.Scrollbar();
+
+		}).fail(function () {
+				console.log("부주의 현황을 불러오지 못했습니다.");
+		});
+	}
+
+	/** 위험요인 - 작업부하 */
+	function riskStatusLoad() {
+		
+		$.ajax({
+			url: "/lms/edu/my/stat/riskStatusLoad",
+			type: 'GET',
+			dataType: 'json',
+		}).done(function (data) {
+			if(!data.data.vo1 && !data.data.vo2 && !data.data.vo3 && !data.data.vo4){
+				$("#chartdiv_load").addClass("no_data");
+				return;
+			}
+			$("#chartdiv_load").removeClass("no_data");
+			
+			var chart = am4core.create("chartdiv_load", am4charts.XYChart);
+			var chartData = [];
+			
+			if(data.data.vo1){
+				var chartDataItem1 = {
+					"category": "주의", 
+					"min": data.data.vo1.minRiskCnt,
+					"avg": data.data.vo1.avgRiskCnt,
+					"max": data.data.vo1.maxRiskCnt
+				}
+				chartData.push(chartDataItem1);
+			}
+			if(data.data.vo2){
+				var chartDataItem2 = {
+					"category": "높음", 
+					"min": data.data.vo2.minRiskCnt,
+					"avg": data.data.vo2.avgRiskCnt,
+					"max": data.data.vo2.maxRiskCnt
+				}
+				chartData.push(chartDataItem2);
+			}
+			if(data.data.vo3){
+				var chartDataItem3 = {
+					"category": "위험", 
+					"min": data.data.vo3.minRiskCnt,
+					"avg": data.data.vo3.avgRiskCnt,
+					"max": data.data.vo3.maxRiskCnt
+				}
+				chartData.push(chartDataItem3);
+			}
+			if(data.data.vo4){
+				var chartDataItem4 = {
+					"category": "아주 위험", 
+					"min": data.data.vo4.minRiskCnt,
+					"avg": data.data.vo4.avgRiskCnt,
+					"max": data.data.vo4.maxRiskCnt
+				}
+				chartData.push(chartDataItem4);
+			}
+			
+			chart.data = chartData;
+			
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.renderer.grid.template.location = 0;
+			categoryAxis.dataFields.category = "category";
+			categoryAxis.renderer.minGridDistance = 15;
+			categoryAxis.renderer.grid.template.location = 0.5;
+			categoryAxis.renderer.grid.template.strokeDasharray = "1,3";
+			categoryAxis.renderer.labels.template.horizontalCenter = "left";
+			categoryAxis.renderer.labels.template.location = 0.5;
+			categoryAxis.renderer.labels.template.fill = am4core.color("#999");
+			
+			categoryAxis.renderer.labels.template.adapter.add("dx", function(dx, target) {
+				return -target.maxRight / 2;
+			})
+
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			valueAxis.tooltip.disabled = true;
+			valueAxis.renderer.grid.template.stroke = am4core.color("#999");
+			valueAxis.renderer.labels.template.fill = am4core.color("#999");
+			valueAxis.renderer.ticks.template.disabled = true;
+			valueAxis.renderer.axisFills.template.disabled = true;
+//	 		valueAxis.extraMin = 0.15;
+//	 		valueAxis.extraMax = 0.15;
+
+			var series = chart.series.push(new am4charts.ColumnSeries());
+			series.dataFields.categoryX = "category";
+			series.dataFields.openValueY = "min";
+//		 	series.dataFields.valueY = "avg";
+			series.dataFields.valueY = "max"; // max 값의 데이터 필드 정의
+			series.tooltipText = "최소 : {openValueY.value}\n평균 : {avg}\n최대 : {valueY.value}";
+			series.sequencedInterpolation = true;
+			series.fillOpacity = 0;
+			series.strokeOpacity = 1;
+			series.columns.template.width = 0.01;
+			series.tooltip.pointerOrientation = "horizontal";
+			
+			
+			var openBullet = series.bullets.create(am4charts.CircleBullet);
+			openBullet.locationY = 1;
+			
+			var closeBullet = series.bullets.create(am4charts.CircleBullet);
+			
+			var avgBullet = series.bullets.push(new am4charts.Bullet());
+			var triangle = avgBullet.createChild(am4core.Triangle);
+			triangle.width = 12;
+			triangle.height = 12;
+			triangle.horizontalCenter = "middle";
+			triangle.verticalCenter = "middle";
+			triangle.fill = chart.colors.getIndex(4);
+			triangle.stroke = chart.colors.getIndex(4);
+			
+			avgBullet.propertyFields.locationY = "locationY";
+			avgBullet.adapter.add("locationY", function(locationY, target) {
+				var ctx = target.dataItem.dataContext;
+				var avg = ctx.avg;
+				var min = ctx.min;
+				var max = ctx.max;
+				if(max == 0) return 0;
+				return (max-avg) / (max-min);
+			});
+			
+			chart.cursor = new am4charts.XYCursor();
+			chart.logo.disabled = true;
+			
+			chart.background.fill = am4core.color("#000");
+			
+//	 		chart.scrollbarX = new am4core.Scrollbar();
+//	 		chart.scrollbarY = new am4core.Scrollbar();
+		
+		}).fail(function () {
+				console.log("작업부하 현황을 불러오지 못했습니다.");
+		});
+	}
+
+	$(function () {
+		trainStatByPeriod()
+		shareByRole();
+		accidentLocation();
+		accidentType();
+		accidentReasonAnalysis();
+		riskStatusEs();
+		riskStatusFall();
+		riskStatusCare();
+		riskStatusLoad();
+	});
+
+
+</script>
+
+
+	<div class="sub-container" style="">
+
+		<div class="scon-tit">
+			나의 훈련정보
+			<span>전체적인 훈련정보의 통계적 중요 수치를 나타냅니다.</span>
+		</div>
+
+		<div class="user_stat_info mb_40">
+			<div class="user_stat_info_wrap">
+				<div class="user_stat_wrap">
+					<div class="stat_chartdiv_period1_wrap col">
+						<h3>종합 정보</h3>
+						<div class="user_stat_info_table">
+							<table>
+								<colgroup>
+									<col width="150px">
+									<col width="150px">
+									<col width="150px">
+									<col width="200px">
+									<col width="400px">
+									<col width="150px">
+								</colgroup>
+								<thead>
+									<tr>
+										<th>총 훈련 수</th>
+										<th>주 역할</th>
+										<th>취약 위험요인</th>
+										<th>최다 사고 원인</th>
+										<th>최다 사고 행동</th>
+										<th>최다 사고 위치</th>
+										
+									</tr>
+								</thead>
+								<tr>
+									<td th:if="${!#strings.isEmpty(vo?.playCnt)}">[[${vo?.playCnt}]]회</td>
+									<td th:if="${#strings.isEmpty(vo?.playCnt)}">-</td>
+									<td th:if="${#strings.equals(vo?.mostRole, '1')}">주작업자</td>
+									<td th:if="${#strings.equals(vo?.mostRole, '2')}">보조작업자</td>
+									<td th:if="${#strings.equals(vo?.mostRole, '3')}">지상작업자</td>
+									<td th:if="${#strings.equals(vo?.mostRole, '4')}">작업책임자</td>
+									<td th:if="${#strings.isEmpty(vo?.mostRole)}">-</td>
+									<td th:if="${#strings.equals(vo?.mostRisk, '1')}">감전</td>
+									<td th:if="${#strings.equals(vo?.mostRisk, '2')}">추락</td>
+									<td th:if="${#strings.equals(vo?.mostRisk, '3')}">부주의</td>
+									<td th:if="${#strings.equals(vo?.mostRisk, '4')}">작업부하</td>
+									<td th:if="${#strings.isEmpty(vo?.mostRisk)}">-</td>
+									<td th:if="${!#strings.isEmpty(vo?.mostCause)}">[[${vo?.mostCause}]]</td>
+									<td th:if="${#strings.isEmpty(vo?.mostCause)}">-</td>
+									<td th:if="${!#strings.isEmpty(vo?.mostBehavior)}">[[${vo?.mostBehavior}]]</td>
+									<td th:if="${#strings.isEmpty(vo?.mostBehavior)}">-</td>
+									<td th:if="${!#strings.isEmpty(vo?.mostLocation)}">[[${vo?.mostLocation}]]</td>
+									<td th:if="${#strings.isEmpty(vo?.mostBehavior)}">-</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+
+					<div class="stat_user_transition_wrap col">
+						<h3>내 훈련 추이</h3>
+<!-- 						<div id="_legendDiv"></div> -->
+						<div id="chartdiv_period1"></div>
+					</div>
+
+					<div class="stat_user_transition_wrap">
+						<div class="stat_user_transition_box">
+							<h3>역할별 훈련 비율</h3>
+							<div id="chartdiv_shareByRole"></div>
+						</div>
+						<div class="stat_user_transition_box">
+							<h3>사고 발생 위치</h3>
+							<div id="chartdiv_accidentLocation"></div>
+						</div>
+						<div class="stat_user_transition_box">
+							<h3>사고 구분</h3>
+							<div id="chartdiv_accidentType"></div>
+						</div>
+					</div>
+					
+					<div class="stat_user_transition_wrap col">
+						<h3>사고 원인 분석</h3>
+						<div id="chartdiv_accidentReasonAnalysis"></div>
+					</div>
+					
+					<h3>위험 요인 발생 현황</h3>
+					<div class="stat_user_transition_wrap">
+						<div class="stat_user_transition_box2">
+							<h3>감전</h3>
+							<div id="chartdiv_es"></div>
+						</div>
+						<div class="stat_user_transition_box2">
+							<h3>추락</h3>
+							<div id="chartdiv_fall"></div>
+						</div>
+						<div class="stat_user_transition_box2">
+							<h3>부주의</h3>
+							<div id="chartdiv_care"></div>
+						</div>
+						<div class="stat_user_transition_box2">
+							<h3>작업부하</h3>
+							<div id="chartdiv_load"></div>
+						</div>
+					</div>
+					<div>
+						
+					</div>
+						
+				</div>
+
+			</div>
+		</div>
+
+
+	</div>
+
+
+</th:block>

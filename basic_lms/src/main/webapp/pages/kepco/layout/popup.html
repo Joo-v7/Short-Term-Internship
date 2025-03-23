@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" /><!-- 4페이지 슬라이드 -->
+<link rel="stylesheet" href="/pages/kepco/css/basic.css"><!-- 공통css -->
+<link rel="stylesheet" href="/pages/kepco/css/layout.css"><!-- 공통css -->
+<link th:if="${currMenuNode?.data?.mn}" rel="stylesheet" href="/pages/kepco/css/sub.css"><!-- 공통css -->
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css"><!-- 애니메이션 -->
+<script src="/assets/libs/fontawesome/fontawesome.js" crossorigin="anonymous"></script><!-- 폰트어썸 -->
+<link href="/assets/libs/aos/aos.css" rel="stylesheet"><!-- aos 애니메이션 -->
+<script src="/assets/libs/aos/aos.js"></script><!-- aos 애니메이션 -->
+
+<script src="/assets/js/jquery-3.5.1.min.js"></script><!-- fullpage 제이쿼리 링크 -->
+<script src="/pages/kepco/js/fullpage.js"></script><!-- fullpage 제이쿼리 링크 -->
+<link rel="stylesheet" href="/pages/kepco/css/fullpage.min.css"><!-- fullpage js css 링크 -->
+
+<script src="/assets/libs/swiperjs/swiper-bundle.min.js" ></script><!-- 비주얼 -->
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<link rel="stylesheet" href="/assets/libs/swiperjs/swiper-bundle.min.css" /><!-- 슬라이드 -->
+
+<script src="/assets/libs/gsap/gsap.min.js" ></script><!-- 비주얼 -->
+
+<script src="/pages/kepco/js/common.js"></script><!-- 공용 -->
+<script src="/pages/kepco/js/script.js" ></script><!-- 컨텐츠 스크립트 -->
+<script src="/pages/kepco/js/mouse_interaction.js" ></script><!-- 마우스 인터랙션 스크립트 -->
+
+<script>
+$(function(){
+	
+});
+</script>
+</head>
+
+
+
+<body>
+<script> 
+	AOS.init(); // 자바스크립트로 init()을 해야 동작한다.
+</script>
+
+<style>
+#web_location{width:100%;height: 62px;display: block;box-sizing: border-box;left: 0;right: 0;}
+#web_location .web_location_box{position: relative;width: 100%;height: 62px;/* max-width: 1430px; */margin: 0 auto;box-sizing: border-box;     border: 1px solid #fff;}
+#web_location .web_location_box>h3{overflow: hidden;position: absolute;width: 1px;height: 1px;font-size: 0;line-height: 0;}
+#web_location .web_location_box > ul{float: left;position: relative}
+#web_location .web_location_box > ul >li.home{float: left;width: 62px;min-width: 62px;height: 62px;padding: 0;border-right: 0;}
+#web_location .web_location_box > ul >li{position: relative;float: left;padding: 0 25px 0 30px;border-right: 1px solid #ddd;text-align: left;min-width: 240px;}
+#web_location .web_location_box > ul >li.active{border-bottom:3px solid #1973CB; box-sizing:border-box;height: 62px;}
+
+#web_location .web_location_box .home a{    display: block;
+    font-size: 16px;
+    line-height: 61px;
+    color: #fff;
+	padding: 0 20px;
+    position: relative;
+    border-right: 1px solid;}
+#web_location .web_location_box > ul >li > a{    display: block;
+    font-size: 16px;
+    line-height: 61px;
+    color: #fff;
+    position: relative;}
+#web_location .web_location_box > ul >li > a.location_dept_a2 {color:#1973CB;}
+#web_location .web_location_box > ul >li > a.location_dept_a2 span{background: url(/pages/cnc/img/sub/arrow_bt_on.png) no-repeat right center;}
+
+
+#web_location .web_location_box > ul >li.home > a > span{font-size: 0;padding: 0;}
+#web_location .web_location_box > ul >li > a > span{display: inline-block;width: 100%;font-weight: 500;cursor: pointer;padding: 0 30px 0 0;color: #111;}
+#web_location .web_location_box > ul >li.mn > a.location_dept_a > span{background: url(/pages/cnc/img/sub/arrow_bt.png) no-repeat right center;}
+#web_location .web_location_box > ul >li > .location_dept{display: none;position: absolute;top: 62px;z-index: 15;background-color: #fff !important;border: 1px solid #ddd;border-top: 0;left: -1px;width: calc(100% + 2px);}
+#web_location .web_location_box > ul >li > .location_dept > li{height: 48px;border-bottom: 1px solid #ddd;}
+#web_location .web_location_box > ul >li > .location_dept > li > a.on{background-color:#0062ad;font-weight: 600;color: #fff}
+#web_location .web_location_box > ul >li > .location_dept > li > a{display: block;width: 100%;height: 48px;line-height: 48px;color: #444;font-size: 15px;padding: 0 30px;box-sizing: border-box;text-decoration: none;}
+
+</style>
+<script>
+$(function() {
+	$("#web_location .location_dept_a").on('click',function(){
+        $(this).next('ul').slideToggle();
+        return false;
+    });
+});
+</script>
+
+<div class="sub_wrap">
+        <div id="sub_content">
+            <div class="content_box">
+                <!-- contents -->
+                <div id="contents">
+					<div id="contents_wrap" class="conStyle">
+						<div id="page_content"><!-- 페이지영역 -->
+							<div layout:fragment="content"></div>
+						</div><!--// 페이지영역 -->
+					</div>
+				</div>
+                <!-- contents -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,342 @@
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+    <div class="sub-container">
+
+        <script src="/assets/libs/jquery-ui/jquery-ui.js"></script>
+
+        <script src="/assets/js/jquery.form.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="/assets/libs/jquery-ui/jquery-ui.min.css"/>
+
+        <style>
+            .sub_wrap {
+                overflow: initial !important;
+                overflow-x: initial !important;
+            }
+
+            #evaluation_search_form {
+                display: flex;
+                gap: 20px;
+                position: relative;
+                justify-content: flex-start;
+            }
+
+            .poll_bg_w {
+                flex: 0 1 auto;
+            }
+
+            #timer {
+                position: absolute;
+                float: right;
+                width: 150px;
+                top: 0;
+                right: 0;
+            }
+
+            .ti_mu {
+                border: 1px solid #fff;
+                max-width: 150px;
+                table-layout: fixed;
+            }
+
+            .ti_mu tr {
+            }
+
+            .ti_mu tr th {
+                border: 1px solid #fff;
+                width: 28%;
+                padding: 3px 0;
+            }
+
+            .ti_mu tr td {
+                border: 1px solid #fff;
+                text-align: center;
+            }
+        </style>
+
+        <script>
+            // window.addEventListener('scroll', function() {
+            //   var container = document.getElementById('evaluation_search_form');
+            //   var timer = document.getElementById('timer');
+
+            //   // 컨테이너 요소의 위치와 크기 가져오기
+            //   var containerRect = container.getBoundingClientRect();
+            //   var containerTop = containerRect.top;
+            //   var containerBottom = containerRect.bottom;
+
+            //   // 요소의 높이와 위치 조정
+            //   var timerHeight = timer.offsetHeight;
+            //   var timerTop = containerTop + (container.offsetHeight - timerHeight) / 2;
+
+            //   // 스크롤 위치에 따라 요소 위치 업데이트
+            //   if (timerTop < window.pageYOffset) {
+            //     timer.style.top = window.pageYOffset + 'px';
+            //   } else if (timerTop + timerHeight > window.pageYOffset + window.innerHeight) {
+            //     timer.style.top = (window.pageYOffset + window.innerHeight - timerHeight) + 'px';
+            //   } else {
+            //     timer.style.top = timerTop + 'px';
+            //   }
+            // });
+
+
+            var t = 0;
+            $(document).ready(function () {
+                t = $('#ti_re2').text();
+                t2 = $('#ti_re').text();
+
+                if (t == 0) {
+                    t = 60;
+                    t2 -= 1;
+                }
+                t -= 1;
+
+                $("#ti_re2").html(t);
+                $("#ti_re").html(t2);
+            });
+
+            $(function () {
+                function validateForm() {
+                    // 현재 폼에 대한 참조
+                    var form = document.forms[0];
+
+                    // 모든 필수 입력 필드에 대해 반복
+                    var requiredFields = form.querySelectorAll('[required]');
+                    for (var i = 0; i < requiredFields.length; i++) {
+                        var field = requiredFields[i];
+
+                        if (field.value.trim() === '') {
+                            // 필수 입력 필드가 비어 있으면 경고를 표시하고 제출을 중지합니다.
+                            alert('Please fill in all required fields.');
+                            return false;
+                        }
+                    }
+
+                    // 모든 검증을 통과하면 true를 반환하여 폼을 제출합니다.
+                    return true;
+                }
+
+                $("#evaluation_search_form").submit(function (e) {
+                    var evIdx = `[[${req.evIdx}]]`;
+                    var playIdx = `[[${req.playIdx}]]`;
+                    validateForm();
+                    e.preventDefault();
+                    var $frm = $(this);
+                    var form = document.getElementById("evaluation_search_form");
+                    if (form.getAttribute("data-submitted") === "true") {
+                        return false; // 이미 제출된 경우 더 이상 제출을 허용하지 않음 더블클릭 방지
+                    }
+                    form.setAttribute("data-submitted", "true");
+
+                    $.ajax({
+                        type: "post",
+                        url: $frm.attr("action"),
+                        data: $frm.serialize(),
+                        contentType: "application/x-www-form-urlencoded",
+                        dataType: "json",
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+                        },
+                    }).done(function (data) {
+                        if (data.code == 0) {
+                            alert('저장되었습니다.');
+                            form.setAttribute("data-submitted", "false");
+                            location.href = '/lms/edu/myEvaluationView/?site=kepco&mn=0405&evIdx=' + evIdx + '&playIdx=' + playIdx;
+                        } else {
+                            alert(data.message);
+                        }
+                    }).fail(function (xhr) {
+                        if (typeof xhr.responseJSON.message != "undefined") {
+                            alert(xhr.responseJSON.message);
+                        }
+                    });
+                });
+
+                $("input:checkbox[name^='evqrText']").change(function () {
+                    var evqIdx = $(this).data("evq_idx");
+                    var dataIdx = $(this).data("data_text");
+                    var sideBarTdElem = $("td[id='view_rev_idx_" + evqIdx + "']");
+                    var sideBarElem = $("input[name='view_rev_idx_" + evqIdx + "']");
+                    var myInputName = "clientAnswer" + evqIdx
+                    var myInput = $("input[name='" + myInputName + "']");
+                    var myInputVal = myInput.val();
+                    var sideBarVal = sideBarElem.val();
+                    var addData = $(this).val();
+
+                    if ($(this).is(":checked")) {
+                        if (!myInputVal) {
+                            myInput.val(addData);
+                            sideBarElem.val(dataIdx);
+                        } else {
+                            myInput.val(myInputVal + "," + addData);
+                            sideBarElem.val(sideBarVal + "," + dataIdx);
+                        }
+                    } else {
+                        var myInputValList = myInputVal.split(",");
+                        for (var i = 0; i < myInputValList.length; i++) {
+                            if (myInputValList[i] == addData) {
+                                myInputValList.splice(i, 1);
+                            }
+                        }
+                        var sideBarElemList = sideBarVal.split(",");
+                        for (var i = 0; i < sideBarElemList.length; i++) {
+                            if (sideBarElemList[i] == dataIdx) {
+                                sideBarElemList.splice(i, 1);
+                            }
+                        }
+                        myInput.val(myInputValList.join(","));
+                        sideBarElem.val(sideBarElemList.join(","));
+                    }
+
+                    // 정렬 후 집어넣음
+                    var tmp = $("input[name='view_rev_idx_" + evqIdx + "']").val();
+                    var tmpList = tmp.split(",");
+                    tmpList = tmpList.sort();
+                    tmp = tmpList.join(",");
+                    if (tmp.length > 6) {
+                        tmp = tmp.substring(0, 5) + "...";
+                    }
+                    sideBarTdElem.text(tmp);
+                });
+
+                $("input:text[name^='evqrText']").on("propertychanges change paste input", function () {
+                    var evqIdx = $(this).data("evq_idx");
+                    var sideBarTdElem = $("td[id='view_rev_idx_" + evqIdx + "']");
+
+                    var displayText = $(this).val();
+                    if ($(this).val().length > 6) {
+                        displayText = $(this).val().substring(0, 5) + "...";
+                    }
+                    $(sideBarTdElem).text(displayText);
+                });
+            });
+
+            function timer() {
+                setTimeout(function () {
+                    t = $('#ti_re2').text();
+                    t2 = $('#ti_re').text();
+
+                    if (t2 == 0 && t == 0) {
+
+                        //$('#evaluation_submit').trigger('click');
+
+                    } else {
+                        if (t == 0) {
+                            t = 60;
+                            t2 -= 1;
+                        }
+                        t -= 1;
+
+                        $("#ti_re2").html(t);
+                        $("#ti_re").html(t2);
+                        timer();
+                    }
+                }, 1000)
+            };
+
+            timer();
+        </script>
+
+        <script>
+            // 답 체크 시 input 값 변경
+        </script>
+
+        <form id="evaluation_search_form" action="/lms/edu/evaluationSave" method="post">
+            <input type="hidden" name="evIdx" th:value="${req?.evIdx}"/>
+            <input type="hidden" name="playIdx" th:value="${playVo?.playIdx}"/>
+            <input type="hidden" name="memberIdx" th:value="${playVo?.memberIdx}"/>
+            <input type="hidden" name="detailIdx" th:value="${playVo?.detailIdx}"/>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div id="timer">
+                <span>남은 시간 : </span><span id="ti_re">[[${vo.evTime}]]</span> 분 <span id="ti_re2">0</span> 초
+
+                <table class="ti_mu">
+                    <tr th:each="list, listState : ${list}">
+                        <input type="hidden" th:name="|view_rev_idx_${list.evqIdx}|" value="">
+                        <th th:text="|${listState.count}|"></th>
+                        <td th:if="${list.evqType == 'A'}" th:id="|view_rev_idx_${list.evqIdx}|"></td>
+                        <td th:if="${list.evqType == 'B'}" th:id="|view_rev_idx_${list.evqIdx}|"></td>
+                        <td th:if="${list.evqType == 'C'}" th:id="|view_rev_idx_${list.evqIdx}|"
+                            style="font-size: 10px; line-height: 12px;"></td>
+                        <td th:if="${list.evqType == 'D'}" th:id="|view_rev_idx_${list.evqIdx}|"
+                            style="font-size: 10px; line-height: 12px;"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="poll_bg_w" style="width: calc(100% - 172px)">
+                <div class="scon-tit">
+                    [[${vo.evSubject}]]([[${vo2.trainTitle}]])
+                </div>
+
+                <div class="poll_bg" th:each="list, listState : ${list}">
+                    <h5 class="poll_title">
+                        <span>[[${listState.count}]].</span>
+                        [[${list.evqSubject}]]
+                    </h5>
+
+                    <!-- 객관식 -->
+                    <ul class="select_poll" th:if="${list.evqType == 'A'}">
+                        <input type="hidden" th:name="|clientAnswer${list.evqIdx}|" value="">
+                        <li th:each="selectdetail, detailState : ${selectdetail}"
+                            th:if="${selectdetail.evqIdx} == ${list.evqIdx}">
+                            <label th:for="|view_evqd_idx_${selectdetail.evqdIdx}|" class="active">
+                                <input
+                                        type="checkbox"
+                                        class="filled-in"
+                                        th:id="|view_evqd_idx_${selectdetail.evqdIdx}|"
+                                        th:name="|evqrText${list.evqIdx}|"
+                                        th:value="${selectdetail.evqdIdx}"
+                                        th:data-evq_idx="${list.evqIdx}"
+                                        th:data-data_text="${selectdetail.evqdText}"
+                                >
+                                <span>[[${selectdetail.evqdText}]]</span>
+                            </label>
+                        </li>
+                    </ul>
+
+                    <!-- 단답형 -->
+                    <input
+                            type="text"
+                            th:id="|evqr_input${list.evqIdx}|"
+                            th:name="|evqrText${list.evqIdx}|"
+                            class="input-type1 w-full" value=""
+                            th:if="${list.evqType == 'B'}"
+                            th:data-evq_idx="${list.evqIdx}"
+                    >
+
+                    <!-- 주관식 -->
+                    <input
+                            type="text"
+                            th:id="|evqr_input${list.evqIdx}|"
+                            th:name="|evqrText${list.evqIdx}|"
+                            class="input-type1 w-full" value=""
+                            th:if="${list.evqType == 'C'}"
+                            th:data-evq_idx="${list.evqIdx}"
+                    >
+
+                    <!-- 서술형 -->
+                    <textarea
+                            th:id="|evqr_input${list.evqIdx}|"
+                            th:name="|evqrText${list.evqIdx}|" class="input-type2 w-full"
+                            th:if="${list.evqType == 'D'}"
+                            th:data-evq_idx="${list.evqIdx}"
+                    ></textarea> <!--서술형-->
+
+                </div>
+
+                <div class="bottom_btn_list">
+                    <ul>
+                        <li><input type="submit" value="제출하기" id="evaluation_submit" class="btn_o"></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+
+</th:block>
+
+

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+<style>
+
+.scroller {overflow-y: auto;}
+.scroll_defalt {max-height: 820px;}
+
+
+.h2_butt {display: block; width: 100%; height: auto; font-size: 18px; font-weight: bold;}
+.h3_butt {display: block; width: 100%; height: auto; font-size: 16px; font-weight: bold;}
+
+.collection-item > button {display: grid;
+	grid-template-areas: 
+	"title title title"
+	"first second third";
+	background-color: transparent; border: 0; width: 100%; height: auto; gap: 10px;
+	grid-template-rows: repeat(3, auto);
+	grid-template-columns: 120px repeat(2, auto);
+}
+.collection-item > button > span {text-align: left; white-space: nowrap;  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;;}
+.collection-item > button .title {grid-area: title; color: #26a69a;}
+.collection-item > button .first {grid-area: first;}
+.collection-item > button .second {grid-area: second;}
+.collection-item > button .third {grid-area: third;}
+.collection-item .none_data {display: flex; width: 100%; height: 100%; justify-content: center; align-items: center;}
+.collection-item:active,
+.collection-item:hover {background-color: #26a69a; color: #fff;}
+.collection-item:active .title,
+.collection-item:hover .title {color: #fff;}
+
+.term_button_list {display: flex; width: auto; height: auto; gap: 10px;}
+.term_button_list button {flex: 0 1 auto;}
+
+</style>
+
+<script>
+
+
+</script>
+
+	<div class="row mb0">
+		<div class="col s12 m12 l6 xl4 pd_box sideline m0">
+			<div class="basic_top_searchbox">
+				<form id="frmList" name="frmList" method="get" enctype="multipart/form-data">
+					<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+					<div class="row">
+						<!-- 검색창 -->
+						<div class="col s12 search_bar">
+							<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="콘텐츠명">
+							
+							<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+								 <i class="material-icons md-18 left">search</i> 검색
+							</button>
+							<div class="title left">
+								전체 : <b id="listCnt">0</b>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="scroller" style="max-height: calc(100vh - 240px);">
+				<ul class="collection">
+					<!-- 데이터가 없음 -->
+					<li class="collection-item" style="display:none">
+						<!-- 미검색 -->
+						<span class="none_data" >검색을 해주십시오.</span>
+						<!-- 검색 후 -->
+						<!-- <span class="none_data">검색된 결과가 없습니다.</span> -->
+					</li>
+					
+				</ul>
+			</div>
+		</div>
+		<div id="view_wrap" class="col s12 m12 l6 xl8 scroller bg_lightblue h100 pd_box">
+			
+		</div>
+	</div>
+<script>
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+		//viewEdu(firstDetailIdx);
+	});
+function dataList() {
+	$.ajax({
+        url : gblAdminPath + '/ras/stat/listJson?'+$('#frmList').serialize(),
+        type: 'GET',
+        dataType: "json",
+		dataSrc : "data.list",
+    }).done(function (data) {
+			// 기존 리스트를 비우기
+	    	$('.collection').empty();
+	      // 새로운 데이터로 리스트 생성 및 추가
+	      
+	      // 첫 번째 생성된 요소의 playIdx 저장
+	   	  var firstDetailIdx = null;
+	   	  $('#listCnt').text(data.data.listCnt);
+	      $.each(data.data.list, function (index, item) {
+			var liElement = `
+				<li class="collection-item">
+					<button onclick="viewEdu('${item.eduIdx}')">
+						<span class="title"><strong>${item.eduTitle}</strong></span>`;
+				if(item.eduType == 1){
+					liElement += `<span class="first">훈련구분 : <strong>개인</strong></span>`;
+				}else{
+					liElement += `<span class="first">훈련구분 : <strong>협동</strong></span>`;
+				}
+				liElement +=`<span class="second">훈련분야 : <strong>${item.eduCateNm}</strong></span>
+					</button>
+				</li>`;
+						
+	        // 리스트에 새로운 아이템 추가
+	        $('.collection').append(liElement);
+	        // 첫 번째 생성된 요소의 modulePlayIdx 저장
+            if (index === 0) {
+                firstEduIdx = item.eduIdx;
+            }
+        })
+        // for문이 끝난 후에 첫 번째 생성된 요소의 detailIdx를 사용하여 viewEdu 함수 실행
+        if (firstEduIdx !== null) {
+            viewEdu(firstEduIdx);
+        }
+        
+    }).fail(function () {
+        toast('네트워크 또는 시스템 장애입니다.', 4000);
+	})
+	    
+}
+
+function viewEdu(eduIdx){
+	
+    $.ajax({
+        url: gblAdminPath + "/ras/stat/contents/view?eduIdx=" + eduIdx,
+        type: 'GET',
+        dataType: 'html',
+    }).done(function (data) {
+		$('#view_wrap').empty();
+        $('#view_wrap').html(data);
+    }).fail(function () {
+        toast('네트워크 또는 시스템 장애입니다.', 4000);
+    });
+    
+}	
+
+
+	
+</script>
+
+</body>
+</html>

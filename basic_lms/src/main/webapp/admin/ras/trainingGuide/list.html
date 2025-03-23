@@ -1,0 +1,1517 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+
+<body>
+<th:block layout:fragment="content">
+
+<!-- 훈련css -->
+<link rel="stylesheet" href="/assets/css/trainingGuide.css">
+<script>
+
+$(function () {
+	setToday();
+	// 목록
+	$('#frmList').submit(function (e) {
+		e.preventDefault();
+		dataList();
+	});
+
+	// 검색
+	$('#frmList').submit();
+});
+
+function setToday(){ //검색일자 오늘로 설정
+	var today = new Date();
+
+    // 오늘의 날짜를 YYYY-MM-DD 형식으로 변환
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); // January는 0으로 시작하므로 +1
+    var yyyy = today.getFullYear();
+
+    today = yyyy + '-' + mm + '-' + dd;
+
+    // 오늘의 날짜를 가지고 있는 input 요소를 찾아 기본값으로 설정
+    document.getElementById('startDate').value = today;
+}
+// 목록
+function dataList() {
+	// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+	$('#dataTable').DataTable({
+		pageLength: 5,
+		ajax: {
+			type: "get",
+			url: gblAdminPath + "/ras/trainingGuide/listJson?" + $('#frmList').serialize(),
+			dataType: "json",
+			dataSrc: "data.list",
+		},
+		order: [0, "desc"],
+		initComplete: dataTableInit,
+		columns: [
+			{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+			{ data: "trainTitle", className: "dt-body-center" },
+			{ data: "teacherNm", className: "dt-body-center" },
+			{ data: "startTime", className: "dt-body-center" },
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var playMinute = "-";
+					if(row.playMinute){
+						playMinute = row.playMinute;
+					}
+					return playMinute;
+				}
+			},
+			{ data: "attemptMax", className: "dt-body-center" },
+			{ data: "moduleCdCnt", className: "dt-body-center" },
+			{ data: "team", className: "dt-body-center" },
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var mainWorker = "-";
+					if(row.mainWorker){
+						mainWorker = row.mainWorker;
+					}
+					return mainWorker;
+				}
+			},
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var subWorker = "-";
+					if(row.subWorker){
+						subWorker = row.subWorker;
+					}
+					return subWorker;
+				}
+			},
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var groundWorker = "-";
+					if(row.groundWorker){
+						groundWorker = row.groundWorker;
+					}
+					return groundWorker;
+				}
+			},
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var superWorker = "-";
+					if(row.superWorker){
+						superWorker = row.superWorker;
+					}
+					return superWorker;
+				}
+			},
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var url = "/api/edu/result/feedback/list?playTeamIdx=" + row.playTeamIdx;
+					var playTeamResult = `<button onclick="window.open('${url}', '_blank');" class="waves-effect waves-light btn teal accent-4" ><i class="material-icons left">filter_none</i>보기</button>`;
+					return playTeamResult;
+				}
+			},
+		],
+		createdRow: function (row, data, dataIndex) {
+			// 각 행에 대한 이벤트를 여기서 추가
+			$(row).on("click", function () {
+				$(this).closest('table').DataTable().rows('.selected').nodes().each((row)=> row.classList.remove('selected'));
+				$(this).addClass('selected');
+				dataList2(data.playTeamIdx);
+			});
+		},
+		
+	});
+}
+
+
+//모듈 현황
+function dataList2(playTeamIdx) {
+	if(!detailIdx) {
+		$('#dataTable2').DataTable().clear().draw();
+		return;
+	}
+	$('#dataTable2').DataTable({
+		ajax : {
+			type : 'get',
+			url : gblAdminPath + '/ras/trainingGuide/trainingGuideList?playTeamIdx=' + playTeamIdx,
+			dataType: "json",
+			dataSrc : "data.list",
+		},
+		order : [1,'asc'],
+		initComplete : dataTableInit2,
+		columns : [
+			{ data : 'moduleCd', className : 'dt-body-center',}, 
+			{ data : 'moduleTitle', className : 'dt-body-center',}, 
+			{ data : 'attempt', className : 'dt-body-center',},
+			{ data : 'workRole', className : 'dt-body-center', render: $.fn.dataTable.render.workRoleNm() },
+			{ data : 'step', className : 'dt-body-center',},
+			{ data : 'eventStartTime', className : 'dt-body-center',},
+			{ data : 'processContents', className : 'dt-body-center',},
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var riskFactor = row.riskFactor;
+					if (row.riskFactor == '1') {
+						riskFactor = "감전";
+					} else if (row.riskFactor == '2') {
+						riskFactor = "추락";
+					} else if (row.riskFactor == '3') {
+						riskFactor = "부주의";
+					} else if (row.riskFactor == '4') {
+						riskFactor = "작업부하";
+					}
+					return riskFactor;
+				}
+			},//위험요인
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var riskFactor = row.riskFactor;
+					var riskLevel = row.riskLevel;
+					
+					if (row.riskFactor == '1') {
+						riskLevel = "경고";
+					} else if (row.riskFactor == '2') {
+						if(riskLevel == '1'){
+							riskLevel = "주의";
+						}else if(riskLevel == '2'){
+							riskLevel = "위험";	
+						}
+					} else if (row.riskFactor == '3') {
+						riskLevel = "부주의";
+					} else if (row.riskFactor == '4') {
+						riskLevel = "작업부하";
+					}
+					return riskLevel;
+				}
+			},//위험요인별 위험수준
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+					var riskFactor = row.riskFactor;
+					var riskLevel = row.riskLevel;
+					var riskValue1 = row.riskValue1;
+					var riskValue2 = row.riskValue2;
+					var riskContents = "-";
+					
+					if (row.riskFactor == '1') {
+						if(row.riskValue1 == '1'){
+							riskContents = "특고압선(22.9kV) 접근";
+						}else if(row.riskValue1 == '2'){
+							riskContents = "COS/1차 측위/애자류 등 접근";
+						}else if(row.riskValue1 == '3'){
+							riskContents = "3상 인입선/인하선(380V) 접근";
+						}else if(row.riskValue1 == '4'){
+							riskContents = "저압인입선(220B) 접근";
+						}
+					} else if (row.riskFactor == '2') {
+						riskContents = "불안정한 작업 위치";
+					} else if (row.riskFactor == '3') {
+						riskContents = "작업 방향과 다른 곳을 "+row.riskValue1+"초간 응시";
+					} else if (row.riskFactor == '4') {
+						var riskValue1Array = row.riskValue1.split(',');
+				        var firstValue = parseInt(riskValue1Array[0]);
+				        
+				        switch (firstValue) {
+				            case 0:
+				                riskContents = "안정적인 자세";
+				                break;
+				            case 1:
+				                riskContents = "불안정한 자세";
+				                break;
+				            case 2:
+				                riskContents = "작업 자세가 근육 부담";
+				                break;
+				            case 3:
+				                riskContents = "작업 자세가 근육 과부화";
+				                break;
+				            case 4:
+				                riskContents = "작업 자세가 근육 손상우려";
+				                break;
+				            default:
+				                riskContents = "작업부하";
+				        }
+				        
+					}
+					return riskContents;
+				}
+			},//위험요인별 위험수준 내용
+			{
+				data: null, searchable: false, orderable: true, className: 'dt-body-center',
+				render: function (data, type, row, meta) {
+			        var stick = 0;
+			        var bucket = 0;
+			        var eventIdx = row.eventIdx;
+			        var riskFactor = row.riskFactor;
+			        var riskLevel = row.riskLevel;
+			        var riskValue1 = row.riskValue1;
+			        var riskValue2 = row.riskValue2;
+			        var attempt = row.attempt;
+			        if (row.riskFactor == 2) {
+			            stick = 1;
+			            bucket = 1;
+			        }
+			        var playcanvas = `<button class="danger_btn" 
+			        	type="button"
+			        	onclick="riskFactorBtn('${riskFactor}', '${riskLevel}', '${riskValue1}', '${riskValue2}', '${attempt}', '${eventIdx}', ${stick}, ${bucket})"
+			        	id="${eventIdx}"
+			        	data-posture="${riskFactor}"
+			            data-risk-level="${riskLevel}"
+			            data-risk-factor="${riskFactor}"
+			            data-val-1="${riskValue1}"
+			            data-val-2="${riskValue2}"
+			            data-stick="${stick}"
+			            data-bucket="${bucket}">
+			            <span class="material-icons">feed</span>
+			            상세보기
+			        </button>`;
+			        
+			        return playcanvas;
+			    }
+			},
+			
+			
+			
+		],
+		createdRow: function (row, data, dataIndex) {
+			$(row).on("click", function () {
+			});
+		},
+
+	});
+}
+
+
+//데이터테이블 initComplete
+function dataTableInit(settings, json) {
+	if ($("#dataTable").DataTable().data().count() == 10000) {
+		toast("데이터 조회를 10,000건으로 제한합니다.");
+	}
+	$("#dataTableTotCnt").text($("#dataTable").DataTable().data().count());
+	
+	if ($('#dataTable').DataTable().data().count() > 0) {
+		$('#dataTable').DataTable().row(':first').nodes().to$().trigger('click');
+	}else{
+		dataList2();
+	}
+	
+}
+
+
+//데이터테이블 initComplete
+function dataTableInit2(settings, json) {
+	if ($('#dataTable2').DataTable().data().count() == 10000) {
+		toast('데이터 조회를 10,000건으로 제한합니다.');
+	}
+	if ($('#dataTable2').DataTable().data().count() > 0) {
+// 		$('#dataTable2').DataTable().row(':first').nodes().to$().trigger('click');
+	}else{
+	}
+}
+
+// function excelDownload() {
+//     var url = gblAdminPath + "/lms/edu/result/team/download?" + $('#frmList').serialize();
+
+//     window.location.href = url;
+// }
+
+
+//플레이캔버스 설정
+// 설정값 대입
+let viewer_risk_info;
+let viewer_risk_level;
+let viewer_val_1;
+let viewer_val_2;
+let viewer_posture;
+let viewer_bucket;
+let viewer_stick;
+let viewer_point;
+let viewer_muscle = [];
+let viewer_point_pose = [];
+
+function formatTime(totalSeconds) {
+	var minutes = Math.floor(totalSeconds / 60); // 분 계산
+	var remainingSeconds = totalSeconds % 60; // 초 계산
+
+	return minutes + ':' + ('0' + remainingSeconds).slice(-2);
+}
+
+function formatTimeMinute(totalSeconds) {
+	var minutes = Math.floor(totalSeconds / 60); // 분 계산
+
+	return minutes;
+}
+
+function formatTimeSecond(totalSeconds) {
+	var remainingSeconds = totalSeconds % 60; // 초 계산
+	return remainingSeconds;
+}
+// 3D 뷰어 로드 완료 콜백 용
+if (typeof start_viewer_switch == 'undefined') {
+	start_viewer_switch = false;
+	// 초기값
+	viewer_posture = '00';
+	viewer_cam = 'front';
+	viewer_bucket = false;
+	viewer_stick = false;
+	viewer_point = false;
+	viewer_point_pose = [];
+	viewer_muscle = [];
+}
+
+
+// 중심점 크기 초기화
+// set_point_size(20, 20);
+
+// 뷰어 초기화
+function viewer_init() {
+	viewer_posture = '00';
+	viewer_cam = 'front';
+	viewer_bucket = false;
+	viewer_stick = false;
+	viewer_point = false;
+	viewer_point_pose = [];
+	viewer_muscle = [];
+
+	if (typeof switch_load_on !== 'undefined') {
+		// 뷰 갱신
+		// view_controlling();
+		view_controlling_2();
+	}
+
+}
+
+function is_viewer() {
+	return start_viewer_switch;
+}
+
+// 3D 뷰 컨트롤링
+function view_controlling_2() {
+	// 자세 및 카메라
+	call3DModelEvent(viewer_posture + '_' + viewer_cam);
+	// 근육 바인딩
+	if (viewer_muscle.length > 0) {
+		// 캐릭터 색상 변환 ( 캐릭터 색상 적용 여부(true = 적용 , false = 미적용) *boolean값 대신 색상값 입력시 그 색상으로 변환 , 색상값 )
+		character_color_setting(true, '#666666');
+		viewer_bucket = false;
+		viewer_point = false;
+		// divElement.setAttribute('data-value', modulePlayIdx);
+
+		// 근육부하 3D뷰어 적용
+		// enabled_muscle_texture(근육이름 or false , 활성화 여부[boolean] , 색상 [ 1 ~ 5] )
+		const muscle_list = [
+			// 근육 이름
+			"L5-Sacrum_joint", 	// L5 - Sacrum 요추관절
+			"QL", 			// 요방형근
+			"EOA", 			// 내복사근
+			// "Multifidus", 	// 다열근
+			"SC_joint", 	// 흉쇄관절
+			"Deltoid", 		// 삼각근
+			"Trapezius", 	// 승모근
+			// "ES", 			// 척추세움근
+			"AC_joint", 	// 견쇄관절
+			"ECRB",			// 단요측수근신근
+			"Supinator", 	// 회외근
+		];
+		// 근육 데이터 병합
+		const muscleData = muscle_list.map((name, index) => ({
+			name: name,
+			point: viewer_muscle[index]
+		}));
+		// 근육 데이터 적용
+		muscleData.forEach(ms => {
+			ms.point > 0 ? enabled_muscle_texture(ms.name, true, ms.point) : false;
+		});
+	} else {
+		// 캐릭터 색상 변환 ( 캐릭터 색상 적용 여부(true = 적용 , false = 미적용) *boolean값 대신 색상값 입력시 그 색상으로 변환 , 색상값 )
+		character_color_setting(false);
+	}
+
+	// 중심점 바인딩
+	enabled_center_point(viewer_point);
+	// 중심점 위치 초기화
+	add_point_position("reset");
+	add_point_position("reset");
+
+	// 중심점 포인트 위치 조절 [x("reset"), y, z]
+	if (typeof viewer_point_pose == Object && viewer_point_pose.length > 0) add_point_position(Number(viewer_point_pose[0]), Number(viewer_point_pose[1]), Number(viewer_point_pose[2]));
+
+	// 버켓 바인딩
+	enabled_bucket(viewer_bucket);
+	enabled_stick(viewer_stick);
+}
+
+// 모든 근육 비활성화 및 근육 표시값 초기화
+function muscle_all_kill() {
+	const muscle_name_list = [
+		/* 어깨 */
+		"shoulder_front_left",   	// : 왼쪽 앞 어깨
+		"shoulder_back_left",    	// : 왼쪽 뒤 어깨
+		"shoulder_front_right",  	// : 오른쪽 앞 어깨
+		"shoulder_back_right",   	// : 오른쪽 앞 어깨
+
+		/* 팔 */
+		"in_upper_arm_left",		// : 왼쪽 안쪽 상완
+		"out_upper_arm_left",    	// : 왼쪽 바깥쪽 상완
+		"in_upper_arm_right",    	// : 오른쪽 안쪽 상완
+		"out_upper_arm_right",   	// : 오른쪽 바깥쪽 상완
+
+		"in_fore_arm_left",     	// : 왼쪽 안쪽 전완
+		"out_fore_arm_left",    	// : 왼쪽 바깥쪽 전완
+		"in_fore_arm_right",    	// : 오른쪽 안쪽 전완
+		"out_fore_arm_right",   	// : 오른쪽 바깥쪽 전완
+
+		/* 목 등 허리 관련 */
+		"trapezius",         		// : 등 세모근
+		"lateral_left",      		// : 왼쪽 옆구리
+		"lateral_right",     		// : 오른쪽 옆구리
+		"sternoclavicular_joint_left",   	// : 왼쪽 복장빗장 관절 (쇄골뼈?)
+		"sternoclavicular_joint_right",  	// : 오른쪽 복장빗장 관절 (쇄골뼈?)
+		"lumbar_spine",      		// : 요추
+		"lumbar_left",       		// : 왼쪽 허리
+		"lumbar_right",      		// : 오른쪽 허리
+		"hip_joint_left",    		// : 왼쪽 고관절
+		"hip_joint_right",   		// : 오른쪽 고관절
+
+		/* 허벅지 관련 */
+		"in_thigh_left",     		// : 왼쪽 안쪽 허벅지
+		"out_thigh_left",    		// : 왼쪽 바깥쪽 허벅지
+		"in_thigh_right",    		// : 오른쪽 안쪽 허벅지
+		"out_thigh_right",   		// : 오른쪽 바깥쪽 허벅지
+
+		/* 종아리 관련 */
+		"in_calf_left",      		// : 왼쪽 안쪽 종아리
+		"out_calf_left",     		// : 왼쪽 바깥쪽 종아리
+		"in_calf_right",     		// : 오른쪽 안쪽 종아리
+		"out_calf_right",    		// : 오른쪽 바깥쪽 종아리
+	];
+	const muscle_name_list2 = [
+		// 근육 이름
+		"EOA", 			// 내복사근
+		"Multifidus", 	// 다열근
+		"ECRB",			// 단요측수근신근
+		"Deltoid", 		// 삼각근
+		"Trapezius", 	// 승모근
+		"QL", 			// 요방형근
+		"ES", 			// 척추세움근
+		"Supinator", 	// 회외근
+		"L5-Sacrum_joint", 	// L5 - Sacrum 관절
+		"SC_joint", 	// 흉쇄관절
+		"AC_joint" 	// 견쇄관절
+	];
+
+	// 모든 근육 비활성화
+	muscle_name_list.forEach(muscle_name => {
+		enabled_muscle(muscle_name, false);
+	});
+	muscle_name_list2.forEach(muscle_name => {
+		enabled_muscle_texture(muscle_name, false);
+	});
+}
+
+// 3D 뷰어 화면 중앙으로 이동(포커스)
+function goToElement(el) {
+	if (el) {
+		const elementTop = el.offset().top;
+		const elementLeft = el.offset().left;
+
+		const elementWidth = el.outerWidth();
+		const elementHeight = el.outerHeight();
+
+		const screenWidth = $(window).width();
+		const screenHeight = $(window).height();
+
+		const scrollX = elementLeft - (screenWidth / 2) + (elementWidth / 2);
+		const scrollY = elementTop - (screenHeight / 2) + (elementHeight / 2);
+
+		$('html, body').animate({
+			scrollTop: scrollY,
+			scrollLeft: scrollX
+		}, 'slow');
+	}
+}
+function start_viewer() {
+	return start_viewer_switch = true;
+}
+
+//3D뷰 버튼 이벤트 초기화
+function viewControll(view) {
+	 // 모든 버튼에서 act 클래스 제거
+    $(".view_controller li button").removeClass('act');
+
+    // 선택된 버튼에 act 클래스 추가
+    var dataView = $(".view_controller li button[data-view='" + view + "']");
+    dataView.addClass('act');
+	
+	viewer_cam = view;
+	
+	// 뷰 갱신
+	view_controlling_2();
+}
+
+// 위험요인상세 열기
+function riskFactorBtn(riskFactor, riskLevel, riskValue1, riskValue2, attempt, eventIdx, stick, bucket){
+	if (!is_viewer()) {
+		alert("잠시 후에 다시 시도해주십시오.");
+		return;
+	}
+	
+	// 초기화
+	viewer_init();
+	$('.result_3d_view_wrap').fadeIn();
+	// 정보 구분
+	let info_num = attempt;
+	// 정보 창 비활성화
+	$('.view_info_wrap .view_info_box').removeClass('act');
+	// 정보 창 활성화
+	$('.view_info_wrap .view_info_box[data-info-box=' + info_num + ']').addClass('act');
+	playcanvas_bloom_set(true);
+	// 3D 뷰어 포커스 (화면상 이동)
+	// goToElement($('.view_focus_area'));
+
+	// html 스크롤 비활성화
+	$('html').addClass('scroll-disabled');
+	
+    $('.danget_btn').removeClass('act');
+    
+    var parameterValue = eventIdx;
+    var element = $("#" + parameterValue);
+    var clickedBtn = document.getElementById(eventIdx);
+    // 버튼 활성화(클릭요소만)
+    clickedBtn.classList.add("act");
+
+    // 로그 코드가 있다면 뷰 갱신
+    if (riskFactor) {
+		// 근육표시 전부 비활성화
+		muscle_all_kill();
+		// 설정값 대입
+		viewer_risk_info = riskFactor;
+        viewer_risk_level = riskLevel;
+        viewer_val_1 = riskValue1;
+        viewer_val_2 = riskValue2;
+        viewer_posture = '0' + riskFactor;
+        viewer_bucket = bucket == 1 ? true : false;
+        viewer_stick = stick == 1 ? true : false;
+        viewer_point = false;
+        viewer_point_pose = [];
+        
+		// 1 : 주의
+		// 2 : 경고
+		// 3 : 위험
+		// 4 : 사고 X(eventId 가 존재하고 있는 경우로 대체)
+		// 5 : 작업부하
+		// 6 : 부주의
+
+		// 위험도 식별
+		if(viewer_risk_info == 2){
+			// 추락 위험도 식별
+			switch (viewer_risk_level) {
+				case '1':
+					viewer_risk_level = "주의";
+					break;
+				case '2':
+					viewer_risk_level = "위험";
+					break;
+				default:
+					viewer_risk_level = "없음";
+					break;
+			}
+		}else{
+			// 추락 외 위험도 식별
+			switch (viewer_risk_level) {
+				case '1':
+					viewer_risk_level = "주의";
+					break;
+				case '2':
+					viewer_risk_level = "경고";
+					break;
+				case '3':
+					viewer_risk_level = "위험";
+					break;
+				case '4':
+					viewer_risk_level = "사고";
+					break;
+
+				default:
+					viewer_risk_level = "없음";
+					break;
+			}
+		}
+
+		// riskFactor 위험요인
+		// 1 : 감전
+		// 2 : 추락
+		// 3 : 부주의
+		// 4 : 작업부하
+
+
+		// 위험요인 상세 정보 랩
+		const info_wrap = document.querySelectorAll('.result_3d_view_wrap .view_info_box');
+		info_wrap.forEach(el => {
+			let el_risk_factor = el.getAttribute('data-risk-factor-box');
+			// 위험요인에 따른 정보 창 활성화
+			if (viewer_risk_info == el_risk_factor) {
+				el.classList.add('act');
+			}
+		});
+
+		// 1 : 특고압선(22.9kV)
+		// 2 : COS/1차 측위/애자류 등
+		// 3 : 3상 인입선/인하선(380V)
+		// 4 : 저압인입선(220B)
+
+		// 감전 내용 변경 - 충전부 및 내용
+		if (viewer_risk_info == 1) {
+			let parts;
+			switch (viewer_val_1) {
+				case '1':
+					parts = "특고압선";
+					break;
+				case '2':
+					parts = "COS/1차 측위/애자류 등";
+					break;
+				case '3':
+					parts = "3상 인입선/인하선(380V)";
+					break;
+				case '4':
+					parts = "저압인입선(220B)";
+					break;
+
+				default:
+					parts = "지정된 충전부 명칭이 없음";
+					break;
+			}
+			// document.getElementById('view_risk_el_1_1').innerText = parts;
+			// document.getElementById('view_risk_el_1_2').innerText = viewer_val_2 + 'cm';
+			// document.getElementById('view_risk_el_1_3').innerText = viewer_risk_level;
+		}
+
+		// 추락 내용 변경 - 추락
+		if (viewer_risk_info == 2) {
+			document.getElementById('view_risk_el_2_1').innerText = viewer_risk_level;
+			if (viewer_risk_level == "주의") {
+				document.getElementById('view_risk_el_2_1').classList.add('score_2');
+				document.getElementById('view_risk_el_2_2').classList.add('score_2');
+				document.getElementById('view_risk_el_2_3').classList.add('score_2');
+				document.getElementById('view_risk_el_2_4').classList.add('score_2');
+				document.getElementById('view_risk_el_2_5').classList.add('score_2');
+			}
+			if (viewer_risk_level == "위험") {
+				document.getElementById('view_risk_el_2_1').classList.add('score_3');
+				document.getElementById('view_risk_el_2_2').classList.add('score_3');
+				document.getElementById('view_risk_el_2_3').classList.add('score_3');
+				document.getElementById('view_risk_el_2_4').classList.add('score_3');
+				document.getElementById('view_risk_el_2_5').classList.add('score_3');
+			}
+			if (viewer_risk_level == "사고") {
+				document.getElementById('view_risk_el_2_1').classList.add('score_4');
+				document.getElementById('view_risk_el_2_2').classList.add('score_4');
+				document.getElementById('view_risk_el_2_3').classList.add('score_4');
+				document.getElementById('view_risk_el_2_4').classList.add('score_4');
+				document.getElementById('view_risk_el_2_5').classList.add('score_4');
+			}
+			document.getElementById('view_risk_el_2_2').innerText = '위치 점수 : ' +
+				viewer_val_1;
+			document.getElementById('view_risk_el_2_3').innerText = '높이 점수 : ' +
+				viewer_val_2;
+			document.getElementById('view_risk_el_2_4').innerText = viewer_risk_level;
+			// 결과 내용
+			let result_cont;
+			if (viewer_risk_level == "주의" || viewer_risk_level == "위험") {
+				result_cont = "안정적인 위치에서 작업해야 합니다.";
+			}
+			if (viewer_risk_level == "사고") {
+				result_cont = "추락하였습니다.";
+			}
+			document.getElementById('view_risk_el_2_5').innerText = result_cont;
+		}
+
+		// 부주의 내용 변경 - 응시 시간
+		if (viewer_risk_info == 3) {
+			document.getElementById('view_risk_el_3_1').innerText = viewer_val_1 +
+				'초간 응시';
+		}
+
+		// 부하자세 내용 변경 - 근육 부하
+		if (viewer_risk_info == 4) {
+			const point_list = viewer_val_1.split(',');
+			
+			let point_cont;
+			let text_cont;
+			let res_text_cont;
+			// 부하 점수
+			switch (point_list[0]) {
+				case '0':
+					point_cont = "양호(0점)";
+					document.getElementById('view_risk_el_4_1').classList.add(
+						'score_1');
+					document.getElementById('view_risk_el_4_3').classList.add(
+						'score_1');
+					document.getElementById('view_risk_el_4_4').classList.add(
+						'score_1');
+					text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지했습니다.";
+					res_text_cont = "'필요없음'";
+					break;
+				case '1':
+					point_cont = "주의(1점)";
+					document.getElementById('view_risk_el_4_1').classList.add(
+						'score_2');
+					document.getElementById('view_risk_el_4_3').classList.add(
+						'score_2');
+					document.getElementById('view_risk_el_4_4').classList.add(
+						'score_2');
+					text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지해야 합니다.";
+					res_text_cont = "'조치권고'";
+					break;
+				case '2':
+					point_cont = "높음(2점)";
+					document.getElementById('view_risk_el_4_1').classList.add(
+						'score_2');
+					document.getElementById('view_risk_el_4_3').classList.add(
+						'score_2');
+					document.getElementById('view_risk_el_4_4').classList.add(
+						'score_2');
+					text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지해야 합니다.";
+					res_text_cont = "'조치필요'";
+					break;
+				case '3':
+					point_cont = "높음(3점)";
+					document.getElementById('view_risk_el_4_1').classList.add(
+						'score_2');
+					document.getElementById('view_risk_el_4_3').classList.add(
+						'score_2');
+					document.getElementById('view_risk_el_4_4').classList.add(
+						'score_2');
+					text_cont = "안정적인 자세를 유지하고, 근골격계에 부담이 가지 않도록 적절한 자세를 유지해야 합니다.";
+					res_text_cont = "'조치필요'";
+					break;
+				case '4':
+					point_cont = "위험(4점)";
+					document.getElementById('view_risk_el_4_1').classList.add(
+						'score_3');
+					document.getElementById('view_risk_el_4_3').classList.add(
+						'score_3');
+					document.getElementById('view_risk_el_4_4').classList.add(
+						'score_3');
+					text_cont = "안정적인 자세와 근골격계에 부담이 되며, 적절한 자세에 대한 학습이 필요합니다.";
+					res_text_cont = "'즉각조치'";
+					break;
+				case '5':
+					point_cont = "위험(5점)";
+					document.getElementById('view_risk_el_4_1').classList.add(
+						'score_3');
+					document.getElementById('view_risk_el_4_3').classList.add(
+						'score_3');
+					document.getElementById('view_risk_el_4_4').classList.add(
+						'score_3');
+					text_cont = "안정적인 자세와 근골격계에 부담이 되며, 적절한 자세에 대한 학습이 필요합니다.";
+					res_text_cont = "'즉각조치'";
+					break;
+				default:
+					point_cont = "고위험(" + point_list[0] + ")";
+					document.getElementById('view_risk_el_4_1').classList.add(
+						'score_4');
+					document.getElementById('view_risk_el_4_3').classList.add(
+						'score_4');
+					document.getElementById('view_risk_el_4_4').classList.add(
+						'score_4');
+					text_cont = "사고가 우려됩니다.";
+					res_text_cont = "'즉각조치'";
+					break;
+			}
+
+
+			// 근육부하 점수 적용 함수
+			function muscle_point_apply(el, point) {
+				switch (point) {
+					case '1':
+						document.getElementById(el).classList.add('muscle_score_1');
+						break;
+					case '2':
+						document.getElementById(el).classList.add('muscle_score_2');
+						break;
+					case '3':
+						document.getElementById(el).classList.add('muscle_score_3');
+						break;
+					case '4':
+						document.getElementById(el).classList.add('muscle_score_4');
+						break;
+					case '5':
+						document.getElementById(el).classList.add('muscle_score_5');
+						break;
+
+					default:
+						break;
+				}
+
+				return;
+			}
+
+			document.getElementById('view_risk_el_4_1').innerText = point_cont;
+			document.getElementById('view_risk_el_4_2').innerText = text_cont;
+			document.getElementById('view_risk_el_4_3').innerText = point_cont;
+			document.getElementById('view_risk_el_4_4').innerText = res_text_cont;
+
+			// 근육부하 점수 적용
+			muscle_point_apply('view_muscle_1', point_list[1]);
+			muscle_point_apply('view_muscle_2', point_list[2]);
+			muscle_point_apply('view_muscle_3', point_list[3]);
+			muscle_point_apply('view_muscle_4', point_list[4]);
+			muscle_point_apply('view_muscle_5', point_list[5]);
+			muscle_point_apply('view_muscle_6', point_list[6]);
+			muscle_point_apply('view_muscle_7', point_list[7]);
+			muscle_point_apply('view_muscle_8', point_list[8]);
+			muscle_point_apply('view_muscle_9', point_list[9]);
+
+
+			// 근육 점수 적용치(3D 뷰어)
+			// if (viewer_muscle.length === 0) {
+			// 	viewer_muscle = [point_list[2], point_list[3], point_list[4], point_list[5], point_list[6], point_list[7], point_list[8], point_list[9], point_list[10]];
+			// }
+			// 근육 부하 여부
+			if (viewer_val_1.split(',').length > 0) {
+				let muscle_list_init = viewer_val_1.split(',');
+				viewer_muscle = [];
+				muscle_list_init.forEach((val, index) => {
+					if (index > 0) {
+						viewer_muscle.push(val);
+					}
+				});
+			} else {
+				viewer_muscle = [];
+			}
+		}
+		// 뷰 갱신
+		view_controlling_2();
+	}
+	
+	
+}
+
+// 위험요인상세 닫기
+function riskFactorClose(){
+	$('.result_3d_view_wrap').fadeOut();
+	playcanvas_bloom_set(false);
+	// html 스크롤 활성화
+	$('html').removeClass('scroll-disabled');
+	
+	 // 모든 버튼에서 act 클래스 제거
+    $(".view_controller li button").removeClass('act');
+
+    // 선택된 버튼에 act 클래스 추가
+    var dataView = $(".view_controller li button[data-view='front']");
+    dataView.addClass('act');
+}
+
+// 부하자세 내용 출력 함수
+function muscle_point_cont(viewer_val_1) {
+	const point_lists = viewer_val_1.split(',');
+	let point_content;
+	switch (point_lists[0]) {
+		case '0':
+			point_content = "안정적인 자세";
+			break;
+		case '1':
+			point_content = "불안정한 자세";
+			break;
+		case '2':
+			point_content = "작업 자세가 근육 부담";
+			break;
+		case '3':
+			point_content = "작업 자세가 근육 과부화";
+			break;
+		case '4':
+			point_content = "작업 자세가 근육 손상우려";
+			break;
+
+		default:
+			point_content = "";
+			break;
+	}
+	return this.innerText = point_content;
+}
+
+$(function() {
+	
+});
+</script>
+<div class="row">
+	<div class="col s12 pd_box bg_lightblue h100">
+		<div class="basic_top_searchbox">
+			<form id="frmList" name="frmList" method="get" enctype="multipart/form-data">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+				<div class="row">
+					<!-- 검색창 -->
+					
+						<div class="input-field col s1 m1">
+							<label for="startDate" class="">훈련 시작일자</label> <input
+								id="startDate" name="startDate" type="date">
+						</div>
+						<div class="input-field col s1 m1">
+							<label for="endDate" class="">훈련 종료일자</label> <input
+								id="endDate" name="endDate" type="date">
+						</div>
+						
+						<div class="col s10 m10 search_bar">
+
+						<input name="scWord" type="text" class="browser-default"
+							th:value="${param?.scWord}" placeholder="훈련명"> <input name="scKey2"
+							type="hidden" th:value="${param?.scKey2}"> <input
+							name="scTeam" type="hidden" th:value="${param?.scTeam}">
+						<input name="type" type="hidden" value="memberList"> <input
+							id="detailIdx" name="detailIdx" type="hidden"
+							th:value="${param?.detailIdx}"> <input id="file"
+							name="file" type="file" style="display: none;" />
+
+						<button type="submit"
+							class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+							<i class="material-icons md-18 left">search</i> 검색
+						</button>
+						<div class="title left">
+							전체 : <b id="dataTableTotCnt">0</b>
+						</div>
+<!-- 								<div class="right"> -->
+<!-- 									<a class="waves-effect waves-light green btn" onclick="excelDownload()">다운로드</a> -->
+<!-- 								</div> -->
+					</div>
+				</div>
+			</form>
+		</div>
+	
+
+		<!--
+		<h2 class="h2_butt mt20 mb10">훈련자 목록</h2>
+		-->
+		<div class="table_type3">
+			<table id="dataTable" class="striped centered highlight">
+				<colgroup>
+					<col width="80px" />
+					<col width="auto" />
+					<col width="120px" />
+					<col width="150px" />
+					<col width="120px" />
+					<col width="120px" />
+					<col width="120px" />
+					<col width="120px" />
+					<col width="120px" />
+					<col width="120px" />
+					<col width="120px" />
+					<col width="120px" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th>NO</th>
+						<th>훈련명</th>
+						<th>교수자</th>
+						<th>훈련일시</th>
+						<th>훈련시간(분)</th>
+						<th>수행시도(횟수)</th>
+						<th>수행모듈(개수)</th>
+						<th>팀</th>
+						<th>주작업자</th>
+						<th>보조작업자</th>
+						<th>지상작업자</th>
+						<th>작업책임자</th>
+						<th>비고</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+		
+		<h2 class="h2_butt mt20 mb10">위험요인 현황<span class="h2_butt_desc">선택된 훈련과정별 위험요인 발생 정보 및 훈련가이드</span></h2>
+		<div class="table_type3">
+			<table id="dataTable2" class="dataTable   striped centered highlight">
+				<colgroup>
+					<col width="90px">
+					<col width="280px">
+					<col width="60px">
+					<col width="90px">
+					<col width="90px">
+					<col width="150px">
+					<col width="auto">
+					<col width="100px">
+					<col width="100px">
+					<col width="250px">
+					<col width="150px">
+				</colgroup>
+				<thead>
+					<tr>
+						<th>모듈코드</th>
+						<th>모듈명</th>
+						<th>회차</th>
+						<th>역할</th>
+						<th>절차순서</th>
+						<th>발생시간</th>
+						<th>절차내용</th>
+						<th>위험요인</th>
+						<th>위험정도</th>
+						<th>위험내용</th>
+						<th>가이드</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
+</div>
+<div class="row">
+	<div class="result_3d_view_wrap">
+		<div class="view_title">
+			수행교정
+			<span>교정을 목적으로 수행 간의 발생한 위험요인에 대한 분석</span>
+			<button class="re_3d_view_close_btn" type="button" onclick="riskFactorClose()" title="위험요인상세 닫기"></button>
+		</div>
+		<div class="scon-wrap">
+			<div class="view_wrap">
+				<span class="view_focus_area"></span>
+				<div id="test_viewbox" class="view_box">
+					<script src="/assets/playcanvas/playcanvas-stable.min.js" defer></script>
+					<script src="/assets/playcanvas/__settings__.js" defer></script>
+					<script src="/assets/playcanvas/__modules__.js" defer></script>
+					<script src="/assets/playcanvas/__start__.js" defer></script>
+					<script src="/assets/playcanvas/__loading__.js" defer></script>
+					<ul class="view_controller">
+						<li><button data-view="front" class="view_front act" type="button" onclick="viewControll('front')">정면</button></li>
+						<li><button data-view="back" class="view_back" type="button" onclick="viewControll('back')">후면</button></li>
+						<li><button data-view="side" class="view_side" type="button" onclick="viewControll('side')">측면</button></li>
+						<li><button data-view="top" clss="view_top" type="button" onclick="viewControll('top')">평면</button></li>
+					</ul>
+				</div>
+				<div class="view_info_wrap">
+					<!-- 뷰어 정보 페이지 -->
+					<div class="view_info_box act" data-info-box="0">
+						<h6 class="result_info_tit_box">
+							<strong>위험요인</strong> 상세 내용
+							<span></span>
+						</h6>
+						<div class="result_info_cont_wrap">
+							<p class="result_info_main_cont_box">
+								위험요인 평가 기준으로 <strong>'위험도'</strong>단계를 표출합니다.
+								<br>
+								세부 수행 내역에서 <strong>'위험요인상세'</strong> 버튼을 클릭하여 상세 정보를 확인할 수 있습니다.
+							</p>
+
+						</div>
+					</div>
+
+					<!-- 감전 -->
+					<div class="view_info_box" data-info-box="111" data-risk-factor-box="1">
+						<h6 class="result_info_tit_box"><strong>감전</strong> 위험요인 <span>충전부 접근한계 거리 내 접근 및
+								접촉에 따른 위험도</span></h6>
+						<div class="result_info_cont_wrap">
+
+							<p class="result_info_main_cont_box">
+								충전부와 작업자 간 접근/접촉 거리 구분에 따라 <strong id="view_risk_el_1_1">[저압
+									인입선(200V)]</strong>에
+								<!-- <strong id="view_risk_el_1_2">45cm</strong> -->
+								접근하여
+								<strong>위험</strong>합니다.<br>
+								충전부 간 접근한계거리를 숙지하시어 감전사고가 발생하지 않도록 유의해주십시오.
+							</p>
+							<!-- <p class="result_info_main_cont_box">충전부에 대한 접근한계 거리 내 접근 및 접촉으로 인해 감전사고가 발생했습니다.</p> -->
+
+							<div class="result_info_table_wrap">
+								<table>
+									<caption>충전부 접근거리에 따른 감전위험요인 평가 기준</caption>
+									<thead>
+										<tr>
+											<th>구분</th>
+											<th colspan="3">접근거리에 따른 위험 점수</th>
+										</tr>
+										<tr>
+											<th>충전부 종류</th>
+											<th>안전</th>
+											<th>경고</th>
+											<th>감전</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<th>특고압선(22.9kV)</th>
+											<td class="t_center">183cm 초과</td>
+											<td class="t_center">90~183cm 초과</td>
+											<td class="t_center">90cm 미만</td>
+										</tr>
+										<tr>
+											<th>COS/1차 측위/애자류 등</th>
+											<td class="t_center">183cm 초과</td>
+											<td class="t_center">90~183cm 초과</td>
+											<td class="t_center">90cm 미만</td>
+										</tr>
+										<tr>
+											<th>3상 인입선/인하선(380V)</th>
+											<td class="t_center">107cm 초과</td>
+											<td class="t_center">30~107cm 초과</td>
+											<td class="t_center">30cm 미만</td>
+										</tr>
+										<tr>
+											<th>저압인입선(220B)</th>
+											<td class="t_center">107cm 초과</td>
+											<td class="t_center">0~107cm 초과</td>
+											<td class="t_center">0(접촉 시)</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+						</div>
+					</div>
+					<!-- 추락 -->
+					<div class="view_info_box" data-info-box="111" data-risk-factor-box="2">
+						<h6 class="result_info_tit_box">
+							<strong>추락</strong> 위험요인
+							<span>신체 무게 중심에 의한 버켓 위치/높이 위험도</span>
+						</h6>
+						<div class="result_info_cont_wrap">
+							<p class="result_info_main_cont_box">
+								위험요인 평가 기준으로 <strong id="view_risk_el_2_1" class="">위험</strong>단계(<strong
+									id="view_risk_el_2_2">버켓 위치3점</strong>, <strong id="view_risk_el_2_3">높이
+									2점</strong>)입니다.<br>
+								<br>
+								추락사고는 작업자의 버켓 작업 위치를 고려한 신체 무게 중심점을 기준으로 판단되며, 사고 발생 위험행동에 따라 버켓 차량의 외부 충돌,
+								흔들림 등의 외부요인과 접목되어 사고로 이어지게 됩니다.
+							</p>
+
+							<!-- <div class="result_info_img_box">
+						<img class="auto" src="/pages/kepco/img/result_view_img_1.png" alt="">
+					</div> -->
+							<p>
+								신체 무게 중심 좌표는 작업자의 모션 센서로부터 획득한 15개의 신체 좌표에 상대 질량을 곱하여 산출하며, 15개 모션 센서 부위에 상대
+								질량 가중치가 적용된 좌표들은 '무게 중심 산출식'을 통하여 무게 중심이 산출됩니다.
+							</p>
+
+							<div class="result_info_table_wrap">
+								<table>
+									<caption>무게 중심 산출 표(상체)</caption>
+									<colgroup>
+										<col width="100px">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+									</colgroup>
+									<tr>
+										<th class="thead">신체부위</th>
+										<td>Hips</td>
+										<td>Spine1</td>
+										<td>Head</td>
+										<td>LeftArm</td>
+										<td>LeftForeArm</td>
+										<td>LeftHand</td>
+										<td>RightArm</td>
+										<td>RightForeArm</td>
+										<td>RightHand</td>
+									</tr>
+									<tr>
+										<th class="thead">상대질량</th>
+										<td>13.7291</td>
+										<td>36.538</td>
+										<td>5.8347</td>
+										<td>2.2784</td>
+										<td>1.362</td>
+										<td>0.5128</td>
+										<td>2.2784</td>
+										<td>1.362</td>
+										<td>0.5128</td>
+									</tr>
+								</table>
+							</div>
+							<div class="result_info_table_wrap">
+								<table>
+									<caption>무게 중심 산출 표(하체)</caption>
+									<colgroup>
+										<col width="100px">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+										<col width="auto">
+									</colgroup>
+									<tr>
+										<th class="thead">신체부위</th>
+										<td>LeftUpLeg</td>
+										<td>LeftLeg</td>
+										<td>LeftFoot</td>
+										<td>RightUpLeg</td>
+										<td>RightLeg</td>
+										<td>RightFoot</td>
+									</tr>
+									<tr>
+										<th class="thead">상대질량</th>
+										<td>11.9047</td>
+										<td>3.6404</td>
+										<td>1.1518</td>
+										<td>11.9047</td>
+										<td>3.6404</td>
+										<td>1.1518</td>
+									</tr>
+								</table>
+							</div>
+							<div class="result_info_img_box">
+								<img class="auto" src="/pages/kepco/img/result_view_img_2.png" alt="">
+							</div>
+							<div class="result_info_img_box">
+								<img src="/pages/kepco/img/result_view_img_3.png" alt="">
+								<p>
+									신체 무게중심점에 따른 버켓 내/외부 위치 점수는 탑뷰(Top View)에서 바라보는 버켓에서의 위치를 3단계 수준으로 나누어
+									결정됩니다.
+								</p>
+							</div>
+
+							<div class="result_info_img_box">
+								<img src="/pages/kepco/img/result_view_img_4.png" alt="">
+								<p>
+									신체 무게 중심점에 따른 버켓 바닥으로부터의 높이 점수는 사이드뷰(Side View)에서 바라볼 때 버켓 바닥면으로부터의 무게
+									중심점 높이 정도에 따라 3단계 수준으로 나누어 결정됩니다.
+								</p>
+							</div>
+
+							<div class="result_info_table_wrap">
+								<table>
+									<caption>높이 및 위치에 따른 추락 점수 표</caption>
+									<thead>
+										<tr>
+											<th>구분</th>
+											<th colspan="3">높이점수</th>
+										</tr>
+										<tr>
+											<th>위치점수</th>
+											<th>1</th>
+											<th>2</th>
+											<th>3</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<th>1</th>
+											<td class="t_safety">0(안전)</td>
+											<td class="t_safety">0(안전)</td>
+											<td class="t_safety">0(안전)</td>
+										</tr>
+										<tr>
+											<th>2</th>
+											<td class="t_safety">0(안전)</td>
+											<td class="t_caution">1(주의)</td>
+											<td class="t_caution">1(주의)</td>
+										</tr>
+										<tr>
+											<th>3</th>
+											<td class="t_danger">2(위험)</td>
+											<td class="t_danger">2(위험)</td>
+											<td class="t_danger">2(위험)</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<p>
+								신체 무게 중심에 따른 버켓 위치/높이 점수 기준에 따라 <strong id="view_risk_el_2_4">위험</strong>단계로
+								<strong id="view_risk_el_2_5">추락되었습니다.</strong><br>
+								<br>
+								추락 사고를 예방하기 위해서는 신체 무게 중심을 낮추거나 버켓 중심에서 작업을 진행해주세요.
+							</p>
+						</div>
+					</div>
+					<!-- 부주의 -->
+					<div class="view_info_box" data-info-box="111" data-risk-factor-box="3">
+						<h6 class="result_info_tit_box">
+							<strong>부주의</strong> 위험요인
+							<span>작업 방향과 시선 방향 불일치에 의한 위험도</span>
+						</h6>
+						<div class="result_info_cont_wrap">
+							<p class="result_info_main_cont_box">
+								작업 및 이동 중, <strong id="view_risk_el_3_1">부주의 위험요인이 3회 발생</strong>했습니다.<br>
+								작업공구, 스마트스틱 또는 손을 이용한 각종 수작업 시, 작업 방향과 시선 방향의 불일치는 작업 시 끼임, 낙하(공구류 등) 등의 사고로
+								이어질 수 있습니다.<br>
+								또한, 이동 시엔 장애물이나 위험 요소를 인지하지 못하여 넘어짐 등의 사고의 원인이 되어 각별한 주의가 필요합니다.
+							</p>
+
+							<div class="result_info_img_box">
+								<img src="/pages/kepco/img/result_view_img_1.jpg" alt="">
+								<p>
+									작업 중 부주의 횟수는 몸의 무게 중심, 양손의 위치를 통한
+									작업 방향과 시선 방향의 각도를 통해 카운트 되며, 이동 중
+									부주의 횟수는 이동 방향<br>
+									벡터와 시선 방향의 각도에 의해 카운트 됩니다.<br>
+									또한 부주의 횟수는 30도 이상 각도가 3초 이상 유지 시
+									발생됩니다.
+								</p>
+							</div>
+
+							<div class="result_info_table_wrap">
+								<table>
+									<caption>부주의 평가기준표</caption>
+									<thead>
+										<tr>
+											<th>구분</th>
+											<th>부주의 평가기준</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>작업 부주의</td>
+											<td>작업 및 시선의 Orientation 각도 30도 이상 3초간 유지 시</td>
+										</tr>
+										<tr>
+											<td>이동 부주의</td>
+											<td>이동 및 시선 상뱡 Orientation 각도 30도 이상 3초간 유지 시</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<p>
+								작업 시 시선은 <strong>항상 작업 방향으로 유지</strong>하여 부주의에 의한 사고가 발생하지 않도록 유의해주십시오.
+							</p>
+						</div>
+					</div>
+					<!-- 작업부하 -->
+					<div class="view_info_box" data-info-box="111" data-risk-factor-box="4">
+						<h6 class="result_info_tit_box">
+							<strong>작업부하</strong> 위험요인
+							<span>작업자의 불안정한 자세에 대한 근골격계 위험도</span>
+						</h6>
+						<div class="result_info_cont_wrap">
+							<p class="result_info_main_cont_box">
+								작업부하자세 평가 결과 <strong id="view_risk_el_4_1" class="score_1">양호(0점)</strong>이며,
+								<br>
+								<span id="view_risk_el_4_2"></span>
+								<br>
+								작업부하자세 평가 근골격계 점수 평가로부터 총괄부하점수까지 다양한 평가 점수의 합산을 통해 평가되며, 주요 근육과 관절의 근골결계 기준
+								평가표에 따라 점수가 산출됩니다.
+							</p>
+
+
+							<div class="result_info_table_wrap">
+								<table>
+									<caption>근골격계 활성 표</caption>
+									<colgroup>
+										<col width="16.6%">
+										<col width="16.6%">
+										<col width="16.6%">
+										<col width="16.6%">
+										<col width="16.6%">
+										<col width="16.6%">
+									</colgroup>
+									<thead>
+										<tr>
+											<th colspan="2" class="t_center">상체</th>
+											<th colspan="4" class="t_center">팔</th>
+										</tr>
+									</thead>
+									<tr>
+										<td class="t_center">앞굽힘</td>
+										<td class="t_center">뒷굽힘</td>
+										<td colspan="2" class="t_center">상완</td>
+										<td colspan="2" class="t_center">전완</td>
+									</tr>
+									<tr>
+										<td id="view_muscle_1" colspan="2" class="t_center muscle_score_1">요추관절
+										</td>
+										<td id="view_muscle_2" colspan="2" class="t_center muscle_score_1">흉쇄관절
+										</td>
+										<td id="view_muscle_3" colspan="2" class="t_center muscle_score_2">견쇄관절
+										</td>
+									</tr>
+									<tr>
+										<td id="view_muscle_4" class="t_center muscle_score_1">요방형근</td>
+										<td id="view_muscle_5" class="t_center muscle_score_1">내복사근</td>
+										<!-- <td id="view_muscle_6" class="t_center">척추세움근</td>
+									<td id="view_muscle_7" class="t_center">다열근</td> -->
+										<td id="view_muscle_6" class="t_center muscle_score_1">삼각근</td>
+										<td id="view_muscle_7" class="t_center muscle_score_1">승모근</td>
+										<td id="view_muscle_8" class="t_center muscle_score_1">단요측수근신근</td>
+										<td id="view_muscle_9" class="t_center muscle_score_1">회외근</td>
+									</tr>
+									<tr>
+										<td colspan="8" class="t_right" style="background-color: transparent">
+											<dl class="muscle_score_help">
+												<dt>1점</dt>
+												<dd class="muscle_score_1"></dd>
+											</dl>
+											<dl class="muscle_score_help">
+												<dt>2점</dt>
+												<dd class="muscle_score_2"></dd>
+											</dl>
+											<dl class="muscle_score_help">
+												<dt>3점</dt>
+												<dd class="muscle_score_3"></dd>
+											</dl>
+											<dl class="muscle_score_help">
+												<dt>4점</dt>
+												<dd class="muscle_score_4"></dd>
+											</dl>
+											<dl class="muscle_score_help">
+												<dt>5점</dt>
+												<dd class="muscle_score_5"></dd>
+											</dl>
+										</td>
+									</tr>
+								</table>
+							</div>
+
+							<div class="result_info_table_wrap">
+								<table>
+									<caption>최종 점수에 따른 작업부하 평가 기준 표</caption>
+									<thead>
+										<tr>
+											<th>작업부하 평가 기준</th>
+											<th>최종 점수</th>
+											<th>조치 단계</th>
+										</tr>
+									</thead>
+									<tr>
+										<td>양호</td>
+										<td>0점</td>
+										<td>필요없음</td>
+									</tr>
+									<tr>
+										<td>주의</td>
+										<td>1점</td>
+										<td>조치권고</td>
+									</tr>
+									<tr>
+										<td>높음</td>
+										<td>2~3점</td>
+										<td>조치필요</td>
+									</tr>
+									<tr>
+										<td>위험</td>
+										<td>4~5점</td>
+										<td>즉각조치</td>
+									</tr>
+								</table>
+							</div>
+
+
+							<p class="result_info_main_cont_box">
+								작업부하 평가 기준 결과, <strong id="view_risk_el_4_3" class="">양호(0점)</strong>이며, 조치는
+								<strong id="view_risk_el_4_4" class="">'조치권고'</strong> 입니다.
+							</p>
+
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div><!-- 뷰어 -->
+</div>
+
+		
+</body>
+
+</html>

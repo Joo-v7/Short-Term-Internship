@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.site.SiteMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND a.delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scSite)">
+			AND a.site = #{site}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND a.site_nm LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+			<if test='!@kepco.util.StrUtil@isBlank(scDefaultSiteYn)'>
+			AND a.default_site_yn = #{scDefaultSiteYn}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="defaultSiteCnt" parameterType="string" resultType="int">
+		SELECT
+			COUNT(1)
+		FROM cms_site
+		WHERE default_site_yn = 'y' AND delete_yn = 'n'
+		<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+		AND site != #{value}
+		</if>
+	</select>
+
+	<select id="selectList" parameterType="map" resultType="kepco.cms.site.SiteVo">
+		SELECT
+			a.*, b.layout_nm, c.page_nm
+		FROM cms_site a
+		left join cms_layout b
+		on a.layout_idx = b.layout_idx
+		left join cms_page c
+		on a.page_idx = c.page_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.site.SiteVo">
+		SELECT
+			a.*,
+			(SELECT layout_nm FROM cms_layout b WHERE a.layout_idx = b.layout_idx) layout_nm,
+			(SELECT page_nm FROM cms_page b WHERE a.page_idx = b.page_idx) page_nm
+		FROM cms_site a
+		WHERE
+			delete_yn = 'n'
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(siteIdx)">
+				AND site_idx = #{siteIdx}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(site)">
+				AND site = #{site}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(scDefaultSiteYn)">
+				AND default_site_yn = #{scDefaultSiteYn}
+			</if>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.site.SiteVo" useGeneratedKeys="true" keyProperty="siteIdx" keyColumn="site_idx">
+		INSERT INTO cms_site
+		(
+			site_idx,site,site_nm,default_site_yn,domain,home_title,layout_idx,page_idx,delete_yn
+		)
+		VALUES
+		(
+			#{siteIdx},#{site},#{siteNm},#{defaultSiteYn},#{domain},#{homeTitle},#{layoutIdx},#{pageIdx},'n'
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.site.SiteVo">
+		UPDATE cms_site
+		<set>
+			<if test="site != null">
+				site = #{site},
+			</if>
+			<if test="siteNm != null">
+				site_nm = #{siteNm},
+			</if>
+			domain = #{domain},
+			home_title = #{homeTitle},
+			layout_idx = #{layoutIdx},
+			page_idx = #{pageIdx},
+			default_site_yn = #{defaultSiteYn}
+			
+		</set>
+		WHERE
+			delete_yn = 'n'
+			<if test = "siteIdx != null">
+				AND site_idx = #{siteIdx}
+			</if>
+	</update>
+	
+	<update id="delete" parameterType="map">
+		UPDATE cms_site
+		<set>
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND site_idx = #{siteIdx}
+	</update>
+	
+	
+	
+</mapper>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+
+<script>
+
+	$(function () {
+		//logList();
+		var logCnt = `[[${pageInfo.total}]]`;
+		$('#logCnt').text(logCnt);
+
+	});
+</script>
+
+
+<div class="row m0 h100">
+	<div class="col s12 m12 l12 xl12 layout_box1 pd_box">
+		<div class="table_type3">
+			<table id="dataTable" class="striped centered highlight" style="min-width:1400px">
+				<colgroup>
+					<col width="180px" />
+					<col width="auto" />
+					<col width="240px" />
+					<col width="160px" />
+					<col width="160px" />
+					<col width="180px" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th>이용일시</th>
+						<th>URL</th>
+						<th>이용 메뉴</th>
+						<th>ID</th>
+						<th>성명</th>
+						<th>이용 IP</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr role="row" class="odd" th:each="logList : ${list}">
+						<td>[[${logList?.logDate}]]</td>
+						<td>[[${logList?.logAccess}]]</td>
+						<!--							<td>[[${logList?.useLocation}]]</td>-->
+						<td th:switch="${logList?.useLocation}">
+							<span th:case="'site'">사이트 관리</span>
+							<span th:case="'dashboard'">대시보드</span>
+							<span th:case="'member'">회원 관리</span>
+							<span th:case="'poll'">만족도 조사</span>
+							<span th:case="'evaluation'">사후평가</span>
+							<span th:case="'board'">게시판 관리</span>
+							<span th:case="'adminMenu'">관리자 메뉴</span>
+							<span th:case="'menu'">메뉴 관리</span>
+							<span th:case="'log'">사이트 통계</span>
+							<span th:case="'metadata'">데이터 관리</span>
+							<span th:case="'systemLog'">이용정보</span>
+							<span th:case="'sysinfoLog'">시스템 이용정보</span>
+							<span th:case="'stat'">사용자 방문정보</span>
+							<span th:case="'sec'">역할/권한</span>
+							<span th:case="'setting'">설정</span>
+							<span th:case="'edu'">실감훈련</span>
+							<span th:case="'vod'">영상교육</span>
+							<span th:case="'trainingGuide'">훈련가이드</span>
+							<span th:case="'achievement'">학습성취도</span>
+							<span th:case="'risk'">위험관리</span>
+							<span th:case="'work'">작업관리</span>
+							<span th:case="'riskAssessment'">위험성평가</span>
+
+							<span th:case="*">[[${logList?.useLocation}]]</span>
+						</td>
+						<td>[[${logList?.memberId}]]</td>
+						<td>[[${logList?.memberNm}]]</td>
+						<td>[[${logList?.logIp}]]</td>
+					</tr>
+				</tbody>
+			</table>
+			<!-- [[${pageInfo}]] -->
+			<div id="paginate_complex" class="mt20 clear" th:if="${!#lists.isEmpty(list)}">
+				<p class="btn_page ">
+					<a th:class="${pageInfo?.isFirstPage} ? 'paginate_button first_back disabled' : 'paginate_button first_back'" th:onclick="${pageInfo?.isFirstPage} ? 'return false;' : ''"
+						th:href="|javascript:page(1);|">
+						<i class="material-icons">
+							keyboard_double_arrow_left
+						</i>
+						<span class="hidden">처음페이지</span>
+					</a>
+					<a th:class="${pageInfo?.hasPreviousPage} ? 'paginate_button first_back' : 'paginate_button first_back disabled'" th:onclick="${pageInfo?.hasPreviousPage} ? '' : 'return false; '"
+						th:href="|javascript:page(${pageInfo?.pageNum-1});|">
+						<i class="material-icons">
+							navigate_before
+						</i>
+						<span class="hidden">이전페이지</span>
+					</a>
+					<a th:each="n : ${pageInfo.navigatepageNums}" th:class=" ${pageInfo.pageNum} == ${n} ? 'paginate_button on current' : 'paginate_button'"
+						th:href="|javascript:page(${n});|" th:text="${n}"></a>
+					<a th:class="${pageInfo?.hasNextPage} ? 'paginate_button next_back' : 'paginate_button last_back disabled' " th:onclick="${pageInfo?.hasNextPage} ? '' : 'return false;'"
+						th:href="|javascript:page(${pageInfo.pageNum+1});|">
+						<i class="material-icons">
+							navigate_next
+						</i>
+						<span class="hidden">다음페이지</span>
+					</a>
+					<a th:class="${pageInfo?.isLastPage} ? 'paginate_button last_back disabled' : 'paginate_button last_back' " th:onclick="${pageInfo?.isLastPage} ? 'return false;' : ''"
+						th:href="|javascript:page(${pageInfo.pages});|">
+						<i class="material-icons">
+							keyboard_double_arrow_right
+						</i>
+						<span class="hidden">마지막페이지</span>
+					</a>
+				</p>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+
+</body>
+
+</html>

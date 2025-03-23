@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+<script>
+	$(function() {
+	
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+		// 추가,수정 폼
+ 		dataForm('');
+		
+	});
+	
+	// 목록
+	function dataList() {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#dataTable').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : false,
+			paging : true,
+			pageLength : 10,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/cms/setting/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ targets : 1, className : 'dt-body-center',
+        			render: function(data, type, row, meta){
+	                	return meta.row+1;
+	            	},
+	        	},
+				{ data : 'settingType', className : 'dt-body-center' },
+				{ data : 'settingKey', className : 'dt-body-center' },
+
+				{ data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						var txt = data.settingValue;
+						if(txt.length > 30) {
+							return txt.substr(0,50) + "...";
+						}
+					return txt;
+					}
+				},
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `<button onclick="dataForm(${row.settingIdx});" class="waves-effect waves-light btn teal accent-4 z-depth-0"><i class="material-icons left">edit</i>수정</button>`;
+					}
+				},
+			],
+		});
+		
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+
+	// 추가,수정 폼
+	function dataForm(settingIdx) {
+		
+		$("#areaForm").load(gblAdminPath + "/cms/setting/form?settingIdx=" + settingIdx);
+	}
+	
+	
+</script>
+
+
+	<div>
+		<div class="row">
+			<!-- // 그룹 -->
+			<div class="col s7 sideline pd_box">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<div class="row">
+							<form id="frmList" method="get">
+								<!-- 검색창 -->
+								<div class="col search_bar">
+									<input name="vodIdx" type="hidden" class="browser-default" th:value="${param?.vodIdx}">
+									<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+									
+									<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+	 									<i class="material-icons md-18 left">search</i> 검색
+									</button>
+									<div class="title left">
+										전체 : <b id="dataTableTotCnt">0</b>
+									</div>
+								</div>
+								<div class="btn_infolist right">
+			                        <button onclick="dataForm('')" class="waves-effect waves-light btn cyan accent-4 z-depth-0 left"><i class="material-icons left" style="margin-bottom: 10px">create</i>신규등록
+			                        </button>
+			                    </div>
+							</form>
+<!-- 							관리자 페이지 기능X -->
+<!-- 							<div class="btn_infolist right"> -->
+<!--  								<button onclick="location.href='/admin/vod/apply/myList'" class="waves-effect waves-light btn cyan left">나의 강의실</button> -->
+<!-- 							</div> -->
+						</div>
+					</div>
+					<div class="table_type3">
+						<table id="dataTable" class="striped centered highlight">
+							<thead>
+								<tr>
+									<th width="5%">NO</th>
+									<th width="10%">구분</th>
+									<th width="15%">항목명</th>
+									<th width="40%px">항목값</th>
+									<th width="15%">수정</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			
+			<div id="areaForm" class="col s5 scroll_defalt pd_box">
+			</div>
+		</div>
+	</div>	
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="/pages/admin/layout/common_layout">
+
+<th:block layout:fragment="content">
+
+
+	<script src="/assets/libs/amchart4/core.js"></script>
+	<script src="/assets/libs/amchart4/charts.js"></script>
+	<script src="/assets/libs/amchart4/themes/animated.js"></script>
+	<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+	<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+	<script src="/assets/libs/amchart4/lang/ko_KR.js"></script>
+
+	<style>
+		.h2_butt{display:flex; align-items: center; width: 100%; min-height: 24px; font-size:14px;margin:10px 0;font-weight:700}
+		.text_unit {display: inline-block; font-size: 0.6em; font-weight: 400; opacity: 0.7;}
+		.cnt_dl {display: flex; width: 100%; height: auto; flex-direction: column; gap: 10px; background-color: #eee; border-radius: 10px; padding: 20px; line-height: 1;;}
+		.cnt_dl > dt {display: flex; width: 100%; height: auto; font-size: 24px; align-items: flex-end; margin: 0; padding-bottom: 10px; border-bottom: 1px solid #ccc; gap: 10px;}
+		.cnt_dl > dd {display: flex; width: 100%; height: auto; min-height: 50px; font-size: 18px; align-items: center; gap: 10px;}
+		.cnt_dl > dd .cnt_text {display: flex; width: auto; min-width: 130px; max-width: 100%; height: auto; align-items: center; line-height: 1; font-size: 50px; font-weight: bold;}
+		.cnt_dl > dd .material-icons {font-size: 40px; color: #999;}
+
+
+		progress { -webkit-appearance: none; width: 100%; height: 20px; border: 1px solid #aaa; border-radius: 4px;}
+		progress::-webkit-progress-bar {background-color: #e6e6e6; }
+		progress::-webkit-progress-value {background-color: #26a0da;transition: all 0.35s ease-in-out;}
+		.cnt_dl > dd.c_progress_bar {display: flex; width: 100%; height: auto; flex-wrap: wrap; gap: 10px; align-items: center;}	
+		.cnt_dl > dd.c_progress_bar progress {flex: 1 1 calc(100% - 50px);}
+		.cnt_dl > dd.c_progress_bar .material-icons {flex: 0 1 20px; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; color: #333; font-size: 20px;}
+		.cnt_dl > dd.c_progress_bar .progress_text {flex: 1; width: 100%; height: auto; display: flex; font-size: 16px; font-weight: 500; color: #666;}
+
+		
+	</style>
+
+
+
+	<div class="row">
+		<div class="col s12 layout_box1 pd_box">
+
+			<div class="basic">
+
+				<div class="row">
+					<!-- <h2 class="page_title">현재 시스템 운영 현황</h2> -->
+					<button class="right refresh_btn waves-effect waves-light btn cyan left" onclick="currMetrics()">새로고침</button>
+				</div>
+
+				<div class="row">
+					<div class="col s12 m12 l6 xl4">
+						<dl class="cnt_dl">
+							<dt>디스크 용량</dt>
+							<dd class="c_progress_bar">
+								<i class="material-icons">storage</i>
+								<progress id="disk_vol" value="0" min="0" max="100"></progress>
+								<span id="disk_vol_text" class="progress_text">0MB 중 0MB 사용가능</span>
+							</dd>
+						</dl>
+						<dl class="cnt_dl">
+							<dt>메모리 사용량</dt>
+							<dd class="c_progress_bar">
+								<i class="material-icons">memory</i>
+								<progress id="memory_use" value="0" min="0" max="100"></progress>
+								<span id="memory_use_vol_text" class="progress_text">0MB 중 0MB 사용중</span>
+							</dd>
+						</dl>
+					</div>
+					<div class="col s12 m12 l6 xl4">
+<!--						<dl id="app_start_time" class="cnt_dl">-->
+<!--							<dt>시스템 구동 시간<span class="text_unit">(단위 : 시간)</span></dt>-->
+<!--							<dd>-->
+<!--								<span class="material-icons">schedule</span> 00:00-->
+<!--							</dd>-->
+<!--						</dl>-->
+						<dl id="process_time" class="cnt_dl">
+							<dt>프로세스 가동 시간<span class="text_unit">(단위 : 시간)</span></dt>
+							<dd></dd>
+						</dl>
+						<dl id="request_count" class="cnt_dl">
+							<dt>HTTP 서버 요청 수<span class="text_unit">(단위 : 횟수)</span></dt>
+							<dd>
+								<span class="material-icons">schedule</span> 00:00
+							</dd>
+						</dl>
+						
+					</div>
+					<div class="col s12 m12 l6 xl4">
+						<dl id="connect_count" class="cnt_dl">
+							<dt>DB연결 사용 횟수<span class="text_unit">(단위 : 횟수)</span></dt>
+							<dd></dd>
+						</dl>
+						<dl id="connect_time" class="cnt_dl">
+							<dt>DB연결 사용 누적시간<span class="text_unit">(단위 : 시간)</span></dt>
+							<dd></dd>
+						</dl>
+					</div>
+
+				</div>
+
+				<div class="row">
+					<h2 class="h2_butt">최근 1시간 시스템 데이터 추이</h2>
+					<button class="right refresh_btn waves-effect waves-light btn cyan left" onclick="metricsChart()">새로고침</button>
+				</div>
+				<div class="row">
+					<div class="chartdiv" id="metricsChart" style="height: 400px"></div>
+				</div>
+
+			</div>
+		</div>
+
+		</body>
+
+		<script>
+
+			$(function () {
+				currMetrics();
+				metricsChart();
+			});
+
+			function currMetrics() {
+				$.ajax({
+					url: gblAdminPath + '/cms/sysinfoLog/currMetricsJson',
+					type: 'GET',
+					dataType: 'json',
+				}).done(function (data) {
+					console.log(data);
+					let disk_total = convertToMegabytes(data.data.metrics.diskTotal);				// 디스크 총량
+					let disk_free = convertToMegabytes(data.data.metrics.diskFree);					// 디스크 남은 용량
+					let memory_max = convertToMegabytes(data.data.metrics.jvmMemoryMax);			// 메모리 총량
+					let memory_use = convertToMegabytes(data.data.metrics.jvmMemoryUsed);			// 메모리 사용량
+					//let app_start_time = data.data.metrics.applicationStartedTime;					// 구동 시간
+					let request_count = data.data.metrics.httpServerRequestCount;								// http 서버 요청 수
+					let process_time = data.data.metrics.processUptime;								// 프로세스 실행 시간
+					let connect_count = data.data.metrics.hikaricpConnectionsUsageCount;			// 연결 사용 횟수
+					let connect_use_time = data.data.metrics.hikaricpConnectionsUsageTotalTime;		// 연결 사용 누적시간
+
+					let html_icon_time = "<i class='material-icons'>schedule</i>";
+					let html_icon_count = "<i class='material-icons'>123</i>";
+
+					// 디스크 용량
+					const disk_vol_bar = document.getElementById('disk_vol');
+					const disk_vol_text = document.getElementById('disk_vol_text');
+					disk_vol_bar.value = disk_total - disk_free;
+					disk_vol_bar.max = disk_total;
+					let disk_total_v = convertToVol(data.data.metrics.diskTotal);
+					let disk_free_v = convertToVol(data.data.metrics.diskFree);
+					disk_vol_text.innerHTML = `${disk_total_v} 중 ${disk_free_v} 사용가능`;
+
+					// 메모리 사용량
+					const memory_use_bar = document.getElementById('memory_use');
+					const memory_use_vol_text = document.getElementById('memory_use_vol_text');
+					memory_use_bar.value = memory_use;
+					memory_use_bar.max = memory_max - memory_use;
+					let memory_max_v = convertToVol(data.data.metrics.jvmMemoryMax);
+					let memory_use_v = convertToVol(data.data.metrics.jvmMemoryUsed);
+					memory_use_vol_text.innerHTML = `${memory_max_v} 중 ${memory_use_v} 사용중`;
+
+					// 구동 시간
+					//const app_start_time_text = document.querySelector('#app_start_time > dd');
+					//app_start_time_text.innerHTML = html_icon_time + `<span class="cnt_text">${convertTo24HourFormat(app_start_time)}</span>`;
+					
+					// HTTP 서버 요청 수
+					const request_count_text = document.querySelector('#request_count > dd');
+					request_count_text.innerHTML = html_icon_count + `<span class="cnt_text">${convertToComma(request_count)}</span>`;
+
+
+					// 프로세스 실행 시간
+					const process_time_text = document.querySelector('#process_time > dd');
+					process_time_text.innerHTML = html_icon_time + `<span class="cnt_text">${convertSecondsToTime(process_time)}</span>`;
+					// process_time_text.innerHTML =  process_time;
+
+					// 프로세스 실행 시간
+					const connect_count_text = document.querySelector('#connect_count > dd');
+					connect_count_text.innerHTML = html_icon_count + `<span class="cnt_text">${convertToComma(connect_count)}</span>`;
+
+					// 프로세스 실행 시간
+					const connect_time_text = document.querySelector('#connect_time > dd');
+					connect_time_text.innerHTML = html_icon_time + `<span class="cnt_text">${convertSecondsToTime(connect_use_time)}</span>`;
+				}).fail(function () {
+					toast('네트워크 또는 시스템 장애입니다.', 4000);
+				});
+			}
+
+			function metricsChart() {
+				$.ajax({
+					url: gblAdminPath + '/cms/sysinfoLog/chartJson',
+					type: 'GET',
+					dataType: 'json',
+				}).done(function (data) {
+					//차트그리기
+					console.log(data)
+					am4core.ready(function () {
+						am4core.options.commercialLicense = true;
+						// Themes begin
+						am4core.useTheme(am4themes_animated);
+						// Themes end
+
+						// 차트 생성
+						var chart = am4core.create("metricsChart", am4charts.XYChart);
+					
+						// 차트 데이터 대입
+						data.data.list.forEach(data_key => {
+							const data = {
+								time: data_key.insertDate,
+								jmuh: convertToMegabytes(data_key.jmuhVal),
+								jmunh: convertToMegabytes(data_key.jmunhVal),
+								jmu: convertToMegabytes(data_key.jmuVal),
+								hca: data_key.hcaVal,
+								tcc: data_key.tccVal,
+							};
+							chart.data.push(data);
+						});
+
+
+						chart.dateFormatter.inputDateFormat = "HH:mm";
+						var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+						dateAxis.renderer.minGridDistance = 60;
+						dateAxis.startLocation = 0.5;
+						dateAxis.endLocation = 0.5;
+						dateAxis.baseInterval = {
+							"timeUnit": "minute",
+							"count": 1
+						};
+
+						var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+						valueAxis.tooltip.disabled = true;
+						valueAxis.title.text = "(MB)";
+						
+						var countAxis = chart.yAxes.push(new am4charts.ValueAxis());
+						countAxis.tooltip.disabled = true;
+						countAxis.title.text = "연결 수";
+						countAxis.renderer.opposite = true;
+						countAxis.renderer.grid.template.disabled = true; // 해당선의 눈금선 숨김
+						countAxis.renderer.labels.template.disabled = false; //범위 안숨김
+						countAxis.syncWithAxis = valueAxis;
+						
+						var series = chart.series.push(new am4charts.LineSeries());
+						series.dataFields.dateX = "time";
+						series.name = "사용중인 메모리(heap)";
+						series.dataFields.valueY = "jmuh";
+						series.tooltipText = "[#000]{valueY.value}[/]";
+						series.tooltip.background.fill = am4core.color("#FFF");
+						series.tooltip.getStrokeFromObject = true;
+						series.tooltip.background.strokeWidth = 3;
+						series.tooltip.getFillFromObject = false;
+						series.fillOpacity = 0.5;
+						series.strokeWidth = 1;
+						series.stacked = true;
+						series.stroke = am4core.color('#e16c58');
+						var gradient0 = new am4core.LinearGradient();
+						gradient0.addColor(am4core.color("#f54f35"));
+						gradient0.addColor(am4core.color("#e16c58")); 
+						gradient0.rotation = 90; 
+						series.fill = gradient0;
+						// series.tensionX = 0.8;
+						// series.tensionY = 0.2;
+
+						var series2 = chart.series.push(new am4charts.LineSeries());
+						series2.name = "사용중인 메모리(nonheap)";
+						series2.dataFields.dateX = "time";
+						series2.dataFields.valueY = "jmunh";
+						series2.tooltipText = "[#000]{valueY.value}[/]";
+						series2.tooltip.background.fill = am4core.color("#FFF");
+						series2.tooltip.getFillFromObject = false;
+						series2.tooltip.getStrokeFromObject = true;
+						series2.tooltip.background.strokeWidth = 3;
+						series2.sequencedInterpolation = true;
+						series2.fillOpacity = 0.5;
+						series2.stacked = true;
+						series2.strokeWidth = 1;
+						series2.stroke = am4core.color('#2eb7b3');
+						var gradient1 = new am4core.LinearGradient();
+						gradient1.addColor(am4core.color("#008771"));
+						gradient1.addColor(am4core.color("#2eb7b3")); 
+						gradient1.rotation = 90; 
+						series2.fill = gradient1;
+						// series2.tensionX = 0.8;
+						// series2.tensionY = 0.2;
+
+
+						var series3 = chart.series.push(new am4charts.LineSeries());
+						series3.name = "사용중인 메모리(total)";
+						series3.dataFields.dateX = "time";
+						series3.dataFields.valueY = "jmu";
+						series3.tooltipText = "[#000]{valueY.value}[/]";
+						series3.tooltip.background.fill = am4core.color("#FFF");
+						series3.tooltip.getFillFromObject = false;
+						series3.tooltip.getStrokeFromObject = true;
+						series3.tooltip.background.strokeWidth = 3;
+						series3.sequencedInterpolation = true;
+						series3.fillOpacity = 0.5;
+						series3.defaultState.transitionDuration = 1000;
+						series3.stacked = true;
+						series3.strokeWidth = 1;
+						series3.stroke = am4core.color('#f5b641');
+						var gradient2 = new am4core.LinearGradient();
+						gradient2.addColor(am4core.color("#f49c2d"));
+						gradient2.addColor(am4core.color("#f5b641")); 
+						gradient2.rotation = 90; 
+						series3.fill = gradient2;
+						// series3.tensionX = 0.8;
+						// series3.tensionY = 0.2;
+
+						
+						var series4 = chart.series.push(new am4charts.LineSeries());
+						series4.name = "데이터베이스 연결 수";
+						series4.dataFields.dateX = "time";
+						series4.dataFields.valueY = "hca";
+						series4.yAxis = countAxis;
+						series4.tooltipText = "[#000]{valueY.value}[/]";
+						series4.tooltip.getFillFromObject = false;
+						series4.tooltip.getStrokeFromObject = true;
+						series4.tooltip.background.strokeWidth = 3;
+						
+						series4.strokeWidth = 2;
+						series4.stroke = am4core.color('#8a2be2');
+						series4.propertyFields.strokeDasharray = "dashLength";
+						
+						var series4Bullet = series4.bullets.push(new am4charts.CircleBullet());
+						series4Bullet.circle.fill = am4core.color("#fff");
+						series4Bullet.circle.strokeWidth = 2;
+						series4Bullet.circle.propertyFields.radius = "hca";
+						
+						var series4State = series4Bullet.states.create("hover");
+						series4State.properties.scale = 1.2;
+						
+						var series4Label = series4.bullets.push(new am4charts.LabelBullet());
+						series4Label.label.horizontalCenter = "left";
+						series4Label.label.dx = 14;
+
+						
+						//series4.tooltip.background.fill = am4core.color("#FFF");
+						//series4.tooltip.getFillFromObject = false;
+						//series4.tooltip.getStrokeFromObject = true;
+						//series4.tooltip.background.strokeWidth = 3;
+						//series4.sequencedInterpolation = true;
+						//series4.fillOpacity = 0.5;
+						//series4.defaultState.transitionDuration = 1000;
+						//series4.stacked = true;
+						//series4.strokeWidth = 1;
+						//series4.stroke = am4core.color('#54a164');
+						//var gradient3 = new am4core.LinearGradient();
+						//gradient3.addColor(am4core.color("#121212"));
+						//gradient3.addColor(am4core.color("#54a164")); 
+						//gradient3.rotation = 90; 
+						//series4.fill = gradient3;
+						// series4.tensionX = 0.8;
+						// series4.tensionY = 0.2;
+						
+						var series5 = chart.series.push(new am4charts.LineSeries());
+						series5.name = "서버 연결 수";
+						series5.dataFields.dateX = "time";
+						series5.dataFields.valueY = "tcc";
+						series5.yAxis = countAxis;
+						series5.tooltipText = "[#000]{valueY.value}[/]";
+						series5.tooltip.getFillFromObject = false;
+						series5.tooltip.getStrokeFromObject = true;
+						series5.tooltip.background.strokeWidth = 3;
+						
+						series5.stroke = am4core.color("#6495ED");
+						series5.strokeWidth = 2;
+						series5.propertyFields.strokeDasharray = "dashLength";
+						
+						var series5Bullet = series5.bullets.push(new am4charts.CircleBullet());
+						series5Bullet.circle.fill = am4core.color("#fff");
+						series5Bullet.circle.strokeWidth = 2;
+						series5Bullet.circle.propertyFields.radius = "tcc";
+						
+						var series5State = series5Bullet.states.create("hover");
+						series5State.properties.scale = 1.2;
+						
+						var series5Label = series5.bullets.push(new am4charts.LabelBullet());
+						//series5Label.label.text = "{tcc}";
+						series5Label.label.horizontalCenter = "left";
+						series5Label.label.dx = 14;
+
+						chart.cursor = new am4charts.XYCursor();
+						chart.cursor.xAxis = dateAxis;
+						chart.scrollbarX = new am4core.Scrollbar();
+
+						// 범례 추가
+						chart.legend = new am4charts.Legend();
+						chart.legend.position = "top";
+
+						// // 축 범위 설정
+						// var range = dateAxis.axisRanges.create();
+						// range.date = "00:10:00";
+						// range.endDate = "00:30:00";
+						// range.axisFill.fill = chart.colors.getIndex(7);
+						// range.axisFill.fillOpacity = 0.2;
+						// range.label.text = "과속 벌금 증가";
+						// range.label.inside = true;
+						// range.label.rotation = 90;
+						// range.label.horizontalCenter = "right";
+						// range.label.verticalCenter = "bottom";
+
+						// var range2 = dateAxis.axisRanges.create();
+						// range2.date = new Date(2007, 0, 1);
+						// range2.grid.stroke = chart.colors.getIndex(7);
+						// range2.grid.strokeOpacity = 0.6;
+						// range2.grid.strokeDasharray = "5,2";
+						// range2.label.text = "오토바이 수수료 도입";
+						// range2.label.inside = true;
+						// range2.label.rotation = 90;
+						// range2.label.horizontalCenter = "right";
+						// range2.label.verticalCenter = "bottom";
+					}); // end am4core.ready()
+
+				}).fail(function () {
+					toast('네트워크 또는 시스템 장애입니다.', 4000);
+				});
+			}
+
+			// 주어진 값을 메가바이트로 변환하는 함수
+			function convertToMegabytes(valueInBytes) {
+				return (valueInBytes / (1024 * 1024)).toFixed(2);
+			}
+			// 주어진 값을 기가바이트로 변환하는 함수
+			function convertToVol(valueInBytes) {
+				var megabytes = (valueInBytes / (1024 * 1024)).toFixed(2);
+
+				if (megabytes >= 1000) {
+					var gigabytes = (megabytes / 1000).toFixed(2);
+					return gigabytes + 'GB';
+				}
+
+				return megabytes + 'MB';
+			}
+
+			function convertTo24HourFormat(value) {
+				var hours = Math.floor(value);
+				var minutes = Math.round((value % 1) * 60);
+
+				// 시간과 분을 두 자리 숫자로 표기하기 위해 패딩(padding) 추가
+				var formattedHours = ("00" + hours).slice(-2);
+				var formattedMinutes = ("00" + minutes).slice(-2);
+
+				return formattedHours + ":" + formattedMinutes;
+			}
+			function convertSecondsToTime(seconds) {
+				var hours = Math.floor(seconds / 3600);
+				var minutes = Math.floor((seconds % 3600) / 60);
+				var remainingSeconds = Math.floor(seconds % 60);
+				var milliseconds = Math.floor((seconds % 1) * 1000).toFixed(2);
+				
+				
+				var formattedHours = ("00");
+				// 시간, 분, 초, 밀리초를 두 자리 숫자로 표기하기 위해 패딩(padding) 추가
+				if(hours < 100){
+					formattedHours = ("00" + hours).slice(-2);
+				}else{
+					formattedHours = hours;
+				}
+				
+				var formattedMinutes = ("00" + minutes).slice(-2);
+				var formattedSeconds = ("00" + remainingSeconds).slice(-2);
+				var formattedMilliseconds = ("000" + milliseconds).slice(-3);
+
+				// return formattedHours + ":" + formattedMinutes + ":" + formattedSeconds + ":" + formattedMilliseconds;
+				return formattedHours + ":" + formattedMinutes + ":" + formattedSeconds;
+			}
+			
+			function convertToComma(number) {
+			  return number.toLocaleString('en-US');
+			}
+		</script>
+
+</html>

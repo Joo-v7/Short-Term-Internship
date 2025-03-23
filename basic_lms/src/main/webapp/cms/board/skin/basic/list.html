@@ -1,0 +1,285 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<link rel="stylesheet" href="/assets/css/board.css">
+<style>
+.t_num {width:5%;}
+.t_date {width:12% ;}
+.t_title {width:auto}
+.t_user {width:10% ;}
+.t_file {width:5%;}
+.t_hit {width: 7%}
+
+.regist_tabs { display: inline-block;  margin: 0 auto; margin-bottom: 55px;  width: 100%; }
+.regist_tabs ul { max-width: 1500px; text-align: center;  border-top: 2px solid #e3e3e3; position: relative; margin: 0 auto; }
+.regist_tabs ul a {  color: #fff; cursor: pointer;  width: calc(100% / 5); float: left; border: 1px solid #2a2a2a; height: 64px; text-align: center; line-height: 61px; border-top: 0; transition: .25s ease-in-out;}
+.regist_tabs ul a.current { background: #26272c;}
+   
+.secret {background:url('/pages/kepco/img/sub/lock-ico.png') center no-repeat; margin-left:10px; width: 13px; height: 15px; display: inline-block;}
+.comment {background:url('/pages/kepco/img/sub/bubble-ico.png') center no-repeat; font-weight: 600; padding-left:17px; margin-left:10px;}
+
+.board_btn {display: flex; justify-content: space-between;}
+.board_btn > .left {display: flex; justify-content: flex-start;}
+.board_btn > .right {display: flex; justify-content: flex-end;}
+
+@media screen and (max-width: 1500px) {
+	.regist_tabs ul a {width: calc(100% / 6); height: 50px; line-height: 50px;}
+}
+
+@media screen and (max-width: 1000px) {
+	.regist_tabs ul a {width: calc(100% / 4);}
+	.t_hit {display: none;}
+}
+
+@media screen and (max-width: 900px) {
+	.t_file {display: none;}
+	.t_date {width:20% ;}
+}
+
+@media screen and (max-width: 800px) {
+	.regist_tabs ul a {width: calc(100% / 3);}
+	.t_date {width:28% ;}
+	
+}
+@media screen and (max-width: 600px) {
+	.regist_tabs ul a {width: calc(100% / 2); height: 40px; line-height: 40px; font-size: 14px;}
+	.t_user {display: none;}
+}
+
+@media screen and (max-width: 500px) {
+	.t_num {display: none;}
+	
+}
+@media screen and (max-width: 400px) {
+	.t_date {display: none;}
+	.t_date {display: none;}
+	
+}
+
+
+@media screen and (max-width: 300px) {
+	.regist_tabs ul a {width: 100%;}
+}
+
+a.anchor_disabled {pointer-events:none; cursor:default}
+</style>
+<div class="sub-container">
+
+<!-- 게시판 검색 영역 -->
+<div id="board_search">
+	<div class="board_search_form text-center">
+		<form id="board_search_form" action="" method="get">
+			<input type="hidden" name="site" th:value="${req?.site}"/>	 
+			<input type="hidden" name="mn" th:value="${req?.mn}"/> 
+			<input type="hidden" name="pageNum" th:value="${req?.pageNum}"/>
+			<input type="hidden" name="boardId" th:value="${req?.boardId}"/> 
+			<div class="input_box select float-none input_category">
+				<select name="scKey" title="검색분류" id="board_select_label" class="select_type">
+					<option value="title" th:selected="title == ${req.scKey}">제목</option>
+					<option value="content" th:selected="content == ${req.scKey}">내용</option>
+					<option value="name" th:selected="name == ${req.scKey}">작성자</option>
+				</select>
+			</div>
+			<div class="input_box search float-none">
+			<input type="text" title="검색어" name="scWord" id="search_keyword" class="search_keyword input_type" th:value="${req?.scWord}"/> 
+			<input type="submit" value="검색" title="검색" class="btn_serach">
+			</div>
+		</form>
+	</div>
+</div>
+<!-- //게시판 검색 영역 -->
+
+
+<th:block th:if="${#strings.equals(boardVo.boardUseCate, 'y')}">
+<div class="regist_tabs">
+	<ul>
+		<li class="tab-link">
+			<th:block th:if="${#strings.equals(req.cate, '')}">
+				<a class="current" th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${req?.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}">전체</a>
+			</th:block>
+			<th:block th:if="!${#strings.equals(req.cate, '')}">
+				<a th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${req?.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}">전체</a>
+			</th:block>
+		</li>
+		<!--/*	
+		<th:block th:each="catevo : ${catevo}">
+			<li><a th:if="${#strings.equals(req.cate, catevo.categoryValue)}" class="current" th:href="@{/cms/board/post/list/?site=kepco(mn = ${req?.mn}, boardId=${req?.boardId}, pageNum=${req?.pageNum}, scKey=${req.scKey}, scWord=${req.scWord}, cate=${catevo.categoryValue})}" th:text="${catevo.categoryValue}"></a></li>
+			<li><a th:if="!${#strings.equals(req.cate, catevo.categoryValue)}" th:href="@{/cms/board/post/list/?site=kepco(mn = ${req?.mn}, boardId=${req?.boardId}, pageNum=${req?.pageNum}, scKey=${req.scKey}, scWord=${req.scWord}, cate=${catevo.categoryValue})}" th:text="${catevo.categoryValue}"></a></li>
+		</th:block>
+		*/-->
+	</ul>
+</div>
+</th:block>
+
+<div id="list_total_count">
+	전체 : <strong th:text="${list?.total}"></strong>,
+	페이지 : <strong id="page_num" th:text="${list.pageNum}"></strong>/<span th:text="${#numbers.formatInteger(list.pages, 1, 'COMMA')}"></span>
+	
+	</div>
+
+	<div id="board_list">
+		<table>
+			<caption>[[${boardVo.boardName}]] 게시판의 게시물 목록으로 번호, 제목,작성자, 등록일, 첨부파일, 조회 현황 입니다.</caption>
+			<thead>
+				<tr>
+					<th scope="col" class="t_num">번호</th>
+					<th scope="col" class="t_title">제목</th>
+					<th scope="col" class="t_user">작성자</th>
+					<th scope="col" class="t_date">등록일</th>
+					<th scope="col" class="t_file" width="7%">첨부</th>
+					<th scope="col" class="t_hit" width="7%">조회</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="vo, voStatus: ${list}"
+					th:with="hasReadPermission=${boardPermission.read and (vo.postSecret == 'n' or (vo.postSecret == 'y' and (vo.insertIdx == memberDetailVo.memberIdx or boardPermission.isBoardAdmin)))}"
+				>
+					<td class="t_num" th:if="${vo.postNotice > 0}" style="color: #fff;font-weight: 600;">공지</td>
+					<td class="t_num" th:unless="${vo.postNotice > 0}" th:text="${list.total - ((list.pageNum - 1) * list.pageSize) - voStatus.index}"></td>
+					
+					<td class="txt_l">
+						<a 
+						th:href="@{/cms/board/post/view(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, postIdx=${vo.postIdx}, pageNum=${req?.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}"
+						th:classappend="${!hasReadPermission} ? 'anchor_disabled'"
+						>
+						<!--/* 답변글 깊이만큼 공백 추가 */-->
+						<th:block th:each="i: ${#numbers.sequence(1, vo.postGroupDepth)}">
+							&nbsp; &nbsp;
+						</th:block>
+						<!--/* 답변글 아이콘 */-->
+						<th:block th:if="${vo.postGroupDepth > 0}">
+							<img src="/pages/kepco/img/sub/ico_re.gif" style="padding-left: 2%;">
+						</th:block>
+						<th:block th:if="${vo.postCategory}">[[${vo.postCategory}]]</th:block>
+						<th:block th:if="${hasReadPermission}">
+						[[${vo.postTitle}]]
+						</th:block>
+						<th:block th:if="${!hasReadPermission && vo.postSecret == 'y'}">
+						비밀글 입니다.
+						</th:block>
+						</a>
+						
+						<!--/* 비밀글. 소유자, 관리자는 조회 가능 */-->
+						<th:block th:if="${vo.postSecret == 'y'}">
+							<span class="secret"></span>
+						</th:block>
+						
+						
+						<th:block th:if="${vo.postCommentCount > 0}">
+							<span class="comment"></span>
+							<span>[[${vo.postCommentCount}]]</span>
+						</th:block>
+					</td>
+					<td class="t_user" th:text="${vo.postSecret == 'y' && !hasReadPermission ? '○○○' : vo.postName}"></td>
+					<td class="t_date" th:text="${#dates.format(vo.insertDate, 'yyyy-MM-dd')}"></td>
+					<td class="t_file">
+						<th:block th:if="${vo.postFile > 0}">
+							<img alt="첨부파일 있음" src="/assets/img/icon_file.png">
+						<th:block>
+					</td>
+					<td class="t_hit" th:text="${vo.postHit}"></td>
+				</tr>
+				
+				<tr th:if="${#lists.isEmpty(list)}">
+					<td colspan="6" id="none_data">데이터가 존재하지 않습니다.</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<div id="paginate_complex" class="mt20 clear" th:if="${!#lists.isEmpty(list)}">
+			<p class="btn_page">
+			
+				<a 
+				class="first_back" 
+				th:classappend="${list.pageNum == 1} ? 'anchor_disabled'"
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=1, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">처음페이지</span>
+				</a>
+				
+				<a 
+				class="prev_back"
+				th:classappend="${list.pageNum == 1} ? 'anchor_disabled'" 
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pageNum-1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">이전페이지</span>
+				</a>
+				
+				<a th:each="i : ${#numbers.sequence(1, list.pages)}"
+				th:if="${i >= list.pageNum - 2 && i <= list.pageNum + 2}"
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${i}, scKey=${req.scKey}, scWord=${req.scWord})}"
+				th:text="${i}"
+				th:classappend="${list.pageNum == i} ? 'on'"
+				>
+				</a>
+				
+				<a 
+				class="next_back"
+				th:classappend="${list.pageNum >= list.pages} ? 'anchor_disabled'" 
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pageNum+1}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">다음페이지</span>
+				</a>
+				
+				
+				<a 
+				class="last_back" 
+				th:classappend="${list.pageNum >= list.pages} ? 'anchor_disabled'"
+				th:href="@{/cms/board/post/list(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pages}, scKey=${req.scKey}, scWord=${req.scWord})}">
+					<span class="hidden">마지막페이지</span>
+				</a>
+				
+			</p>
+		</div>
+		<div th:if="${boardPermission.write}" class="board_btn mt20">
+			<div class="right">
+				<a class="go_list"
+				th:href="@{/cms/board/post/form(site=${req?.site}, mn=${req?.mn}, boardId=${req?.boardId}, pageNum=${list.pageNum}, scKey=${req.scKey}, scWord=${req.scWord})}">쓰기
+				</a>
+			</div>
+		</div>
+		
+	</div>
+</div><!--// 페이지영역 -->
+
+
+<script>
+	
+	$( window ).ready(function() {
+		none_data_colspan();
+	});
+
+	$( window ).resize(function() {
+		none_data_colspan();
+	});
+
+	
+	// 데이터 없음 표시 반응형
+	function none_data_colspan(){
+		let windowWidth = $(window).width();
+		let none_data_e = $('#none_data');
+		if(windowWidth > 1000) {
+			none_data_e.attr('colspan', 6);
+		}
+		if(windowWidth <= 1000) {
+			none_data_e.attr('colspan', 5);
+		}
+		if(windowWidth <= 900) {
+			none_data_e.attr('colspan', 4);
+		}
+		if(windowWidth <= 600) {
+			none_data_e.attr('colspan', 3);
+		}
+		if(windowWidth <= 500) {
+			none_data_e.attr('colspan', 2);
+		}
+		if(windowWidth <= 400) {
+			none_data_e.attr('colspan', 1);
+		}
+	}
+	
+</script>
+</div>
+</th:block>
+

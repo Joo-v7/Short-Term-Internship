@@ -1,0 +1,52 @@
+<link rel="stylesheet" href="/assets/css/materialize.css?version=1607859447">
+<style>
+    #damages-area {background:transparent;position: absolute;}
+</style>
+<div class="top pop-title">
+    <div class="row">
+        <div style="float:left; margin-top: 6px; margin-left:5px;">
+            <a href="#" onclick="$('#map_modal').remove();return false;" class="btn grey lighten-1 waves-effect waves-light" name="action">닫기 </a>
+            <h4>이미지맵</h4>
+        </div>
+    </div>
+</div>
+<div  id='imageMapModalDiv' class="basic">
+    <div class="row">
+        <div class="col s9" style="width: 78% !important;">
+            <div id='imageMapCanvasDiv' style='background: grey; text-align: center;  width: 100%; height: 1050px;max-width: 100%; border-right: 1px solid black; float: left; overflow: auto;'>
+                <canvas id="damages-area" width=1500 style="border: 1px solid red"></canvas>
+                <img style="max-width: 100%" src="" alt="">
+            </div>
+        </div>
+        <div class="col s3" style="width: 20% !important;">
+            <div class="row col s12" style='margin-bottom: 10px;margin-top: 10px;'>
+                <button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" style="margin-right:10px" onclick='set_html();return false;'>저장</button>
+                <button class='btn waves-effect z-depth-0 red lighten-1 left'  style="margin-right:10px" onclick='del_option();return false;'>삭제</button>
+            </div>
+            <div class="row">
+                <select class='browser-default' style='    margin-top: 20px; width: 100%; height: 200px;' size='4' onclick='area_select();' id='imageMapAreas'></select>
+            </div>
+            <div class="row">
+                <div class="col s12" style='margin-bottom: 10px;'>
+                    <button class='waves-effect waves-light btn cyan accent-4 z-depth-0 left' style="margin-right:5px"  onclick='set_circle();return false;'>원형</button>
+                    <button class='waves-effect waves-light btn cyan accent-4 z-depth-0 left'  style="margin-right:5px" onclick='set_rect();return false;'>사각형</button>
+                </div>
+                <div>원형, 사각형 선택후 이미지의 맵을 입력하고자 하는 곳에 클릭 하십시오.</div>
+                <div class="col s12">
+                    <div style='display: block; border: none;' id='imageMapRegionEdit'><br/>
+                        url: <input type="text" id="imageMapHref" style="width:190px;"><br/>
+                        title: <input type='text' id='imageMapTitle' style='width: 190px;'><br/>
+                        alt: <input type='text' id='imageMapAlt' style='width: 190px;'><br/>
+                        taget: <select name="mapTarget" id="mapTarget" style="display: block">
+                            <option value="_blank">_blank</option>
+                            <option value="_self">_self</option>
+                            <option value="_parent">_parent</option>
+                            <option value="_top">_top</option>
+                        </select>
+                        <button class='waves-effect waves-light btn cyan accent-4 z-depth-0 left' style="margin-right:5px"  onclick='set_option();return false;'>입력</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<script>
+    $(function () {
+        var evIdx = `[[${req.evIdx}]]`;
+        var memberIdx = `[[${req.memberIdx}]]`;
+        var detailIdx = `[[${req.detailIdx}]]`;
+
+        answeredList(evIdx, detailIdx, memberIdx);
+
+        $("#evaluation_search_form").submit(function (e) {
+            validateForm();
+            e.preventDefault();
+            var $frm = $(this);
+
+            var form = document.getElementById("evaluation_search_form");
+            if (form.getAttribute("data-submitted") === "true") {
+                return false; // 이미 제출된 경우 더 이상 제출을 허용하지 않음 더블클릭 방지
+            }
+            form.setAttribute("data-submitted", "true");
+
+            $.ajax({
+                type: "post",
+                url: $frm.attr("action"),
+                data: $frm.serialize(),
+                contentType: "application/x-www-form-urlencoded",
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+                },
+            }).done(function (data) {
+                if (data.code == 0) {
+                    toast('저장되었습니다.');
+                    evqrForm(memberIdx);
+                    studentList(detailIdx);
+                    form.setAttribute("data-submitted", "false");
+                } else {
+                    toast(data.message);
+                }
+            }).fail(function (xhr) {
+                if (typeof xhr.responseJSON.message != "undefined") {
+                    toast(xhr.responseJSON.message);
+                }
+            });
+        });
+
+        $("input:checkbox[name^='evqrText']").change(function () {
+            var evqIdx = $(this).data("evq_idx");
+            var dataIdx = $(this).data("data_text");
+            var myInputName = "clientAnswer" + evqIdx
+            var myInput = $("input[name='" + myInputName + "']");
+            var myInputVal = myInput.val();
+            var addData = $(this).val();
+
+            if ($(this).is(":checked")) {
+                if (!myInputVal) {
+                    myInput.val(addData);
+                } else {
+                    myInput.val(myInputVal + "," + addData);
+                }
+            } else {
+                var myInputValList = myInputVal.split(",");
+                for (var i = 0; i < myInputValList.length; i++) {
+                    if (myInputValList[i] == addData) {
+                        myInputValList.splice(i, 1);
+                    }
+                }
+                myInput.val(myInputValList.join(","));
+            }
+        });
+    });
+
+    function evaluationSubmit() {
+        $("#evaluation_search_form").submit();
+    }
+
+    function answeredList(evIdx, detailIdx, memberIdx) {
+        $.ajax({
+            url: gblAdminPath + '/lms/evaluation/review/answeredList?memberIdx=' + memberIdx + '&detailIdx=' + detailIdx + '&evIdx=' + evIdx,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $.each(data.data.list, function (index, item) {
+                if (item.textYn == "Y") {
+                    var inputName = "evqrText" + item.evqIdx;
+                    var inputElement = $('textarea[name="' + inputName + '"]');
+                    var inputElementText = $('input[name="' + inputName + '"]');
+                    inputElement.val(item.answer);
+                    inputElementText.val(item.answer);
+                    if(item.evqType == 'D') {
+                        var correct = item.correctYn
+                        var radioElem = $("input:radio[name='answerGroup']");
+
+                        radioElem.each(function(idx, elem) {
+                            if($(elem).val() == correct) {
+                                $(elem).attr("checked", true);
+                            }
+                        });
+                    }
+                } else {
+                    var name = "evqrText" + item.evqIdx;
+                    var value = item.answer;
+                    var clientAnswer = $("input[name='clientAnswer" + item.evqIdx + "']");
+                    $(clientAnswer).val(value);
+                    setChecked(name, value);
+                }
+
+            });
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        })
+    }
+
+    function setChecked(name, value) {
+        var checkElem = document.getElementsByName(name);
+
+        var answerList = value.split(",");
+
+        for (var i = 0; i < checkElem.length; i++) {
+            var inputValue = $(checkElem[i]).val();
+            if (answerList.includes(inputValue)) {
+                $(checkElem[i]).attr("checked", true);
+            }
+        }
+    }
+
+    function validateForm() {
+        // 현재 폼에 대한 참조
+        var form = document.forms[0];
+
+        // 모든 필수 입력 필드에 대해 반복
+        var requiredFields = form.querySelectorAll('[required]');
+        for (var i = 0; i < requiredFields.length; i++) {
+            var field = requiredFields[i];
+
+            if (field.value.trim() === '') {
+                // 필수 입력 필드가 비어 있으면 경고를 표시하고 제출을 중지
+                toast('필수항목을 확인해주세요.');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+</script>
+
+
+<div class="row pd_box m0">
+    <div class="top_btn_list">
+        <ul>
+            <li class="input-field col select_m0">
+                <button class="btn waves-effect waves-light  blue-grey darken-4" onclick="evaluationSubmit()"
+                        type="submit" value="저장">
+                    <i class="material-icons left">check</i>
+                    저장
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="evaluation_bg_w scroller bg_lightblue" style="max-height: calc(100vh - 216px);">
+        <form id="evaluation_search_form"
+              th:action="@{/{adminPath}/lms/evaluation/review/evaluationSave(adminPath=${@environment.getProperty('global.admin-path')})}"
+              method="post">
+            <input type="hidden" name="detailIdx" th:value="${req?.detailIdx}"/>
+            <input type="hidden" name="evIdx" th:value="${req?.evIdx}"/>
+            <!-- 			<input type="hidden" name="playIdx" th:value="${req?.playIdx}" />-->
+            <input type="hidden" name="memberIdx" th:value="${req?.memberIdx}"/>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <!-- <div class="scon-tit" >
+                <h2 class="h2_butt mb10">만족도 조사 결과 - [[${vo.evSubject}]]([[${vo2.trainTitle}]])</h2>
+                <span class="tit-red">* 필수항목</span>
+            </div> -->
+
+            <ul class="evaluation_bg">
+                <li class="review_result_list_box" th:each="list, listState : ${list}">
+                    <h5 class="poll_title review_result_list_title">
+                        <span>[[${listState.count}]].</span>
+                        [[${list.evqSubject}]]
+
+                        <th:block th:if="${list.evqType == 'D'}">
+                            <div class="row" style="margin-top: 10px;">
+                                <label>
+                                    <input type="radio" value="Y" name="answerGroup">
+                                    <span>정답</span>
+                                </label>
+                                <label>
+                                    <input type="radio" value="N" name="answerGroup">
+                                    <span>오답</span>
+                                </label>
+                            </div>
+                        </th:block>
+                    </h5>
+
+                    <ul class="select_evaluation" th:if="${list.evqType == 'A'}"> <!--객관식-->
+                        <input type="hidden" th:name="|clientAnswer${list.evqIdx}|" value="">
+                        <li th:each="selectdetail, detailState : ${selectdetail}"
+                            th:if="${selectdetail.evqIdx} == ${list.evqIdx}"
+                        >
+                            <label th:for="|view_evqd_idx_${selectdetail.evqdIdx}|" class="active">
+                                <input
+                                        type="checkbox"
+                                        class="filled-in"
+                                        th:id="|view_evqd_idx_${selectdetail.evqdIdx}|"
+                                        th:name="|evqrText${list.evqIdx}|"
+                                        th:value="${selectdetail.evqdIdx}"
+                                        th:data-evq_idx="${list.evqIdx}"
+                                        th:data-data_text="${selectdetail.evqdText}"
+                                >
+                                <span>[[${selectdetail.evqdText}]]</span>
+                            </label>
+                        </li>
+                    </ul>
+
+                    <div class="input-field col s12 m0 p0">
+                        <input type="text" th:id="|evqr_input${list.evqIdx}|" th:name="|evqrText${list.evqIdx}|"
+                               value="" th:if="${list.evqType == 'B'}" required/> <!--단답형-->
+                    </div>
+                    <div class="input-field col s12 m0 p0">
+                        <input type="text" th:id="|evqr_input${list.evqIdx}|" th:name="|evqrText${list.evqIdx}|"
+                               value="" th:if="${list.evqType == 'C'}" required/> <!--주관식-->
+                    </div>
+                    <div class="input-field col s12 m0 p0">
+                        <textarea th:id="|evqr_input${list.evqIdx}|" th:name="|evqrText${list.evqIdx}|"
+                                  class="materialize-textarea mt0" style="height: 72px;" th:if="${list.evqType == 'D'}"
+                                  required></textarea> <!--서술형-->
+                    </div>
+                </li>
+            </ul>
+        </form>
+    </div>
+</div>

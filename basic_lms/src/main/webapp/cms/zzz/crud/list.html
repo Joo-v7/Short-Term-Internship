@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<head>
+    <link th:href="@{'/cms/static/css/default.css'}" rel="stylesheet"/>
+    <script src="//code.jquery.com/jquery-3.6.1.min.js"></script>
+    <script>
+    $(function() {
+        
+        $.ajax({
+            url : "[[@{'/cms/zzz/crud/listData'}]]",
+            data : "[[${T(kepco.util.WebUtil).toQueryString(req)}]]",
+            dataType : "html",
+            beforeSend: function() {
+                console.log("beforeSend");
+            },
+            complete: function() {
+                console.log("complete");
+            },
+        }).done(function(data) {
+            console.log("done");
+            $("#listData").html(data);
+        }).fail(function(xhr, status, error) {
+            console.log("fail");
+            $("#listData").text("에러");
+        }).always(function(xhr, status, error) {
+        	console.log("always");
+        });
+    })
+    </script>
+</head>
+<body>
+
+<div th:each="v : ${req}">
+    [[${v.key}]] : [[${v.value}]]
+</div>
+
+<hr/>
+<div id="listData"></div>
+<hr/>
+
+<a href="form">등록</a>
+
+</body>
+</html>

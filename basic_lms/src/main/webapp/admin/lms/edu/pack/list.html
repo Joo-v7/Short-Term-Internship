@@ -1,0 +1,213 @@
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+<style>
+.nested-list-content input { 
+	width: 95% !important;
+    border: 0 none !important;
+}
+.pack_order2 { display: inline-block; background:red;   color: #fff;  padding: 0 10px;  position: relative;  left: -10px;}
+</style>
+<form id="pack_form">
+	<input type="hidden" id="eduidx" th:value="${req.eduIdx}">
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+</form>
+
+<div class="row m0">
+<!-- 	<label for="">모듈</label> -->
+	<span class="text_cnt_box"><i class="material-icons small" style="margin-bottom:-2px; margin-right:10px;">info</i>모듈을 추가하여 콘텐츠를 구성할 수 있습니다.</span>
+	<div class="" style="margin-left: auto; float:right;">
+		<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" style="background: #00b8d4 !important; " href="#" th:onclick="set_module_list([[${req.eduIdx}]]); return false;">
+			<i class="material-icons left">create</i>
+			모듈 추가
+		</a>
+	</div>
+</div>
+
+<!-- <div class="scroll_box list mb20"> -->
+<div class=" list">
+	<table id="pack_ul" class="dd p0">
+		
+	</table>
+</div>
+
+
+
+<script>
+$(function() {
+	eduidx = $('#eduidx').val();
+	pack_ul(eduidx);
+	
+	$('#pack_ul').nestable({
+	  maxDepth: 1, //1개까지만
+	  dropCallback: function(details) {
+		var order = new Array();
+
+		$('li[data-id=\'' + details.destId + '\']').find('ol:first').children().each(function(index, elem) {
+		  order[index] = $(elem).attr('data-id');
+		});
+		
+
+		if (order.length === 0) {
+		  var order = new Array();
+		  $('#pack_ul > ol > li').each(function(index, elem) {
+			order[index] = $(elem).attr('data-id');
+		  });
+		}
+		
+		// don't post if nothing changed
+		var data_id = window.location.hostname + '.nestable';
+		var drag_data = JSON.stringify($('#pack_ul').nestable('serialize'));
+		var storage_data = localStorage.getItem(data_id);
+
+		if (drag_data === storage_data) {
+		  return false;
+		}
+		localStorage.setItem(data_id, drag_data);
+		
+		csrf = $('#csrf').val();
+		
+		$.post(gblAdminPath+'/lms/edu/pack/packChange',
+			{
+			  sourceId: details.sourceId,
+			  destinationId: details.destId,
+			  order: order,
+			  _csrf:csrf,
+			},
+			function(result) {
+			  pack_ul(eduidx);
+			  toast('정상적으로 처리되었습니다.', 3000);
+			},
+			'json'
+		).fail(function(result) {
+		  toast('시스템 오류로 처리할 수 없습니다.', 3000);
+		});
+	  },
+	});
+
+});
+
+
+function packDelete(packIdx) {
+	
+	if(confirm("모듈을 삭제하시겠습니까?")){
+		
+		if (!packIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.ajax({
+			url  : gblAdminPath + '/lms/edu/pack/delete',
+			type : 'get',
+			data : {
+				'packIdx' : packIdx
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				pack_ul(eduidx);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function() {
+			toast('시스템 오류로 처리할 수 없습니다.');
+		});
+	}
+}
+
+function set_edu_detail_del(packIdx,eduIdx){
+	
+	csrf = $('#csrf').val();
+	$.confirm({
+		theme: 'supervan', // 'material', 'bootstrap'
+		title: '문항삭제',
+		content: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+		buttons: {
+		  확인: function() {
+			$.ajax({
+			  url: gblAdminPath+'/lms/edu/pack/eduDetailDelete',
+			  type: 'POST',
+			  data: {'packIdx': packIdx,'eduIdx':eduIdx,'_csrf':csrf},
+			  dataType: 'json',
+			}).done(function (d) {
+				$('#pack_detail').html('');
+
+				var order = new Array();
+				if (order.length === 0) {
+				  var order = new Array();
+				  i = 0;
+				  $('#pack_ul > ol > li').each(function(index, elem) {
+					if($(elem).attr('data-id') != packIdx){
+						order[i] = $(elem).attr('data-id');
+						i++;
+					}
+				  });
+				}
+				
+				$.post(gblAdminPath+'/lms/edu/pack/packChange',
+					{
+					  order: order,
+					  _csrf:csrf,
+					},
+					function(result) {
+					  pack_ul(eduIdx);
+					  toast("삭제완료", 3000);
+					},
+					'json'
+				).fail(function(result) {
+				  toast(result.message, 3000);
+				});
+				
+			}).fail(function () {
+			  toast('네트워크 또는 시스템 장애입니다.', 4000);
+			});
+		  },
+		  취소: function() {}
+		}
+	});
+
+}
+
+function pack_ul(eduIdx) {
+	if (!eduIdx) {
+	  eduIdx = '';
+	}
+	$.ajax({
+	  url: gblAdminPath +'/lms/edu/pack/eduModuleList?eduIdx=' + eduIdx,
+	  type: 'GET',
+	  dataType: 'html',
+	}).done(function (data) {
+		$('#pack_ul').html(data);
+	}).fail(function () {
+	  toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+  }
+  
+function pack_save(eduIdx,packIdx){
+	csrf = $('#csrf').val();
+	
+	var order = new Array();
+	if (order.length === 0) {
+	  var order = new Array();
+	  i = 0;
+	  $('#pack_ul > ol > li').each(function(index, elem) {
+		order[index] = $(elem).attr('data-id');
+	  });
+	}
+	maxOrder = order.length+1;
+	
+	$.ajax({
+		url: gblAdminPath +'/lms/edu/pack/eduQsonSave',
+		type: 'POST',
+		data: {'eduIdx': eduIdx, '_csrf':csrf,'packIdx':packIdx, 'packOrder':maxOrder,},
+		dataType: 'json',
+	}).done(function (d) {
+		pack_ul(eduIdx);
+		$('#pack_ul').animate({scrollTop: $("#pack_ul")[0].scrollHeight}, 300);
+		toast('저장완료');
+	}).fail(function () {
+		toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+}
+</script>

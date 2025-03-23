@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.board.post.file.FileMapper">
+
+	<sql id="selectWhere">
+		<where>
+			a.delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					file_origin_name LIKE CONCAT ('%',#{scWord},'%') 
+					OR file_memo LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scBoardIdx)">
+				AND board_idx = #{scBoardIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.board.post.file.FileVo">
+		SELECT
+			@RNUM := @RNUM + 1 AS rn, a.*, b.board_name, c.post_title,c.post_name
+		FROM cms_board_post_file a
+		left join cms_board b
+        on a.board_idx = b.board_idx
+        left join cms_board_post c
+        on a.post_idx = c.post_idx, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				rn DESC,
+				file_idx DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.board.post.file.FileVo">
+		SELECT *
+		FROM cms_board_post_file
+		WHERE
+			delete_yn = 'n'
+			AND file_idx = #{fileIdx}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.board.post.file.FileVo" useGeneratedKeys="true" keyProperty="fileIdx" keyColumn="fileIdx">
+		INSERT INTO cms_board_post_file (
+			file_idx,post_idx,board_idx,board_id,file_origin_name,file_save_name,file_download,file_filesize,file_width,file_height,
+			file_type,file_is_image,file_memo,file_sort,file_thumb_src,file_hidden,file_trust,file_view,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{fileIdx},#{postIdx},#{boardIdx},#{boardId},#{fileOriginName},#{fileSaveName},#{fileDownload},#{fileFilesize},#{fileWidth},#{fileHeight},
+			#{fileType},#{fileIsImage},#{fileMemo},#{fileSort},#{fileThumbSrc},#{fileHidden},#{fileTrust},#{fileView},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.board.post.file.FileVo">
+		UPDATE cms_board_post_file
+		<set>
+			file_origin_name=#{fileOriginName},
+			file_save_name=#{fileSaveName},
+			file_download=#{fileDownload},
+			file_filesize=#{fileFilesize},
+			file_width=#{fileWidth},
+			file_height=#{fileHeight},
+			file_type=#{fileType},
+			file_is_image=#{fileIsImage},
+			file_memo=#{fileMemo},
+			file_sort=#{fileSort},
+			file_thumb_src=#{fileThumbSrc},
+			file_hidden=#{fileHidden},
+			file_trust=#{fileTrust},
+			file_view=#{fileView},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP,
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND file_idx = #{fileIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.cms.board.post.file.FileVo">
+		UPDATE cms_board_post_file
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND file_idx = #{fileIdx}
+	</update>
+	
+	<update id="fileadd" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post
+		<set>
+			post_file = IFNULL(post_file,0)+1
+		</set>
+		WHERE post_idx = #{postIdx}
+	</update>
+	
+	<update id="filedelete" parameterType="kepco.cms.board.post.PostVo">
+		UPDATE cms_board_post
+		<set>
+			post_file = IFNULL(post_file,0)-1
+		</set>
+		WHERE post_idx = #{postIdx}
+	</update>
+	
+	<update id="deleteListByPostIdx" parameterType="map">
+		UPDATE cms_board_post_file
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND post_idx = #{postIdx}
+	</update>
+	
+	
+	
+</mapper>

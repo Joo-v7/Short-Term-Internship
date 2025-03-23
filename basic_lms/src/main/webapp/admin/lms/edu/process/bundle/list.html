@@ -1,0 +1,237 @@
+<link href="/assets/css/nestable2.css" type="text/css" rel="stylesheet">
+<script src="/assets/js/nestable2.js"></script>
+<style>
+.nested-list-content input { 
+	width: 95% !important;
+	border: 0 none !important;
+}
+.bundle_order2 { display: inline-block; background:red;   color: #fff;  padding: 0 10px;  position: relative;  left: -10px;}
+#bundle_ul {height: 100%; overflow-y: auto; padding: 10px 0 20px;}
+</style>
+<form id="bundle_form">
+	<input type="hidden" id="moduleIdx" th:value="${req.moduleIdx}">
+	<input type="hidden" id="csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+</form>
+
+<div class="row m0">
+<!-- 	<label for="">절차</label> -->
+<!-- 	<span class="text_cnt_box"><i class="material-icons small" style="margin-bottom:-2px; margin-right:10px;">info</i>절차를 추가하여 절차를 구성할 수 있습니다.</span> -->
+<!-- 	<div class="" style="margin-left: auto; float:right;"> -->
+<!-- 		<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" style="background: #00b8d4 !important; " href="#" th:onclick="set_process_list([[${req.moduleIdx}]]); return false;"> -->
+<!-- 			<i class="material-icons left">create</i> -->
+<!-- 			절차 추가 -->
+<!-- 		</a> -->
+<!-- 	</div> -->
+</div>
+
+<!-- <div class="scroll_box list mb20"> -->
+<div class=" list">
+	<div id="bundle_ul" class="dd ">
+		
+	</div>
+</div>
+
+
+
+<script>
+$(function() {
+	moduleIdx = $('#moduleIdx').val();
+	bundle_ul(moduleIdx);
+	
+// 	$('#bundle_ul').nestable({
+// 	  maxDepth: 1, //1개까지만
+// 	  dropCallback: function(details) {
+// 		var order = new Array();
+
+// 		$('li[data-id=\'' + details.destId + '\']').find('ol:first').children().each(function(index, elem) {
+// 		  order[index] = $(elem).attr('data-id');
+// 		});
+		
+
+// 		if (order.length === 0) {
+// 		  var order = new Array();
+// 		  $('#bundle_ul > ol > li').each(function(index, elem) {
+// 			order[index] = $(elem).attr('data-id');
+// 		  });
+// 		}
+		
+// 		// don't post if nothing changed
+// 		var data_id = window.location.hostname + '.nestable';
+// 		var drag_data = JSON.stringify($('#bundle_ul').nestable('serialize'));
+// 		var storage_data = localStorage.getItem(data_id);
+
+// 		if (drag_data === storage_data) {
+// 		  return false;
+// 		}
+// 		localStorage.setItem(data_id, drag_data);
+		
+// 		csrf = $('#csrf').val();
+		
+// 		$.post(gblAdminPath+'/lms/edu/process/bundle/orderChange',
+// 			{
+// 			  sourceId: details.sourceId,
+// 			  destinationId: details.destId,
+// 			  order: order,
+// 			  _csrf:csrf,
+// 			},
+// 			function(result) {
+// 			  bundle_ul(moduleIdx);
+// 			  toast('정상적으로 처리되었습니다.', 3000);
+// 			},
+// 			'json'
+// 		).fail(function(result) {
+// 		  toast('시스템 오류로 처리할 수 없습니다.', 3000);
+// 		});
+// 	  },
+// 	});
+
+});
+
+
+function bundleDelete(bundleIdx) {
+	
+	if(confirm("절차를 삭제하시겠습니까?")){
+		
+		if (!bundleIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.ajax({
+			url  : gblAdminPath + '/lms/edu/process/bundle/delete',
+			type : 'get',
+			data : {
+				'bundleIdx' : bundleIdx
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				bundle_ul(moduleIdx);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function() {
+			toast('시스템 오류로 처리할 수 없습니다.');
+		});
+	}
+}
+
+function set_process_list(moduleIdx) {
+
+	if (moduleIdx == null) {
+		alert("저장 후 추가가능합니다.");
+		return false;
+	}
+
+	$.ajax({
+		url: gblAdminPath + '/lms/edu/process/bundle/processList?moduleIdx=' + moduleIdx,
+		type: 'get',
+		dataType: 'html',
+	}).done(function (data) {
+		$('#pop_modal5').html(data);
+
+		var staff_modal = $("#pop_modal5").modal();
+		staff_modal.modal('open');
+		$('#pop_modal5').css({'height': '80%', 'width': '70%', 'overflow-y': 'scroll'});
+
+	}).fail(function () {
+		toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+	return false;
+}
+// function set_edu_detail_del(bundleIdx,moduleIdx){
+	
+// 	csrf = $('#csrf').val();
+// 	$.confirm({
+// 		theme: 'supervan', // 'material', 'bootstrap'
+// 		title: '문항삭제',
+// 		content: '한번 삭제한 자료는 복구가 불가능합니다. <br /> 삭제 하시겠습니까?',
+// 		buttons: {
+// 		  확인: function() {
+// 			$.ajax({
+// 			  url: gblAdminPath+'/lms/edu/process/bundle/eduDetailDelete',
+// 			  type: 'POST',
+// 			  data: {'bundleIdx': bundleIdx,'moduleIdx':moduleIdx,'_csrf':csrf},
+// 			  dataType: 'json',
+// 			}).done(function (d) {
+// 				$('#bundle_detail').html('');
+
+// 				var order = new Array();
+// 				if (order.length === 0) {
+// 				  var order = new Array();
+// 				  i = 0;
+// 				  $('#bundle_ul > ol > li').each(function(index, elem) {
+// 					if($(elem).attr('data-id') != bundleIdx){
+// 						order[i] = $(elem).attr('data-id');
+// 						i++;
+// 					}
+// 				  });
+// 				}
+				
+// 				$.post(gblAdminPath+'/lms/edu/process/bundle/orderChange',
+// 					{
+// 					  order: order,
+// 					  _csrf:csrf,
+// 					},
+// 					function(result) {
+// 					  bundle_ul(moduleIdx);
+// 					  toast("삭제완료", 3000);
+// 					},
+// 					'json'
+// 				).fail(function(result) {
+// 				  toast(result.message, 3000);
+// 				});
+				
+// 			}).fail(function () {
+// 			  toast('네트워크 또는 시스템 장애입니다.', 4000);
+// 			});
+// 		  },
+// 		  취소: function() {}
+// 		}
+// 	});
+
+// }
+
+function bundle_ul(moduleIdx) {
+	if (!moduleIdx) {
+	  moduleIdx = '';
+	}
+	$.ajax({
+	  url: gblAdminPath +'/lms/edu/process/bundle/bundleList?moduleIdx=' + moduleIdx,
+	  type: 'GET',
+	  dataType: 'html',
+	}).done(function (data) {
+		$('#bundle_ul').html(data);
+	}).fail(function () {
+	  toast('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+  }
+  
+// function bundle_save(moduleIdx,bundleIdx){
+// 	csrf = $('#csrf').val();
+	
+// 	var order = new Array();
+// 	if (order.length === 0) {
+// 	  var order = new Array();
+// 	  i = 0;
+// 	  $('#bundle_ul > ol > li').each(function(index, elem) {
+// 		order[index] = $(elem).attr('data-id');
+// 	  });
+// 	}
+// 	maxOrder = order.length+1;
+	
+// 	$.ajax({
+// 		url: gblAdminPath +'/lms/edu/process/bundle/eduQsonSave',
+// 		type: 'POST',
+// 		data: {'moduleIdx': moduleIdx, '_csrf':csrf,'bundleIdx':bundleIdx, 'processOrder':maxOrder,},
+// 		dataType: 'json',
+// 	}).done(function (d) {
+// 		bundle_ul(moduleIdx);
+// 		$('#bundle_ul').animate({scrollTop: $("#bundle_ul")[0].scrollHeight}, 300);
+// 		toast('저장완료');
+// 	}).fail(function () {
+// 		toast('네트워크 또는 시스템 장애입니다.', 4000);
+// 	});
+// }
+</script>

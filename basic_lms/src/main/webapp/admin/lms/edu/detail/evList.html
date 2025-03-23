@@ -1,0 +1,220 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<th:block layout:fragment="content">
+<script>
+	$(function () {
+		get_ev_list();
+		// 검색
+		$("#search_ev_submit").click(function () {
+		  setTimeout(function () {
+			var formData = $("#search_ev_submit").serialize();
+			get_ev_list(formData);
+		  }, 40);
+	
+		  return false;
+		});
+	});
+	
+	function ev_onSubmit() {
+		var param = $("#search_ev_submit").serialize();
+		get_ev_list(param);
+	  }
+
+	
+	function select(idx,name) {
+		$("#evIdx").val(idx);
+		$("#evSubject").val(name);
+	
+		var staff_modal = $("#pop_modal").modal();
+		staff_modal.modal('close');
+	}
+
+	
+	// 목록
+	function get_ev_list(formData) {
+		
+		let today = new Date();   
+		let year = today.getFullYear(); // 년도
+		let month = today.getMonth() + 1;  // 월
+		let date = today.getDate();  // 날짜
+		let day = today.getDay();  // 요일
+		
+		let hours = today.getHours();  // 시간
+		let minutes = today.getMinutes();
+		
+		if(hours < 10){
+			hours = '0'+hours;
+		}else{
+			hours = hours;
+		}
+		
+		if(month < 10){
+			month = '0'+month;
+		}else{
+			month = month;
+		}
+		
+		if(date < 10){
+			date = '0'+date;
+		}else{
+			date = date;
+		}
+		
+		if(hours < 10){
+			hours = '0'+hours;
+		}else{
+			hours = hours;
+		}
+		
+		if(minutes < 10){
+			minutes = '0'+minutes;
+		}else{
+			minutes = minutes;
+		}
+		
+		to = year+'-'+month+'-'+date+' '+hours+':'+minutes+':00';
+		
+		ev_table = $('#ev_table').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			resevnsive : true,
+			processing : true,
+			ordering : true,
+			select : false,
+			paging : true,
+			pageLength : 10,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/evaluation/listJson?'+formData,
+					dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			initComplete: function(settings, json) {
+	             if (ev_table) {
+	                 $('#evTableTotCnt').text(ev_table.data().count() + ' 건');
+	                 // 최대 10000건 알림
+	                 if (ev_table.data().count() == 10000) {
+	                     alert('원활한 검색을 위해 최대 10,000건으로 제한합니다.');
+	                 }
+	             }
+	         },
+			columns : [
+				{ data : 'evSubject', className : '' },
+				{ data : 'detailCount', className : 'dt-body-center' },
+				{ data : 'evUseState', className : 'dt-body-center', render: $.fn.dataTable.render.yn() },
+// 				{
+// 				  data: 'evUseState', className:'center click',
+// 					render: function(data, type, full, meta) {
+// 						if(data == 'Y'){
+// 							if(to <= full.evStartDate+' '+full.evStartTime){
+// 								return '대기';
+// 							 }else if(to >= full.evEndDate+' '+full.evEndTime){
+// 								 return '마감';
+// 							 }else{
+// 								 return '진행';
+// 							 }
+// 						}else{
+// 							return '<i style=" color: red;" class="material-icons">close</i>';
+// 						}
+// 					},
+// 				},
+// 				{
+// 				  data: 'evStartDate', className:'center click',
+// 					render: function(data, type, full, meta) {
+// 						return data+' '+full.evStartTime+'<br />'+full.evEndDate+' '+full.evEndTime;
+						
+// 					},
+// 				},
+// 				{
+// 				  data: 'evStartDate', className:'center click',
+// 					render: function(data, type, full, meta) {
+// 						return '0명';
+						
+// 					},
+// 				},
+				{
+				  data: 'evIdx', className:'center',
+					render: function(data, type, full, meta) {
+						return '<button onclick="select('+full.evIdx+',\''+full.evSubject+'\');" class="waves-effect waves-light btn-small cyan accent-4 z-depth-0 ">선택</button>';
+					},
+				},
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+// 	function dataTableInit(settings, json) {
+// 		$('#evTableTotCnt').text( $('#evTable').DataTable().data().count());
+// 		if ($('#evTable').DataTable().data().count() == 10000) {
+// 			toast('데이터 조회를 10,000건으로 제한합니다.');
+// 		}
+// 	}
+	
+</script>
+
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light" name="action"><i class="material-icons">clear</i></a>
+			</div>
+		</div>
+	</div>
+
+	<div>
+		<div class="row">
+			<!-- // 그룹 -->
+			<div class="col s12 pd_box">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<div class="row">
+							<form id="search_ev_submit" method="get">
+								<!-- 검색창 -->
+								<div class="col search_bar">
+									<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+									<button type="button" onclick="get_ev_list();" class="waves-effect waves-light btn cyan accent-4 z-depth-0 left">
+	 									<i class="material-icons md-18 left">search</i> 검색
+									</button>
+									<div class="title left">
+										전체 : <b id="evTableTotCnt">0</b>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="table_type3">
+						<table id="ev_table" class="striped centered highlight">
+		                <thead>
+		                <tr>
+		                    <th width="*">사후평가명</th>
+							<th width="80px">과정수</th>
+							<th width="80px">사용</th>
+							<th width="80px">기능</th>
+		                </tr>
+		                </thead>
+		                <tbody>
+		
+		                </tbody>
+            </table>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>	
+	
+</html>

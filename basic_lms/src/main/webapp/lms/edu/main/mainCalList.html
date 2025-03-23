@@ -1,0 +1,123 @@
+<script th:inline="javascript">
+	
+	function displayToggle(is){
+		if($(`#${is.id}`).children()[0].style.display == 'none'){
+			$(`#${is.id}`).children()[0].style.display = 'block';
+		}else{
+			$(`#${is.id}`).children()[0].style.display = 'none';
+		}
+	}
+
+	function fncCalendar(is){
+		$.ajax({
+			url: is,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#mcdw').html(data);
+		}).fail(function () {
+		});
+	}
+</script>
+
+<div class="mcd">
+	<div id="calendar" class="calendar">
+		<div class="calendar_header">
+			<a class="btn-prev fontawesome-angle-left" th:href="|/lms/edu/mainCalList?selDate=${prevYear}${prevMon lt 10 ? '0'+prevMon : prevMon}|" onclick="fncCalendar(this.href);return false;"><i class="fa-solid fa-angle-left"></i></a>
+		    <h2><span class="year">[[${nowYear}]].[[${nowMon lt 10 ? "0"+nowMon: nowMon}]]</span></h2>
+			<a class="btn-next fontawesome-angle-right" th:href="|/lms/edu/mainCalList?selDate=${nextYear}${nextMon lt 10 ? '0'+nextMon : nextMon}|" onclick="fncCalendar(this.href);return false;"><i class="fa-solid fa-angle-right"></i></a>
+		</div>
+				
+		<th:block th:if="${cal} != null">
+		<table>
+			<thead>
+				<tr>
+					<td class="sun">일</td>
+					<td>월</td>
+					<td>화</td>
+					<td>수</td>
+					<td>목</td>
+					<td>금</td>
+					<td class="sat">토</td>
+				</tr>
+			</thead>
+			<tbody>
+				<th:block th:each="n1, n1Stat : ${#numbers.sequence(0,41)}">
+					<tr th:if="${n1} % 7 == 0"/>
+						<th:block th:if="${!#strings.equals(cal.month[n1],nowMon)}">
+							<td 
+								th:class="|dis_day|"
+								th:classappend="${#arrays.contains(eduTrainBgnList,#strings.concat(#strings.concat(cal.year[n1],#strings.length(cal.month[n1]) == 1 ?'0'+cal.month[n1] : cal.month[n1]),#strings.length(cal.day[n1]) == 1 ?'0'+cal.day[n1] : cal.day[n1])) ? 'event': ''}"
+								th:text="${cal.day[n1]}"
+							/>
+						</th:block>
+						<th:block th:unless="${!#strings.equals(cal.month[n1],nowMon)}">
+							<td 
+								th:class="|current_day ${#strings.concat(#strings.concat(cal.year[n1],cal.month[n1]),cal.day[n1]) == #strings.concat(toYear,#strings.concat(toMon,toDay)) ? 'today' : ''}|"
+								th:classappend="${#arrays.contains(eduTrainBgnList,#strings.concat(#strings.concat(cal.year[n1],#strings.length(cal.month[n1]) == 1 ?'0'+cal.month[n1] : cal.month[n1]),#strings.length(cal.day[n1]) == 1 ?'0'+cal.day[n1] : cal.day[n1])) ? 'event': ''}"
+								th:id="|${cal.year[n1]}${#strings.length(cal.month[n1]) == 1 ?'0'+cal.month[n1] : cal.month[n1]}${#strings.length(cal.day[n1]) == 1 ?'0'+cal.day[n1] : cal.day[n1]}|"
+								th:text="${cal.day[n1]}"
+							/>
+						</th:block>
+				</th:block>
+			</tbody>
+		</table>
+		</th:block>
+	</div>
+</div>
+
+<div class="mcd_txtw">
+	<div class="mcd_txt" th:each="vo : ${detailList}">
+		<a th:href="|/lms/edu/view/?site=kepco&&mn=0101&detailIdx=${vo?.detailIdx}|">
+			<div class="mcd_date">
+				<p th:text="${#strings.substring(vo?.eduTrainBgnDate,8,10)}"></p>	
+				<span th:text="${#strings.substring(vo?.eduTrainBgnDate,0,7)}"></span>
+			</div>
+			<div class="mcd_info">
+				<th:block th:switch="${vo.eduAcceptState}">
+					<span th:case="1" class="reception">접수대기</span>
+					<span th:case="2" class="waiting">접수중</span>
+					<span th:case="3" class="deadline">접수마감</span>
+					<span th:case="4" class="deadline"></span>
+				</th:block>
+				<p th:text="${vo?.trainTitle}"></p>
+				<dl>
+					<dt>정원</dt>
+					<dd th:text="|${vo?.eduLimitCnt}명|"></dd>
+					<dt>신청기간</dt>
+					<dd th:text="|${vo?.eduAcceptBgnDate} ~ ${vo?.eduAcceptEndDate}|"></dd>
+				</dl>
+			</div>
+			<button><i class="fas fa-angle-right"></i></button>
+		</a>
+	</div>
+	<div th:if="${#lists?.isEmpty(detailList)}" class="mcd_txt" >
+		<div class="mcd_info">
+			<p>등록된 일정이 없습니다.</p>
+		</div>
+	</div>
+</div>
+
+<script th:inline="javascript">
+
+	//달력에 훈련 링크 걸기
+	var detailIdxList = /*[[${detailList}]]*/;
+	
+	if(detailIdxList != null){
+		for(var i=0; i<detailIdxList.length; i++){
+			var calId = "#"+detailIdxList[i].eduTrainBgnDate.replaceAll("-","");
+			
+			if($(`#${detailIdxList[i].eduTrainBgnDate.replaceAll("-","")}option`).html() == null){
+				$(calId).attr('onclick','displayToggle(this)');
+				$(calId).append(`
+						<span id='${detailIdxList[i].eduTrainBgnDate.replaceAll("-","")}option' style='display: none; position: fixed;'>		
+				`);
+			}
+			
+			$(`${calId}option`).append(	`
+					<a href='/lms/edu/view/?site=kepco&&mn=0101&detailIdx=${detailIdxList[i].detailIdx}' style='display:table-cell; position: fixed;'>${detailIdxList[i].trainTitle}</a>
+			`);
+		}
+	}
+</script>
+

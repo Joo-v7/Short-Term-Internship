@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!--layout:decorate="/pages/admin/layout/common_layout">-->
+<body>
+
+<!--<th:block layout:fragment="content">-->
+
+<script>
+    $(function () {
+        $('select').formSelect();
+
+        var detailIdx = $("input[name='detailIdx']").val();
+        studentList(detailIdx);
+        changeHref();
+    });
+
+    // 목록
+    function studentList(detailIdx) {
+        var scWord = $("#evalViewScWord").val();
+        var searchIdx = $("#evalViewSearchWord").val();
+
+        $('#dataTableDetail').DataTable({
+            autoWidth: true,
+            lengthChange: false,
+            searching: false,
+            bDestroy: true,
+            bInfo: false,
+            responsive: true,
+            processing: true,
+            ordering: true,
+            select: true,
+            paging: true,
+            pageLength: 10,
+            scrollCollapse: true,
+            scrollY: '600px',
+            fixedHeader: {
+                header: false,
+                footer: false,
+            },
+            ajax: {
+                type: 'get',
+                url: gblAdminPath + '/lms/evaluation/review/studentList?detailIdx=' + detailIdx + '&scWord=' + scWord + '&searchIdx=' + searchIdx,
+                dataType: "json",
+                dataSrc: "data.list",
+            },
+            select: {
+                style: 'multi',
+            },
+            order: [0, 'desc'],
+            initComplete: dataTableInit,
+            columns: [
+                {
+                    data: null, className: 'dt-body-center', render: function (data, type, row, meta) {
+                        return meta.settings._iDisplayStart + meta.row + 1;
+                    }
+                },
+                {data: 'memberId', className: 'dt-body-center'},
+                {data: 'memberNm', className: 'dt-body-center'},
+                {data: 'correctCount', className: 'dt-body-center'},
+                {data: 'failCount', className: 'dt-body-center'},
+                {data: 'score', className: 'dt-body-center'},
+                {
+                    data: null, searchable: false, orderable: true, className: 'dt-body-center',
+                    render: function (data, type, row, meta) {
+                        if (row.evPlayIdx > 0) {
+                            return '<i class="material-icons green-text">check_circle</i>';
+                        }
+                        return '<i class="material-icons red-text">remove_circle</i>';
+                    }
+                },
+            ],
+            createdRow: function (row, data, dataIndex) {
+                // 각 행에 대한 이벤트를 여기서 추가
+                $(row).on('click', function () {
+                    // 클릭 이벤트에 대한 동작을 여기에 추가
+                    evqrForm(data.memberIdx);
+                    var allTr = $(this).parent().children();
+                    allTr.each(function (idx, elem) {
+                        $(elem).removeClass("selected");
+                    });
+                    $(this).addClass("selected");
+                });
+            },
+        });
+    }
+
+
+    // 데이터테이블 initComplete1
+    function dataTableInit(settings, json) {
+        var dataTableCount = $("#dataTableDetail").DataTable().data().count();
+        if (dataTableCount == 10000) {
+            toast('데이터 조회를 10,000건으로 제한합니다.');
+        }
+        // 첫번째 행의 데이터 가져오기
+        var firstRow = $("#dataTableDetail").DataTable().row(":first");
+        var firstRowData = firstRow.data();
+        if (firstRowData) {
+            evqrForm(firstRowData.memberIdx);
+        }
+        // 첫번째 행 selected Class 추가
+        var firstRowClass = firstRow.$("tr:first");
+        if (firstRowClass) {
+            firstRowClass.addClass("selected");
+        }
+        // 전체 개수 text 변경
+        $("#dataTableDetailCnt").text(dataTableCount);
+    }
+
+    function evqrForm(memberIdx) {
+        var detailIdx = $("input[name='detailIdx']").val();
+        $.ajax({
+            url: gblAdminPath + '/lms/evaluation/review/form?detailIdx=' + detailIdx + '&memberIdx=' + memberIdx,
+            type: 'GET',
+            dataType: 'html',
+        }).done(function (data) {
+            $('#evq_list').empty();
+            $('#evq_list').html(data);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        })
+    }
+</script>
+
+<script>
+    $("form[name='viewFrmList']").submit(function () {
+        var detailIdx = $("input[name='detailIdx']").val();
+        studentList(detailIdx);
+        changeHref();
+        return false;
+    });
+</script>
+
+<script>
+    // a태그 href parameter 추가 변경
+    function changeHref() {
+        var downloadUrl = "/admin/lms/evaluation/review/downloadDetail";
+        var scWord = $("#evalViewScWord").val();
+        var searchIdx = $("#evalViewSearchWord").val();
+        var detailIdx = $("input[name='detailIdx']").val();
+        var param = "&scWord=" + scWord + "&detailIdx=" + detailIdx + "&searchIdx=" + searchIdx;
+        var changeHref = downloadUrl + "?" + param;
+        $("#view_excel_download").attr("href", changeHref);
+    }
+</script>
+
+
+<div class="row mb0">
+    <div id="popbox_memberinfo">
+        <div class="top pop-title">
+            <div class="row">
+                <div class="pop-title-bar pd_box2">
+                    <div class="col s2">
+                        <a href="#" onclick="side_close('#side_view', dataList());"
+                           class="btn grey lighten-1 waves-effect waves-light">
+                            <i class="material-icons">clear</i>
+                        </a>
+                    </div>
+                    <div class="col s10" style="text-align: right;">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col s6 pd_box sideline m0">
+        <div class="basic_top_searchbox">
+            <form id="viewFrmList" name="viewFrmList" method="get" enctype="multipart/form-data">
+                <input type="hidden" name="detailIdx" th:value="${req?.detailIdx}"/>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="row">
+                    <!-- 검색창 -->
+                    <div class="col xl3 left-align input-field select_m0">
+                        <select id="evalViewSearchWord" name="evalViewSearchWord">
+                            <option value="">선택</option>
+                            <option value="id">아이디</option>
+                            <option value="name">성명</option>
+                        </select>
+                    </div>
+                    <div class="col xl8 left-align input-field search_bar">
+                        <input id="evalViewScWord" name="evalViewScWord" type="text" th:value="${param?.scWord}"
+                               placeholder="검색어">
+                        <button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+                            <i class="material-icons md-18 left">search</i> 검색
+                        </button>
+                        <a href="/admin/lms/evaluation/review/downloadDetail" class="waves-effect waves-light green btn"
+                           style="margin-left: 10px;" id="view_excel_download">다운로드</a>
+                        <div class="title left">
+                            전체 : <b id="dataTableDetailCnt">0</b>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <h2 class="h2_butt mt20 mb10">훈련자 목록</h2>
+        <div class="table_type3">
+            <table id="dataTableDetail" class="striped centered highlight">
+                <colgroup>
+                    <!-- NO -->
+                    <col width="5%">
+                    <!-- 아이디 -->
+                    <col width="20%">
+                    <!-- 성명 -->
+                    <col width="20%">
+                    <!-- 정답수 -->
+                    <col width="10%">
+                    <!-- 오답수 -->
+                    <col width="10%">
+                    <!-- 점수 -->
+                    <col width="10%">
+                    <!-- 만족도 조사-->
+                    <col width="*">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>NO</th>
+                    <th>아이디</th>
+                    <th>성명</th>
+                    <th>정답수</th>
+                    <th>오답수</th>
+                    <th>점수</th>
+                    <th>수행여부</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col s6 p0" id="evq_list">
+
+
+    </div>
+</div>

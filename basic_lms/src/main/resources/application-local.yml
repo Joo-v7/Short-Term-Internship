@@ -1,0 +1,13 @@
+spring.config.activate.on-profile: local
+
+# 로컬 전용 설정. 오버라이드 하지 않고 분리하여 정의
+
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 24h
+
+global:
+  scheduling.enable: false
+  file.base-path: "C:\\base_lms\\base_lms\\src\\main\\webapp\\datas"

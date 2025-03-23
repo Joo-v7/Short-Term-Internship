@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<head>
+</head>
+
+<body>
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/cms/sec/role/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+		<div class="top">
+			<div class="row">
+				<div class="col s12 right-align">
+					<button th:if="${!#strings.isEmpty(vo?.roleIdx)}"class="btn waves-effect waves-light  red z-depth-0 left" type="delete" th:onclick="dataDelete();">삭제 <i class="material-icons left">delete</i></button>
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장 <i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s12">
+				<input type="hidden" name="roleIdx" id="roleIdx" th:value="${vo?.roleIdx} ? ${vo?.roleIdx} : ''" />
+				<div class="row">
+					<div class="input-field col s12 m4 l4 xl4">
+						<label for="roleCd" class="req">역할코드</label>
+						<input id="roleCd" name="roleCd" type="text" title="역할코드" th:value="${vo?.roleCd}" placeholder="ROLE_ADMIN_LMS" />
+					</div>
+					<div class="input-field col s12 m4 l4 xl4">
+						<label for="roleNm" class="req">역할명</label>
+						<input id="roleNm" name="roleNm" type="text" title="역할명" th:value="${vo?.roleNm}" placeholder="관리자"/>
+					</div>
+					<div class="input-field col s12 m4 l4 xl4">
+						<label for="parentRoleCd" class="req">상위역할코드</label>
+						<input id="parentRoleCd" name="parentRoleCd" class="select-dropdown dropdown-trigger" type="text" title="상위역할코드" th:value="${vo?.parentRoleCd}" placeholder="ROLE_ADMIN_LMS" />
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field col s12 m6 l6 xl6">
+						<label for="insertDate" class="">등록일시</label>
+						<input id="insertDate" type="text" th:value="${#dates.format(vo?.insertDate, 'yyyy-MM-dd HH:mm')}" readonly />
+					</div>
+					<div class="input-field col s12 m6 l6 xl6">
+						<label for="updateDate" class="">수정일시</label>
+						<input id="updateDate" type="text" th:value="${#dates.format(vo?.updateDate, 'yyyy-MM-dd HH:mm')}" readonly />
+					</div>
+				</div>
+			</div>
+		</div>	
+	</form>
+</body>
+
+<script>
+	$(function() {
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	});
+	
+	
+	// 삭제
+	function dataDelete() {
+		if(!confirm("삭제하시겠습니까?")) {
+			return false;
+		}
+		
+		var roleIdx = $("[name='roleIdx']", '#frmForm').val();
+		
+		var $frm = $(this);
+		
+		$.ajax({
+			type: "get",
+			url: "delete",
+			data: "roleIdx="+roleIdx,
+// 			contentType: "application/x-www-form-urlencoded",
+			dataType: "json",
+			beforeSend: function(xhr) {
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				dataForm('');
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				toast("HTTP "+xhr.status+ " 에러 입니다.");
+			}
+		});
+	}
+	
+</script>
+</html>

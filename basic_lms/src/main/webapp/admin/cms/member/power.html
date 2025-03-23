@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<script></script>
+	
+<style>
+	#memberRole {display:block;}
+</style>
+
+	 <label for="memberRole" class="req active">권한</label>
+	<select th:if="${#strings.isEmpty(vo)}" id="memberRole" name="memberRole" class="req active">
+		 <option th:each="item : ${roleList}" th:if="${#strings.equals(req?.memberType2, '1') and #strings.equals(item.roleCd, 'ROLE_USER')}" th:value="${item.roleCd}" th:text="${item.roleCd}"></option>
+		 <option th:each="item : ${roleList}" th:if="${#strings.equals(req?.memberType2, '2') and #strings.startsWith(item.roleCd, 'ROLE_ADMIN') and !#strings.equals(item.roleCd, 'ROLE_ADMIN') and !(#strings.equals(item.roleCd, 'ROLE_ADMIN_SUPER'))}" th:value="${item.roleCd}" th:text="${item.roleCd}"></option>
+		 <option th:each="item : ${roleList}" th:if="${#strings.equals(req?.memberType2, '3') and #strings.equals(item.roleCd, 'ROLE_ADMIN_SUPER')}" th:value="${item.roleCd}" th:text="${item.roleCd}"></option>
+	</select>	
+	<select th:unless="${#strings.isEmpty(vo)}" id="memberRole" name="memberRole" class="req active">
+		 <option th:each="item : ${roleList}" th:if="${#strings.equals(req?.memberType2, '1') and #strings.equals(item.roleCd, 'ROLE_USER')}" th:value="${item.roleCd}" th:selected="${vo.memberRole == item.roleCd}" th:text="${item.roleCd}"></option>
+		 <option th:each="item : ${roleList}" th:if="${#strings.equals(req?.memberType2, '2') and #strings.startsWith(item.roleCd, 'ROLE_ADMIN') and !#strings.equals(item.roleCd, 'ROLE_ADMIN') and !(#strings.equals(item.roleCd, 'ROLE_ADMIN_SUPER'))}" th:value="${item.roleCd}" th:selected="${#strings.equals(vo.memberRole, item.roleCd)}" th:text="${item.roleCd}"></option>
+		 <option th:each="item : ${roleList}" th:if="${#strings.equals(req?.memberType2, '3') and #strings.equals(item.roleCd, 'ROLE_ADMIN_SUPER')}" th:value="${item.roleCd}" th:selected="${#strings.equals(vo.memberRole, item.roleCd)}" th:text="${item.roleCd}"></option>
+	</select>
+</html>

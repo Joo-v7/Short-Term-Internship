@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<script>
+    $(function () {
+        var poIdx = $("input[name='poIdx']").val();
+        var memberIdx = `[[${req.memberIdx}]]`;
+		var detailIdx = `[[${req.detailIdx}]]`;
+
+        answeredList(poIdx, detailIdx, memberIdx);
+
+        $("#poll_search_form").submit(function (e) {
+            validateForm();
+            e.preventDefault();
+            var $frm = $(this);
+
+            var detailIdx = $("input[name='detailIdx']").val();
+
+            var form = document.getElementById("poll_search_form");
+            if (form.getAttribute("data-submitted") === "true") {
+                return false; // 이미 제출된 경우 더 이상 제출을 허용하지 않음 더블클릭 방지
+            }
+            form.setAttribute("data-submitted", "true");
+
+            $.ajax({
+                type: "post",
+                url: $frm.attr("action"),
+                data: $frm.serialize(),
+                contentType: "application/x-www-form-urlencoded",
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+                },
+            }).done(function (data) {
+                if (data.code == 0) {
+                    toast('저장되었습니다.');
+                    poqrForm(memberIdx);
+                    studentList(detailIdx);
+                    form.setAttribute("data-submitted", "false");
+                } else {
+                    toast(data.message);
+                }
+            }).fail(function (xhr) {
+                if (typeof xhr.responseJSON.message != "undefined") {
+                    toast(xhr.responseJSON.message);
+                }
+            });
+        });
+    });
+
+    function pollSubmit() {
+        $("#poll_search_form").submit();
+    }
+
+    function answeredList(poIdx, detailIdx, memberIdx){
+        $.ajax({
+            url: gblAdminPath + '/lms/poll/review/answeredList?memberIdx='+memberIdx+'&detailIdx='+detailIdx+'&poIdx=' + poIdx,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $.each(data.data.list, function (index, item) {
+                if (item.textYn == "Y") {
+                    var inputName = "poqrText" + item.poqIdx;
+                    var inputElement = $('textarea[name="' + inputName + '"]');
+                    inputElement.val(item.answer);
+                } else {
+                    var name = "poqrText" + item.poqIdx;
+                    var value = item.answer
+                    setRadioChecked(name, value);
+                }
+
+            });
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        })
+    }
+
+    function setRadioChecked(name, value) {
+        var radioButtons = document.getElementsByName(name);
+
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].value === value) {
+                radioButtons[i].checked = true;
+                break; // 해당 값의 라디오 버튼을 찾았으므로 반복문 종료
+            }
+        }
+    }
+
+    function validateForm() {
+        // 현재 폼에 대한 참조
+        var form = document.forms[0];
+
+        // 모든 필수 입력 필드에 대해 반복
+        var requiredFields = form.querySelectorAll('[required]');
+        for (var i = 0; i < requiredFields.length; i++) {
+            var field = requiredFields[i];
+
+            if (field.value.trim() === '') {
+                // 필수 입력 필드가 비어 있으면 경고를 표시하고 제출을 중지
+                toast('필수항목을 확인해주세요.');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+</script>
+<div class="row pd_box m0">
+    <div class="top_btn_list">
+        <ul>
+            <li class="input-field col select_m0">
+                <button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" onclick="pollSubmit() "
+                        type="submit" value="저장">
+                    <i class="material-icons left">check</i>
+                    저장
+                </button>
+            </li>
+        </ul>
+    </div>
+    <form id="poll_search_form"
+          th:action="@{/{adminPath}/lms/poll/review/save(adminPath=${@environment.getProperty('global.admin-path')})}"
+          method="post">
+        <!--<form id="poll_search_form" action="/lms/edu/pollSave" method="post">-->
+        <input type="hidden" name="detailIdx" th:value="${req?.detailIdx}"/>
+        <input type="hidden" name="poIdx" th:value="${req?.poIdx}"/>
+<!--         <input type="hidden" name="playIdx" th:value="${req?.playIdx}"/> 더미데이터나 실데이터 넣은 후 수정 일단 고정값 -->
+        <input type="hidden" name="memberIdx" th:value="${memberIdx}"/>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="poll_bg_w scroller bg_lightblue" style="max-height: calc(100vh - 216px);">
+
+
+            <!-- <div class="scon-tit" >
+                <h2 class="h2_butt mb10">만족도 조사 결과 - [[${vo2.trainTitle}]]</h2>
+                <span class="tit-red">* 필수항목</span>
+            </div> -->
+
+            <ul class="poll_bg">
+                <li class="review_result_list_box" th:each="list : ${list}">
+                    <h5 class="poll_title review_result_list_title">
+                        <span class="necessary_color" th:if="${list.poqNecessary == 'Y'}">*</span>
+                        [[${list.poqSubject}]]
+                        <span th:if="${list.poqType == 'D'}">(최대 [[${list.poqMaxTxt}]] 글자)</span>
+                    </h5>
+                    <ul class="select_poll" th:if="${list.poqType == 'A'}"> <!--만족도조사는 5지선다(A), 서술형(D) 만 있음(용역설계서)-->
+                        <li th:each="selectdetail : ${selectdetail}" th:if="${selectdetail.poqIdx} == ${list.poqIdx}">
+                            <label th:for="|view_poqd_idx_${selectdetail.poqdIdx}|" class="active">
+                                <input type="radio" th:if="${list.poqNecessary == 'Y'}"
+                                       th:id="|view_poqd_idx_${selectdetail.poqdIdx}|"
+                                       th:name="|poqrText${list.poqIdx}|" class="filled-in"
+                                       th:value="${selectdetail.poqdIdx}" required>
+                                <input type="radio" th:unless="${list.poqNecessary == 'Y'}"
+                                       th:id="|view_poqd_idx_${selectdetail.poqdIdx}|"
+                                       th:name="|poqrText${list.poqIdx}|" class="filled-in"
+                                       th:value="${selectdetail.poqdIdx}">
+                                <span th:text="${selectdetail.poqdText}"></span>
+                            </label>
+                        </li>
+                    </ul>
+                    <ul class="select_poll" th:if="${list.poqType == 'D'}">
+                        <li>
+                            <div class="input-field col s12 m0 p0">
+                                <textarea class="materialize-textarea mt0" style="height: 72px;"
+                                          th:if="${list.poqNecessary == 'Y'}" th:id="|poqr_input${list.poqIdx}|"
+                                          th:name="|poqrText${list.poqIdx}|" th:maxlength="${list.poqMaxTxt}"
+                                          required></textarea>
+                                <textarea class="materialize-textarea mt0" style="height: 72px;"
+                                          th:unless="${list.poqNecessary == 'Y'}" th:id="|poqr_input${list.poqIdx}|"
+                                          th:name="|poqrText${list.poqIdx}|"
+                                          th:maxlength="${list.poqMaxTxt}"></textarea>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </form>
+</div>

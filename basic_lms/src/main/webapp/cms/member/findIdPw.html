@@ -1,0 +1,166 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<script src="/pages/kepco/js/join.js"></script>
+<div class="find_id_pw_wrap">
+	<th:block th:if="${#strings.equals(param?.find,'id')}">
+		<!-- id -->
+		<span class="disc_box">
+			사번 또는 아이디를 확인해주세요.
+		</span>
+		<div class="find_id_pw_box">
+			<dl>
+				<dt>이름</dt>
+				<dd></dd>
+			</dl>
+			<dl>
+				<dt>사번/아이디</dt>
+				<dd></dd>
+			</dl>
+		</div>	
+	</th:block>	
+	<!-- //id -->
+	<th:block th:if="${#strings.equals(param?.find,'pw')}">
+		<!-- pw -->
+		<span class="disc_box">
+			비밀번호 재설정을 원하신다면 신규 비밀번호를 입력해주세요.
+		</span>
+		<form th:action="|/cms/member/findPw?site=${param?.site}&mn=${param.mn}|">
+			<div class="find_id_pw_box">
+				<dl>
+					<dt>신규 비밀번호</dt>
+					<dd>
+						<input type="password">
+					</dd>
+				</dl>
+				<dl>
+					<dt>비밀번호 확인</dt>
+					<dd>
+						<input type="password">
+					</dd>
+				</dl>
+			</div>
+			<input type="submit" class="pw_btn" value="비밀번호 변경"/>
+		</form>
+		<!-- //pw -->
+	</th:block>
+
+</div>
+	
+<script>
+$(function() {
+	$("#frm_id").submit(function(e) {
+		var $frm = $(this);
+		var $e;
+		
+		$e = $("[name=memberNm]", this);
+		if($e.val() == "") {
+			alert("성명은 필수입력입니다.");
+			$e.focus();
+			return false;
+		}
+		
+		$e = $("[name=memberPhone]", this);
+		if($e.val() == "") {
+			alert("전화번호는 필수입력입니다.");
+			$e.focus();
+			return false;
+		}
+	
+	    var member_phone = $("[name=memberPhone]", this).val();
+	    if(checkNull(member_phone)) return false;
+	    member_phone = member_phone.replace(/(^02.{0}|^01.{1}|[0-9]{3})([0-9]+)([0-9]{4})/,"$1-$2-$3");
+	    pattern1 = /^(01[01346-9])-?([0-9]{4})-?([0-9]{4})$/;
+
+	    if(pattern1.test(member_phone) == false){
+	        hp = false;
+// 	        $(".hp_error").text("올바른 전화번호가 아닙니다.");
+	        alert("올바른 전화번호가 아닙니다.");
+	        return false;
+	    }else{
+	        hp = true;
+	        $("[name=memberPhone]", this).val(member_phone);
+// 	        $(".hp_error").text("");
+	    }
+		
+		$.ajax({
+	        url: $frm.attr("action"),
+	        type: "post",
+	        data: $frm.serialize(),
+	        success: function(data) {
+	            alert(data.message);
+	        },
+	        error: function(xhr, status, error) {
+	            alert("시스템 에러\n\n" + xhr.responseText);
+	        },
+	        dataType: "json",
+	        timeout:60,
+	        async: false
+	    });
+		return false;
+	});
+	
+	$("#frm_pass").submit(function(e) {
+		var $frm = $(this);
+		var $e;
+		
+		$e = $("[name=memberId2]", this);
+		if($e.val() == "") {
+			alert("아이디는 필수입력입니다.");
+			$e.focus();
+			return false;
+		}
+		
+		$e = $("[name=memberNm2]", this);
+		if($e.val() == "") {
+			alert("성명은 필수입력입니다.");
+			$e.focus();
+			return false;
+		}
+		
+		$e = $("[name=memberPhone2]", this);
+		if($e.val() == "") {
+			alert("전화번호는 필수입력입니다.");
+			$e.focus();
+			return false;
+		}
+		
+	   var member_phone = $("[name=memberPhone2]", this).val();
+	    if(checkNull(member_phone)) return false;
+	    member_phone = member_phone.replace(/(^02.{0}|^01.{1}|[0-9]{3})([0-9]+)([0-9]{4})/,"$1-$2-$3");
+	    pattern1 = /^(01[01346-9])-?([0-9]{4})-?([0-9]{4})$/;
+
+	    if(pattern1.test(member_phone) == false){
+	        hp = false;
+// 	        $(".hp_error").text("올바른 전화번호가 아닙니다.");
+	        alert("올바른 전화번호가 아닙니다.");
+	        return false;
+	    }else{
+	        hp = true;
+	        $("[name=memberPhone2]", this).val(member_phone);
+// 	        $(".hp_error").text("");
+	    }
+		
+		$.ajax({
+	        url: $frm.attr("action"),
+	        type: "post",
+	        data: $frm.serialize(),
+	        success: function(data) {
+	            alert(data.message);
+	        },
+	        error: function(xhr, status, error) {
+	            alert("시스템 에러\n\n" + xhr.responseText);
+	        },
+	        dataType: "json",
+	        timeout:60,
+	        async: false
+	    });
+		return false;
+	});
+});
+</script>
+</th:block>

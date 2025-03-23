@@ -1,0 +1,200 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<link rel="stylesheet" href="/assets/css/board.css"><!-- 게시판css -->
+
+<script th:inline="javascript">
+
+function page(i){
+	if(i == null){ i = 1;}
+	$("#pageNum").val(i);
+	$("#search_form").submit();
+}
+
+
+function regist(detailIdx) {
+	
+	var memberIdx = /*[[${session.memberIdx}]]*/;
+	var registState = 2;
+	var site = /*[[${req.site}]]*/;
+	
+	if(memberIdx == null){
+		alert("로그인정보가 없습니다.");
+		location.href = "/cms/page?site=kepco&mn=1001";
+		return false;
+	}
+	
+	if(confirm("해당 과정을 신청하시겠습니까?")){
+			
+		if (!detailIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.ajax({
+			url  : '/lms/edu/regist/save',
+			type : 'get',
+			data : {
+				'detailIdx' : detailIdx,
+				'memberIdx' : memberIdx,
+				'registState' : registState,
+			},
+			dataType : 'json',
+		}).done(function(data) {
+
+			if(data.data.detailState != 2){
+				alert("승인된 훈련이 아닙니다.");
+				return false;
+			}
+			if(data.data.check == "n"){
+				alert("훈련 신청시간이 아닙니다.");
+				return false;
+			}
+			if(data.data.check == "o"){
+				alert("정원을 초과했습니다.");
+				return false;
+			}
+			if(data.data.duplicateCnt > 0){
+				alert("중복신청입니다.");
+				location.href="/lms/edu/regist/myList?site="+site+"&mn=0401";
+				return false;
+			}
+			if(data.code == 0) {
+				alert("과정신청이 완료되었습니다.\n나의강의실에서 확인할 수 있습니다.");
+				location.href="/lms/edu/regist/myList?site="+site+"&mn=0401";
+			}
+			else {
+				alert(data.message);
+			}
+		}).fail(function(xhr) {
+			if(xhr.responseJSON && typeof xhr.responseJSON.message != "undefined") {
+				alert(xhr.responseJSON.message);
+			} else if(xhr.status != 200) {
+				alert('시스템 오류로 처리할 수 없습니다.');
+			}
+			
+		});
+	}
+}
+
+</script>
+
+<div class="con-info">		
+<div class="sub-container">
+	<div class="board_search">
+		<div class="board_search_form text-center">
+			<form id="search_form" action="/lms/edu/list" method="get">
+				<input type="hidden" name="site" th:value="${req?.site}"/>
+				<input type="hidden" name="mn" th:value="${req?.mn}"/> 
+				<input type="hidden" id="pageNum" name="pageNum" th:value="${#strings.isEmpty(pageInfo?.pageNum) ? '1' : pageInfo?.pageNum}"/> 
+				<input type="hidden" name="pageSize" th:value="5"/> 
+				
+				<div class="input_box select float-none input_category">
+					<select name="scCategory" title="검색분류" id="" class="select_type">
+						<option value="">분야선택</option>
+						<option th:each="category : ${categoryList}" th:value="${category?.categoryIdx}" th:utext="${category?.categoryNm}" th:selected="${#strings.equals(category?.categoryIdx, param?.scCategory)}"></option>
+					</select>
+				</div>
+				<div class="input_box select float-none input_category">
+					<select name="scKey2" title="검색분류" id="" class="select_type">
+						<option value="">상태선택</option>
+						<option value="1" th:selected="|${#strings.equals(param?.scKey2,'1')}|">신청대기</option>
+						<option value="2" th:selected="|${#strings.equals(param?.scKey2,'2')}|">신청진행</option>
+						<option value="3" th:selected="|${#strings.equals(param?.scKey2,'3')}|">신청종료</option>
+					</select>
+				</div>
+				<div class="input_box search float-none">
+					<input type="text" title="검색어" name="scWord" id="search_keyword" class="search_keyword input_type" th:value="${param?.scWord}" placeholder="검색어를 입력해주세요" /> 
+					<input type="submit" value="검색" title="검색" class="btn_serach" onclick="page(1);">
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	<!-- //게시판 검색 영역 -->
+	<div id="list_total_count">
+		전체 : <strong th:text="${pageInfo?.total}"></strong>,
+		페이지 : <strong id="page_num" th:text="${pageInfo?.pageNum}"></strong>/<span data-th-text="${pageInfo?.pages}"></span>
+	</div>
+	<div class="con-infobox">	
+		<div class="edu_list_wrap">
+			<ul class="edu_list_ul">
+				<li th:each="list : ${list}" class="edu_list_li">
+					<div class="edu_img">
+						<img th:src="|/lms/edu/file?detailIdx=${list?.detailIdx}&file=eduImage1|" onerror="this.src='/pages/kepco/img/sub/edu_none.jpg'"/>
+						<div class="edu_sub_cnt_box">
+							<!-- <p class="logo"></p> -->
+							
+							<p class="txt" th:text="${list?.eduDesc}"></p>
+							<!-- <a th:href="@{/lms/edu/view/(site = ${req?.site}, mn = ${req?.mn}, detailIdx=${list?.detailIdx})}"><span>자세히보기</span></a> -->
+						</div>
+					</div>
+					<div class="edu_content">
+						<div class="edu_content_box">
+							<ul class="edu_cate_list">
+								<li th:each="eduKeyword,idx : ${#strings.setSplit(list?.eduKeyword,',')}" th:class="|ca${idx.count}|" th:text="${eduKeyword}" />
+							</ul>
+							<h4 class="edu_list_tit ellipsis" th:text="|${list?.trainTitle} ${list?.eduNumeral}|"></h4>
+							<!-- <h6 th:text="|${list?.trainTitle} ${list?.eduNumeral}|" class="edu-list-tit"></h6> -->
+							<div class="edu_list_info_box">
+								<dl>
+									<dt>모집인원 : </dt>
+									<dd>[[${list?.eduLimitCnt}]]명</dd>
+								</dl>	
+								<dl>
+									<dt>신청기간 : </dt>
+									<dd>[[${list?.eduAcceptBgnDate}]] ~ [[${list?.eduAcceptEndDate}]]</dd>
+								</dl>	
+								<dl>
+									<dt>교육기간 : </dt>
+									<dd>[[${list?.eduTrainBgnDate}]] ~ [[${list?.eduTrainEndDate}]]</dd>
+								</dl>
+							</div>
+
+							<ul class="edu_detail_btn_box">
+								<li>
+									<a class="detail_btn" th:href="@{/lms/edu/view/?site=kepco(mn = ${req?.mn}, detailIdx=${list?.detailIdx})}">자세히보기</a>
+								</li>
+								<li>	
+									<th:block th:switch="${list?.eduAcceptState}">
+										<span class="detail_btn text" th:case="1">접수대기</span>
+										<a class="detail_btn apply" th:case="2" href="#" th:onclick="regist([[${list?.detailIdx}]]);return false;">과정신청</a>
+										<span class="detail_btn text" th:case="3">접수마감</span>
+									</th:block>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</li>
+			</ul>
+			
+		</div>
+	</div>
+	
+	<div id="paginate_complex" class="mt20 clear" th:if="${!#lists.isEmpty(list)}">
+		<p class="btn_page">
+			<a class="first_back" th:onclick="${pageInfo?.isFirstPage} ? 'return false;' : ''" th:href="|javascript:page(1);|">
+				<span class="hidden">처음페이지</span>
+			</a>
+			<a class="prev_back" th:onclick="${pageInfo?.hasPreviousPage} ? '' : 'return false;'" th:href="|javascript:page(${pageInfo?.pageNum-1});|">
+				<span class="hidden">이전페이지</span>
+			</a>
+			<a th:each="n : ${pageInfo.navigatepageNums}" th:class="${pageInfo.pageNum} == ${n} ? 'on' : ''" th:href="|javascript:page(${n});|" th:text="${n}" ></a>
+			<a class="next_back" th:onclick="${pageInfo?.hasNextPage} ? '' : 'return false;'" th:href="|javascript:page(${pageInfo.pageNum+1});|">
+				<span class="hidden">다음페이지</span>
+			</a>
+			<a class="last_back" th:onclick="${pageInfo?.isLastPage} ? 'return false;' : ''" th:href="|javascript:page(${pageInfo?.pages});|">
+				<span class="hidden">마지막페이지</span>
+			</a>
+		</p>
+	</div>
+</div>
+</div>
+</div>
+
+
+
+</th:block>

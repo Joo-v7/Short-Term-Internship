@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.common.EditorMapper">
+ 
+ 
+ <insert id="insert" parameterType="kepco.cms.common.EditorVo" useGeneratedKeys="true" keyProperty="fileIdx" keyColumn="fileIdx">
+		INSERT INTO cms_editor_file (
+			file_idx,
+			file_name,
+			file_path,
+			full_path,
+			orig_name,
+			file_ext,
+			file_size,
+			is_image,
+			image_width,
+			image_height,
+			file_insert_date
+		)
+		VALUES (
+		file_idx,
+			#{fileName},
+			#{filePath},
+			#{fullPath},
+			#{origName},
+			#{fileExt},
+			#{fileSize},
+			#{isImage},
+			#{imageWidth},
+			#{imageHeight},
+			CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+</mapper>
+

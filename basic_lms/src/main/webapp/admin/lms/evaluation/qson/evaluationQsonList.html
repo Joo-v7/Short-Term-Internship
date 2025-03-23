@@ -1,0 +1,96 @@
+<style>
+.poq_order3 {    display: inline-block;
+    background: #5998d3;
+    color: #fff;
+    padding: 9px 6px;
+    position: relative;
+    left: 26px;
+    top: -5px;}
+.poq_order2 {  display: inline-block;
+    background:red;
+    color: #fff;
+    padding: 9px 6px;
+    position: relative;
+    left: 26px;
+    top: -5px;}
+
+.dd-handle_A:before {background: url(/assets/img/poll_chk_A.png) left center no-repeat; content:'　'; height: 21px; left:4px;}
+.dd-handle_B:before {background: url(/assets/img/poll_chk_B.png) left center no-repeat; content:'　'; height: 21px; left:4px;}
+.dd-handle_C:before {background: url(/assets/img/poll_chk_C.png) left center no-repeat; content:'　'; height: 21px; left:4px;}
+.dd-handle_D:before {background: url(/assets/img/poll_chk_D.png) left center no-repeat; content:'　';  height: 21px; left:4px;}
+.dd-handle_E:before {background: url(/assets/img/poll_chk_E.png) left center no-repeat; content:'　'; height: 27px; top: 5px;}
+.dd-handle_F:before {background: url(/assets/img/poll_chk_F.png) left center no-repeat; content:'　'; height: 28px;  top: 5px;}
+
+.dd-handle_A { width: 60px;}
+.dd-handle_B { width: 60px;}
+.dd-handle_C { width: 60px;}
+.dd-handle_D { width: 60px;}
+.dd-handle_E { width: 60px;}
+.dd-handle_F { width: 60px;}
+
+</style>
+<ol class="dd-list" >
+
+	<li class="dd-item nested-list-item" th:each="list, i : ${list}" th:attr="data-id=${list?.evqIdx}">
+		<div class='dd-handle nested-list-handle dd-handle_A' th:if="${list.evqType == 'A'}">
+			<span class='poq_order2' th:if="${list.evqNecessary == 'Y'}">[[${list?.evqOrder}]]</span>
+			<span class='poq_order3' th:if="${list.evqNecessary != 'Y'}">[[${list?.evqOrder}]]</span>
+		</div>
+		<div class='dd-handle nested-list-handle dd-handle_B' th:if="${list.evqType == 'B'}">
+			<span class='poq_order2' th:if="${list.evqNecessary == 'Y'}">[[${list?.evqOrder}]]</span>
+			<span class='poq_order3' th:if="${list.evqNecessary != 'Y'}">[[${list?.evqOrder}]]</span>
+		</div>
+		<div class='dd-handle nested-list-handle dd-handle_C' th:if="${list.evqType == 'C'}">
+			<span class='poq_order2' th:if="${list.evqNecessary == 'Y'}">[[${list?.evqOrder}]]</span>
+			<span class='poq_order3' th:if="${list.evqNecessary != 'Y'}">[[${list?.evqOrder}]]</span>
+		</div>
+		<div class='dd-handle nested-list-handle dd-handle_D' th:if="${list.evqType == 'D'}">
+			<span class='poq_order2' th:if="${list.evqNecessary == 'Y'}">[[${list?.evqOrder}]]</span>
+			<span class='poq_order3' th:if="${list.evqNecessary != 'Y'}">[[${list?.evqOrder}]]</span>
+		</div>
+		<div class='dd-handle nested-list-handle dd-handle_E' th:if="${list.evqType == 'E'}">
+			<span class='poq_order2' th:if="${list.evqNecessary == 'Y'}">[[${list?.evqOrder}]]</span>
+			<span class='poq_order3' th:if="${list.evqNecessary != 'Y'}">[[${list?.evqOrder}]]</span>
+		</div>
+		<div class='dd-handle nested-list-handle dd-handle_F' th:if="${list.evqType == 'F'}">
+			<span class='poq_order2' th:if="${list.evqNecessary == 'Y'}">[[${list?.evqOrder}]]</span>
+			<span class='poq_order3' th:if="${list.evqNecessary != 'Y'}">[[${list?.evqOrder}]]</span>
+		</div>
+		
+		<div class="nested-list-content">
+			<form style="display: inline-block; width: calc(100% - 172px); margin-left:25px;" th:id="|frm_evaluation_detail_form_${i.index+1}|" name="frm_search_form" method="post" enctype="multipart/form-data" action="/admin/lms/evaluation/qson/evaluationQsonSave">
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+				<input type="hidden" name="type" value="chage" >
+				<input type="hidden" name="evqIdx" th:value="${list?.evqIdx}" >
+				<input type="text" name="evqSubject" th:value="${list?.evqSubject}" >
+			</form>
+			<div class="pull-right">
+				<!-- <a href="#" th:onclick="set_evaluation_detail_copy([[${list.evqIdx}]],[[${list.evIdx}]]); return false;" >복사</a>&nbsp;-->
+				<a href="#" th:onclick="set_evaluation_detail_edit([[${list.evqIdx}]],[[${list.evIdx}]]); return false;" style="background:#00b8d4 !important; border: 0 none;">편집</a>&nbsp;
+				<a href="#" th:onclick="set_evaluation_detail_del([[${list.evqIdx}]],[[${list.evIdx}]]); return false;" style="background:#EF5350 !important; border: 0 none;">삭제</a>
+			</div>
+		</div>	
+	</li>
+</ol>
+
+<script th:inline="javascript">
+$(function() {
+	total = /*[[${#lists.size(list)}]]*/;
+	for(i = 1; i <= total; i++){
+		$('#frm_evaluation_detail_form_'+i).ajaxForm({
+			dataType: 'json',
+			success: function(response) {
+			  toast('수정완료',3000)
+			},
+			error: function(result, status, error) {
+			  toast('네트워크 및 시스템 에러', 3000);
+			},
+		});
+	}
+});
+
+
+
+
+</script>
+

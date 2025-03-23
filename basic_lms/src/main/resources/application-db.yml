@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    #driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    username: base_lms
+    password: base_lms12#$
+#    username: ENC(srEPb8BBwE5AM15Q9AWWZtxefZ3tPGFQAKXnlTsfAjKykD3FyntD/ZrNgoaKpQa8)
+#    password: ENC(rEL25+crgvYLXLgXwIToJU5VKm1dF+wgdW/r+bSZmwRZKy6M5fY62k4/zZttdsuQ)
+---
+spring.config.activate.on-profile: local
+spring:
+  datasource:
+    url: jdbc:log4jdbc:mariadb://121.254.175.163:3306/base_lms
+#    url: ENC(rNEcO1KjfhxH67U6sBg1MhH9hUkMR6TP2+MMH8daLZqc0bbXkwyaX5DjZY4VzP4L/fGe+wOVmNxPGP7tHGBZqijW1SLK5mS8f5hpxvwa8kbnL/iBRW7reBpEYEdWCYTj)
+---
+spring.config.activate.on-profile: server
+spring:
+  datasource:
+    url: jdbc:log4jdbc:mysql://localhost:3306/base_lms
+#    url: ENC(q1CaIgvXCn/IZjmwp7ozdYnd41AycCXEPvJPwpQODtOmgHWpSb6f7YmIiCNlHvr0r6+C106IHQ2HomzLNnaJD80ELZlkvQkLnhRtmhe1BD0=)

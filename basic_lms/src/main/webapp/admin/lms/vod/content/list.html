@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+<script>
+
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+	});
+	
+	// 목록
+	function dataList() {
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#dataTable').DataTable({
+			autoWidth : false,
+			lengthChange : false,
+			searching : false,
+			bDestroy : true,
+			bInfo : false,
+			responsive : true,
+			processing : true,
+			ordering : true,
+			select : false,
+			paging : true,
+			pageLength : 10,
+			fixedHeader : {
+				header : false,
+				footer : false,
+			},
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/lms/vod/content/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			initComplete : dataTableInit,
+			columns : [
+				{ targets : 1, className : 'dt-body-center',
+        			render: function(data, type, row, meta){
+	                	return meta.row+1;
+	            	}
+	        	},
+				{ data : 'contentTitle', className : 'dt-body-left' },
+				{ data : 'contentTime', className : 'dt-body-center' },
+				{ data : 'contentDesc', className : 'dt-body-left' },
+				{ data : 'categoryNm', className : 'dt-body-center' },
+				{ data : 'insertNm', className : 'dt-body-center' },
+				{ data : 'useYn', className : 'dt-body-center' },
+				{ data : 'insertDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime()},
+				{ data : 'updateDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime()},
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `
+							<button onclick="dataForm(${row.contentIdx},this);" class="waves-effect waves-light btn teal accent-4"><i class="material-icons left">edit</i>수정</button>
+							<button onclick="dataDelete(${row.contentIdx}, '영상');" class="waves-effect waves-light btn red"><i class="material-icons left">delete</i>삭제</button>
+						`;
+					}
+				},
+				//삭제
+				// {
+				// 	data : null, searchable : false, orderable : false, className : 'dt-body-center',
+				// 	render : function(data, type, row, meta) {
+				// 		return `<button onclick="dataDelete(${row.contentIdx}, '영상');" class="waves-effect waves-light btn red"><i class="material-icons left">delete</i>삭제</button>`;
+				// 	}
+				// },
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+	// 추가,수정 폼
+	function dataForm(contentIdx,ts) {
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+		
+		if (contentIdx==undefined) {
+			contentIdx = '';
+        }
+		
+		sidenav_default_options = {
+            edge : 'right', //	String	'left'	Side of screen on which Sidenav appears.
+            draggable : true,	//Boolean	true	Allow swipe gestures to open/close Sidenav.
+            onCloseStart : null	//Function	null	Function called when sidenav starts exiting.
+        }
+		
+		$('.sidenav').sidenav(sidenav_default_options);
+        $('.sidenav').sidenav('open');
+        $('#side_view').css({'width':'100%', 'max-width':'800px', 'overflow-y': 'scroll'});
+
+        $.ajax({
+            url: gblAdminPath + "/lms/vod/content/form?contentIdx=" + contentIdx,
+            type: 'GET',
+            dataType: 'html',
+        }).done(function (data) {
+            $('#side_view').html(data);
+        }).fail(function () {
+            toast('네트워크 또는 시스템 장애입니다.', 4000);
+        });
+	}
+	
+	// 삭제
+	function dataDelete(contentIdx, title) {
+		if (!contentIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : title + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url  : gblAdminPath + '/lms/vod/content/delete',
+						type : 'get',
+						data : {
+							'contentIdx' : contentIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							//dataForm('');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+	
+	function set_category_list(){
+			
+		$.ajax({
+			url: gblAdminPath + '/lms/vod/category/list',
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+
+			var staff_modal = $("#pop_modal").modal();
+			staff_modal.modal('open');
+			$('#pop_modal').css({'height':'70vh', 'width':'100%', 'max-width':'720px'});
+		  
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+		return false;
+	}
+</script>
+
+	<div>
+		<div class="row">
+			<!-- // 그룹 -->
+			<div class="col s12 sideline pd_box bg_lightblue h100">
+				<div class="basic">
+					<div class="basic_top_searchbox left">
+						<form id="frmList" method="get">
+							<div class="row">
+								<!-- 검색창 -->
+								<div class="input-field col s12 m6 l2 xl1 select_m0">
+									<label for="scKey1" class="">구분</label>
+									<select name="scKey1">
+										<option value="">전체</option>
+										<option th:each="category : ${categoryList}" th:value="${category?.vodCategoryIdx}" th:utext="${category?.categoryNm}" th:selected="${category?.vodCategoryIdx} == ${param?.scKey1}"></option>
+									</select>
+								</div>
+								<div class="input-field col s12 m6 l2 xl1 select_m0">
+									<label for="scKey2" class="">사용여부</label>
+									<select name="scKey2">
+										<option value="">전체</option>
+										<option value="1" th:selected="${param?.scKey2} == 1">사용</option>
+										<option value="2" th:selected="${param?.scKey2} == 2">미사용</option>
+									</select>
+								</div>
+								<div class="col s12 m12 l6 xl6 search_bar">
+									<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="콘텐츠명, 설명">
+									
+									<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+	 									<i class="material-icons md-18 left">search</i> 검색
+									</button>
+									<div class="title left">
+										전체 : <b id="dataTableTotCnt">0</b>
+									</div>
+								</div>
+								<div class="btn_infolist right">
+									<div class="input-field col select_m0">
+										<button type="button" onclick="set_category_list()" class="waves-effect waves-light btn cyan left">
+											<i class="material-icons left">add_box</i>구분
+										</button>
+									</div>
+									<div class="input-field col select_m0">
+										<button onclick="dataForm('')" class="waves-effect waves-light btn cyan left">
+											<i class="material-icons left">add_box</i>등록
+										</button>
+									</div>
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="table_type3">
+						<table id="dataTable" class="striped centered highlight" style="min-width: 1400px">
+							<colgroup>
+								<col width="80px">
+								<col width="320px">
+								<col width="100px">
+								<col width="500px">
+								<col width="100px">
+								<col width="120px">
+								<col width="80px">
+								<col width="140px">
+								<col width="140px">
+								<col width="180px">
+							</colgroup>
+							<thead>
+								<tr>
+									<th>NO</th>
+									<th>콘텐츠명</th>
+									<th>영상시간(분)</th>
+									<th>설명</th>
+									<th>훈련분야</th>
+									<th>등록자</th>
+									<th>사용여부</th>
+									<th>등록일시</th>
+									<th>수정일시</th>
+									<th>비고</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div id="areaForm" class="col s5 pd_box bg_lightblue h100">
+			</div>
+		</div>
+	</div>	
+</body>
+</html>

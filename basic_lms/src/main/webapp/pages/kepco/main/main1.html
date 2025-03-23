@@ -1,0 +1,216 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<script>
+ $( document ).ready( function() {
+	 $( '#gagge' ).animate( {
+		width: '100%'
+	}, 5500);
+});
+setInterval(function() { 
+	playcnavas_Interactive_Rotation(false);
+}, 6000);
+
+</script>
+
+<div class="fullpage custom">
+	
+  <div class="section section1"><!------------------- 1페이지 ------------------->
+	<div class="vsbox">
+		<!-- 이미지컷 -->
+		<!-- <div id="vsimg" class="vsimg_wrap"></div> -->
+
+		<!-- 3D뷰어 -->
+		<div id="vsimg" class="vsimg"></div>
+
+		<div class="vs-btn">
+			<div class="vs-btn-box">
+				<div class="vs-btn-num">
+					<b id="playcnavas_count">01</b>/03
+				</div>
+				<div class="vs-btn-bar">
+					<span id="gagge" style="width:0%;"></span>
+				</div>
+				<div class="vs-btn-arrow">
+					<button onclick="playcnavas_Interactive_Rotation(true)"></button>
+					<button onclick="playcnavas_Interactive_Rotation(false)"></button>
+				</div>	
+			</div>
+		</div>
+
+
+
+		<div class="vstxt">
+			<div class="vstxt2">			
+				<!-- <h6>XR 초실감 안전훈련시스템</h6> -->
+				<h5><span>i</span>KEMPUS</h5>
+				<p>XR(확장현실)기술을 활용하여 현실처럼 가상으로 구현된 훈련 상황에서<br />위험요인과 가이드에 따라 안전교육을 실습하는 초실감 안전교육훈련</p>
+			</div>
+			<div class="vsbtn">
+				<a href="/lms/edu/list/?site=kepco&mn=0101" class="vsbtn1">이동형 팀 훈련 바로가기</a>
+				<a href="/lms/vod/list/?site=kepco&mn=0102" class="vsbtn2">좌식형 개인 훈련 바로가기</a>				
+			</div>
+		</div>
+		<!--
+		<span class="scroll-btn">
+			<a href="#">
+				<span class="mouse">
+					<span>
+					</span>
+				</span>
+			</a>
+			<p>scroll down</p>
+		</span>
+		-->
+	</div>
+  </div><!------------------- 1페이지 ------------------->
+
+
+  <div class="section section2"><!------------------- 2페이지 ------------------->
+		<div class="mcbox hg1">	
+			<div class="mctit3">
+				<p class="info">TRAINING COURSE</p>
+				<h6>분야별 교육과정</h6>
+				<!--<p class="txt">모션 캡쳐 및 VR 시스템을 활용한 분야별 초실감 안전훈련과정을 소개합니다</p>-->
+			</div>
+			
+			<ul class="con-tabs3">
+				<li class="tab-link current3" data-tab="tab-1">이동형 팀 훈련</li>
+				<li class="tab-link" data-tab="tab-2">좌식형 개인 훈련</li>
+			</ul>
+			
+			<!-- 프로그램 -->
+			<div id="mddw" class="mddw" th:include="lms/edu/main/mainList"></div>
+
+			<div id="mvw" class="mvw" th:include="lms/vod/main/mainList"></div>
+
+<!-- 			<div id="tab-2" class="tab-content3 ">탭 컨텐츠2 -->
+<!-- 				<div class="more-btn"> -->
+<!-- 					<a class="link" href="/lms/vod/list/?site=kepco&mn=0102"> -->
+<!-- 						<div class="pink"></div> -->
+<!-- 						<span>view more</span> -->
+<!-- 						<i class="fa-solid fa-arrow-right"></i> -->
+<!-- 					</a> -->
+<!-- 				</div> -->
+<!-- 				<div class="edu-w"> -->
+<!-- 					<div class="edu-box"> -->
+<!-- 						<div class="edu-video"> -->
+<!-- 							<a href="" class="eva"> -->
+<!-- 								<img src="/pages/kepco/img/sub/v-th1.jpg" alt=""> -->
+<!-- 							</a> -->
+<!-- 						</div> -->
+<!-- 						<span class="bd_line01"></span> -->
+<!-- 						<span class="bd_line02"></span> -->
+<!-- 						<span class="bd_line03"></span> -->
+<!-- 						<span class="bd_line04"></span> -->
+<!-- 					</div> -->
+<!-- 					<div class="edu-box"> -->
+<!-- 						<div class="edu-video"> -->
+<!-- 							<a href="" class="eva"> -->
+<!-- 								<img src="/pages/kepco/img/sub/v-th1.jpg" alt=""> -->
+<!-- 							</a> -->
+<!-- 						</div> -->
+<!-- 						<span class="bd_line01"></span> -->
+<!-- 						<span class="bd_line02"></span> -->
+<!-- 						<span class="bd_line03"></span> -->
+<!-- 						<span class="bd_line04"></span> -->
+<!-- 					</div> -->
+<!-- 				</div>		 -->
+<!-- 			</div>// 탭 컨텐츠2 -->
+		</div>
+  </div><!------------------- 2페이지 ------------------->
+
+
+  <div class="section section3"><!------------------- 3페이지 ------------------->
+	<div class="mcbox">
+		<div class="mctit3">
+			<p class="info purple bd-purple">RESERVATION</p>
+			<h6>이동형 팀 훈련 일정안내</h6>
+			<!--
+			<a class="link" href="/lms/edu/list/?site=kepco&mn=0101">
+				<div class="pink bg-purple"></div>
+				<span>view more</span>
+				<i class="fa-solid fa-arrow-right"></i>
+			</a>
+			-->
+		</div>
+
+		<!-- 프로그램 -->
+		<div id="mcdw" class="mcdw" th:include="lms/edu/main/mainCalList"></div>
+	</div>
+  </div><!------------------- 3페이지 ------------------->
+
+
+  <div class="section section4"><!------------------- 4페이지 ------------------->
+  	<div class="mcbox flexbox">
+		<div class="notice-l">
+			<div class="mctit">
+				<p class="info">NOTICE</p>
+				<h6>공지사항</h6>
+				<p class="txt">새로운 소식들을<br />지금 바로 확인해 보세요</p>
+				<div class="mnt-btn">
+					<a class="link" href="/cms/board/post/list/?site=kepco&mn=0301&boardId=notice">
+						<div class="pink bg-blue"></div>
+						<span>view more</span>
+						<i class="fa-solid fa-arrow-right"></i>
+					</a>
+				</div>
+			</div>
+		</div>
+		<!-- 공지사항 -->
+		<div id="notice" class="notice-w" th:include="cms/board/main/list"></div>
+  	</div> 
+  </div><!------------------- 4페이지 ------------------->
+
+<link rel="manifest" href="/playcanvas/manifest.json">
+<script src="/playcanvas/playcanvas-stable.min.js"></script>
+<script src="/playcanvas/__settings__.js"></script>
+<script src="/playcanvas/__modules__.js"></script>
+<script src="/playcanvas/__start__.js"></script>
+<script src="/playcanvas/__loading__.js"></script>
+
+<script th:inline="javascript"> 
+	 $(function() {
+		$.ajax({
+				url: '/lms/edu/mainList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#mddw').html(data);
+			}).fail(function () {
+		});
+
+		$.ajax({
+				url: '/lms/vod/mainList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#mvw').html(data);
+			}).fail(function () {
+		});
+		
+		$.ajax({
+				url: '/lms/edu/mainCalList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#mcdw').html(data);
+			}).fail(function () {
+		});
+
+		$.ajax({
+				url: '/cms/board/mainList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#notice').html(data);
+			}).fail(function () {
+		});
+	 });
+</script>
+
+</th:block>

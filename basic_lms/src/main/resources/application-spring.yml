@@ -1,0 +1,37 @@
+spring:
+#  autoconfigure:
+#    exclude: org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration
+# 순환참조를 왜 굳이 허용하려 했었는지 확인 후 제거
+#  main.allow-circular-references: true
+  jackson:
+    time-zone: "GMT+9"
+    date-format: yyyy-MM-dd HH:mm:ss
+  web:
+    locale: ko_KR
+    locale-resolver: fixed
+#    resources:
+#      static-locations: /static/
+  thymeleaf:
+    prefix: /
+    suffix: .html
+    cache: false
+#    view-names: 
+  mvc:
+# 404 캐치 목적
+    throw-exception-if-no-handler-found: true
+  devtools:
+    livereload:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 1GB
+#      서버 업로드 용량제한
+      max-request-size: 1GB
+mybatis:
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:**/*Mapper.xml
+pagehelper:
+  autoDialect: true
+  closeConn: true
+  reasonable: true
+  count-column: "1"

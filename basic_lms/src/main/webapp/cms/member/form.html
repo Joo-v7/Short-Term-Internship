@@ -1,0 +1,161 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<!-- ie에서  Placeholders 사용을위한 스크립트-->
+<script src="/pages/kepco/js/join.js"></script>
+<!-- <script type="text/javascript" src="/assets/libs/Placeholders.js-master/lib/placeholder.js"></script> -->
+	<script type="text/javascript" src="https://spi.maps.daum.net/imap/map_js_init/postcode.v2.js"></script><script charset="UTF-8" type="text/javascript" src="//t1.daumcdn.net/postcode/api/core/221018/1666013742754/221018.js"></script>
+<script th:inline="javascript">
+function openPostCode() {
+	new daum.Postcode({
+		oncomplete: function(data) {
+			var fullAddr = ''; // 최종 주소 변수
+			var extraAddr = ''; // 조합형 주소 변수
+			
+			// 사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+			if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+				fullAddr = data.roadAddress;
+			} else { // 사용자가 지번 주소를 선택했을 경우(J)
+				fullAddr = data.jibunAddress;
+			}
+			
+			// 사용자가 선택한 주소가 도로명 타입일때 조합한다.
+			if(data.userSelectedType === 'R'){
+				//법정동명이 있을 경우 추가한다.
+				if(data.bname !== ''){
+					extraAddr += data.bname;
+				}
+				// 건물명이 있을 경우 추가한다.
+				if(data.buildingName !== ''){
+					extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+				}
+				// 조합형주소의 유무에 따라 양쪽에 괄호를 추가하여 최종 주소를 만든다.
+				fullAddr += (extraAddr !== '' ? ' ('+ extraAddr +')' : '');
+			}
+			
+			$("#frm input[name='mb_zip']").val(data.zonecode);
+			$("#frm input[name='mb_addr1']").val(fullAddr);
+			$("#frm input[name='mb_addr2']").focus();
+		}
+	}).open();
+}
+
+//$("input[name$='member_birth']").datepicker();
+</script>
+
+<div class="sub-container">
+ <!----------------2단계-------------------->
+<div id="join_step_wrap">
+
+	<!--<div class="title">
+		<dl>
+			<dt>정보입력</dt>
+			<dd>회원정보입력을 작성해 주세요.</dd>
+		</dl>
+	</div>
+	-->
+	<div class="top_navi">
+		<ul>
+			<li>약관동의</li>
+			<li class="on"><i class="fa-solid fa-circle-check"></i>정보입력</li>
+			<li>가입완료</li>
+		</ul>
+	</div>
+
+	<form id="frm" name="frm" method="post" enctype="multipart/form-data" action="/cms/member/save">
+		<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+		<input type="hidden" name="site" th:value="${param?.site}">
+		<input type="hidden" name="mn" th:value="${param?.mn}">
+		<input type="hidden" name="mb_etc10" value="Y">
+		<input type="hidden" name="memberType1" th:value="${req?.memberType1}">
+		<input type="hidden" name="check_id" value="">
+		<input type="hidden" name="check_pw" value="">
+		<input type="hidden" name="mb_duplicate_code" value="">
+		<div class="join_step4_box">
+				<div class="login-form">
+					<span class="sex">
+						<!-- @@ 마이페이지에서는 label의 class를 추가할 것(mypage_info_cate_label) 작업완료시 이 주석은 삭제할 것 -->
+						<span class="jender"><input type="radio" id="memberType21" name="memberType2" value="1" checked="checked"><label for="memberType21" class="">학습자 </label></span>
+						<span class="jender"><input type="radio" id="memberType22" name="memberType2" value="2"><label for="memberType22" class="">교수자 </label></span>
+					</span>
+					<h3>성명<span class="star">*</span></h3>
+					<input name="member_nm" title="성명" class="type_input_t" type="text" maxlength="40" value="">
+					<h3>아이디<span class="star">*</span></h3>
+					<input type="text" maxlength="40" title="아이디" name="member_id" placeholder="" value="" class="type_input_t" onblur="id_check();return false;">
+					<span class="join_info_ok id_ok">아이디를 입력하십시오.</span> 
+				<h3>비밀번호<span class="star">*</span></h3>
+					<input type="password" maxlength="40" title="비밀번호" name="member_pw" placeholder="" value="" class="type_input_t" onblur="paswd_check(); return false;">
+					<span class="join_info_normal " style="padding-left: 0px;">6~12자의 영문 소문자, 숫자 조합</span>
+					<span class="join_info_error passwd_error1"></span>
+				<h3>비밀번호확인<span class="star">*</span></h3>
+					<input type="password" maxlength="40" title="비밀번호확인" name="member_pw_r" placeholder="" value="" class="type_input_t" onblur="paswd_check2(); return false;">
+					<span class="join_info_normal passwd_2">6~12자의 영문 소문자, 숫자 조합</span>
+					<span class="join_info_error passwd_error2"></span>
+				<!-- <h3><span class="star">*</span>일반전화<span class="star">*</span></h3> -->
+				<!-- <input type="text" maxlength="40" title="일반전화" name="mb_tel" placeholder="" value="" class="type_input_t" onblur="tel_check();return false;"> -->
+				<!-- <span class="join_info_error tel_error"></span>  -->
+				<h3>휴대전화<span class="star">*</span></h3>
+					<input type="text" maxlength="40" title="휴대전화" name="member_phone" placeholder="" value="" class="type_input_t" onblur="hp_check();return false;">
+					<span class="join_info_error hp_error"></span> 
+<!-- 				<h3><span class="star">*</span>우편번호<span class="star">*</span></h3> -->
+<!-- 				<div class="flexbox"> -->
+<!-- 					<input type="text" maxlength="40" title="우편번호" placeholder="" value="" class="type_input_t2" name="mb_zip"> <a href="" class="btn_addr" onclick="openPostCode();return false;">검색</a> -->
+<!-- 				</div> -->
+<!-- 				<h3><span class="star">*</span>주소<span class="star">*</span></h3> -->
+<!-- 					<input type="text" name="mb_addr1" maxlength="40" title="주소" placeholder="" value="" class="type_input_t"> -->
+<!-- 				<h3><span class="star">*</span>상세주소<span class="star">*</span></h3> -->
+<!-- 					<input type="text" name="mb_addr2" maxlength="40" title="상세주소" placeholder="" value="" class="type_input_t"> -->
+
+			<!-- //birth_y birth_m birth_d gender gender -->
+					<span class="sex">
+						<span class="jender"><input type="radio" id="man" name="member_gender" value="m" checked="checked"><label id="manLb" for="man" class="">남자 </label></span>
+						<span class="jender"><input type="radio" id="woman" name="member_gender" value="f"><label id="womanLb" for="woman" class="">여자 </label></span>
+					</span>
+				<h3><!-- <span class="star">*</span> -->생년월일<span class="star">*</span></h3>
+				<div class="bdaybox">
+					<input type="text" maxlength="4" title="년(4자)" placeholder="년(4자)" value="" class="type_input_t2" name="member_birth_y" onblur="year_check();return false;">
+					<input type="text" maxlength="2" title="월(1~2자)" placeholder="월(1~2자)" value="" class="type_input_t2" name="member_birth_m" onblur="month_check();return false;">
+					<input type="text" maxlength="2" title="일(1~2자)" placeholder="일(1~2자)" value="" class="type_input_t2" name="member_birth_d" onblur="day_check();return false;" style="margin-right:0;">
+				</div>
+				<span class="join_info_error birth_error"></span>
+<!-- 					<span class="sex"> -->
+<!-- 						<span class="jender"><input type="radio" id="birth_type1" name="member_birth_type" value="0" checked=""><label for="birth_type1" class="">양력</label></span> -->
+<!-- 						<span class="jender"><input type="radio" id="birth_type2" name="member_birth_type" value="1"><label for="birth_type2" class="">음력</label></span> -->
+<!-- 					</span> -->
+				<h3>이메일<span class="star">*</span></h3>
+					<input type="text" maxlength="40" title="이메일" placeholder="" value="" class="type_input_t" name="member_email" onblur="emaile_check(); return false;">
+					<span class="join_info_error email_error"></span>
+			<!-- 			<div class="join_table_list_group">
+				<div class="join_table_list_box ">
+					<p class="fixed_p">SMS수신 <input type="checkbox" name="mb_sms_use"  value="1"  class="checkbox_type"></p>
+					<span class="join_info_normal">이벤트 당첨 소식 및 경품 안내, 자격증 시험 정보, 수강료 할인정보 전달</span>
+				</div>
+				<div class="join_table_list_box br_t_n">
+					<p class="fixed_p">이메일수신 <input type="checkbox" name="member_email_use" value="1"  class="checkbox_type"></p>
+					<span class="join_info_normal">이벤트 당첨 소식 및 경품 안내, 자격증 시험 정보, 수강료 할인정보 전달</span>
+				</div>
+			</div>
+			 -->
+			</div>
+
+		</div>
+
+<br><br>
+	<div class="bottom_btn_list">
+		<ul>
+			<li><a href="/member?type=join&amp;site=basic&amp;mn=224" class="btn_c"><span>이전단계</span></a></li>
+			<!-- @@ 마이페이지에서는 이전단계 대신 회원 탈퇴로 변경 > 얼럿창으로 동의 구하기 작업완료시 이 주석은 삭제할 것 -->
+			<!-- <li><a href="" class="btn_c"><span>회원탈퇴</span></a></li> -->
+			<li><a href="" class="btn_o" onclick="formsubmit();return false"><span>가입완료</span></a></li>
+		</ul>
+	</div>
+</form>
+</div>
+<!----------------//2단계-------------------->
+</div>
+
+</th:block>

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<head>
+</head>
+<body>
+<style>
+.scroll_defalt .select-wrapper {
+    margin: 0;
+}
+</style>
+	<form id="frmForm" method="post" th:action="@{/{adminPath}/cms/menu/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+		<div class="top">
+			<div class="row">
+				<div class="col s2 left-align">
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="button" onclick="dataForm(null);">하위메뉴 추가 <i class="material-icons left">check</i></button>
+				</div>
+				<div class="col s10 right-align">
+					<button type="button" th:if="${!#strings.isEmpty(vo?.menuIdx)}" class="btn waves-effect z-depth-0 red lighten-1" th:onclick="dataDelete([[${vo?.menuIdx}]])">삭제<i class="material-icons left">delete</i></button>
+					<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit">저장<i class="material-icons left">check</i></button>
+				</div>
+			</div>
+		</div>
+		<div>
+			<div class="row">
+				<input id="menuIdx" name="menuIdx" type="hidden" th:value="${vo?.menuIdx} > 0 ? ${vo.menuIdx} : ''" />
+				<input id="site" name="site" type="hidden" th:value="${vo?.site}" />
+				<input id="parentMenuIdx" name="parentMenuIdx" type="hidden" th:value="${vo?.parentMenuIdx}" />
+				<div class="input-field col s12 m8 l6 xl8">
+					<label for="parentMenuNm" class="req">상위 메뉴</label>
+					<input id="parentMenuNm" name="parentMenuNm" type="text" th:value="${vo?.parentMenuNm}" readonly/>
+					<button type="button" class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="parent_menu_tree();" ><i class="material-icons">search</i></button>
+				</div>
+				<div class="input-field col s12 m2 l3 xl2">
+					<label for="menuDepth" class="req">메뉴 깊이</label>
+					<input id="menuDepth" name="menuDepth" type="text" th:value="${vo?.menuDepth}" readonly/>
+				</div>
+				
+				<div class="input-field col s12 m2 l3 xl2">
+					<label for="menuOrder" class="req">메뉴 순서</label>
+					<input id="menuOrder" name="menuOrder" type="text" th:value="${vo?.menuOrder}" />
+				</div>
+				
+			</div>
+			
+			<div class="row">
+				<div class="input-field col s8 m10 l10 xl10">
+					<label for="menuNm" class="req">메뉴명</label>
+					<input id="menuNm" name="menuNm" type="text" th:value="${vo?.menuNm}" />
+				</div>
+				<label for="">사용여부</label>
+				<div class="col s4 m2 l2 xl2 check_list_box">
+					<label for="useYn">
+						<input id="useYn" name="useYn" type="checkbox" class="filled-in" title="사용여부" value="y" th:checked="${vo?.useYn eq 'y'}">
+						<span>사용</span>
+					</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12 m3 l3 xl2">
+					<label for="menuType" class="req">메뉴종류</label>
+					<select id="menuType" name="menuType" title="메뉴유형">
+						<option value="none" th:selected="${vo.menuType} == 'none'">비어있음</option>
+						<option value="module" th:selected="${vo.menuType} == 'module'">모듈</option>
+						<option value="page" th:selected="${vo.menuType} == 'page'">페이지</option>
+						<option value="redirect" th:selected="${vo.menuType} == 'redirect'">리디렉션</option>
+					</select>
+				</div>
+				
+				<div class="input-field col s12 m3 l2 xl2">
+					<label for="mn" class="req">메뉴 코드</label>
+					<input id="mn" name="mn" type="text" th:value="${vo?.mn}" />
+				</div>
+				
+				<div class="input-field col s12 m6 l7 xl8">
+					<label for="menuUrl" class="req">메뉴 주소</label>
+					<input id="menuUrl" name="menuUrl" type="text" th:value="${vo?.menuUrl}" />
+				</div>
+			</div>
+			
+			
+			<div class="row">
+				<div class="input-field col s12 m12 l6 xl6">
+					<label for="layoutNm">레이아웃</label>
+					<input type="hidden" name="layoutIdx" id="layoutIdx" th:value="${vo?.layoutIdx}" >
+					<input type="text" id="layoutNm"  th:value="${vo?.layoutNm}" placeholder="레이아웃을 선택해주세요!">
+					<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="layout_modal();" ><i class="material-icons">search</i></a>
+				</div>
+				
+				<div class="input-field col s12 m12 l6 xl6">
+					<label for="pageNm">페이지</label>
+					<input type="hidden" name="pageIdx" id="pageIdx" th:value="${vo?.pageIdx}" >
+					<input type="text" id="pageNm" th:value="${vo?.pageNm}" placeholder="페이지를 선택해주세요!">
+					<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="page_modal();" ><i class="material-icons">search</i></a>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="input-field col s12 m12 l6 xl6">
+					<label for="mn_head_html">윗글 HTML</label>
+					<textarea id="mn_head_html" name="mn_head_html" title="윗글 HTML" class="materialize-textarea" style="min-height: 100px;" placeholder="html코드"></textarea>
+				</div>
+				<div class="input-field col s12 m12 l6 xl6">
+					<label for="mn_tail_html">아랫글 HTML</label>
+					<textarea id="mn_tail_html" name="mn_tail_html" title="아랫글 HTML" class="materialize-textarea" style="min-height: 100px;" placeholder="html코드"></textarea>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="input-field col s12 m6 l3 xl3">
+					<label for="mt_charge">담당 부서</label>
+					<input type="text" id="mt_charge" name="mt_charge" value="" placeholder="담당 부서">
+				</div>
+				<div class="input-field col s12 m6 l3 xl3">
+					<label for="mt_charge_tel">담당 전화</label>
+					<input type="text" id="mt_charge_tel" name="mt_charge_tel" value="" placeholder="000-000-0000">
+				</div>
+				<div class="input-field col s12 m6 l3 xl3">
+					<label for="mt_charge_fax">담당 팩스</label>
+					<input type="text" id="mt_charge_fax" name="mt_charge_fax" value="" placeholder="000-000-0000">
+				</div>
+				<div class="input-field col s12 m6 l3 xl3">
+					<label for="mt_charge_email">담당 이메일</label>
+					<input type="text" id="mt_charge_email" name="mt_charge_email" value="" placeholder="0000@000.com" >
+				</div>
+			</div>
+			
+		</div>
+	</form>
+</body>
+
+<script>
+//# sourceURL=/admin/cms/menu/form.html
+	$(function() {
+		$("#menuType").formSelect();
+		$("#menuModule").formSelect();
+		
+		$("#frmForm").submit(function(e) { 
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='menuNm']", $frm).val() == "") {
+				toast("메뉴명은 필수입력 입니다.");
+				$("input[name='menuNm']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					// 트리 새로고침
+					getTreeJson();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	});
+	
+	// 상위 메뉴트리 검색 모달
+	function parent_menu_tree() {
+// 		toast("미구현");
+		var site = $("[name='site']", "#frmForm").val();
+// 		var scPageType = "sub";
+		$.ajax({
+			url: gblAdminPath + '/cms/menu/menuModal?callback=parent_menu_modal_callback&site=' + site,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+// 			$('#pop_modal').css({'width':'30%', 'height':'50%'});
+			var myModal = $("#pop_modal").modal();
+			myModal.modal('open');
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+
+	// 콜백 - 상위메뉴 검색 모달
+	function parent_menu_modal_callback(parentMenuIdx, parentMenuNm, parentMenuDepth) {
+		$("[name='parentMenuIdx']", "#frmForm").val(parentMenuIdx);
+		$("[id='parentMenuNm']", "#frmForm").val(parentMenuNm);
+		$("[id='menuDepth']", "#frmForm").val(parentMenuDepth + 1);
+	}
+	
+	// 페이지 검색 모달
+	function page_modal() {
+		var site = $("[name='site']", "#frmForm").val();
+		var scPageType = "sub";
+		$.ajax({
+			url: gblAdminPath + '/cms/page/listModal?callback=page_modal_callback&site='+site+'&scPageType='+scPageType,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+// 			$('#pop_modal').css({'height':'80%'});
+			var myModal = $("#pop_modal").modal();
+			myModal.modal('open');
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+	
+	// 콜백 - 페이지 검색 모달
+	function page_modal_callback(data) {
+		$("[name='pageIdx']", "#frmForm").val(data.pageIdx);
+		$("[id='pageNm']", "#frmForm").val(data.pageNm);
+	}
+	
+	// 레이아웃 검색 모달
+	function layout_modal() {
+		var site = $("[name='site']", "#frmForm").val();
+		$.ajax({
+			url: gblAdminPath + '/cms/layout/listModal?callback=layout_modal_callback&site='+site,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+// 			$('#pop_modal').css({'height':'80%'});
+			var myModal = $("#pop_modal").modal();
+			myModal.modal('open');
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+	
+	// 콜백 - 레이아웃 검색 모달
+	function layout_modal_callback(data) {
+		$("[name='layoutIdx']", "#frmForm").val(data.layoutIdx);
+		$("[id='layoutNm']", "#frmForm").val(data.layoutNm);
+	}
+	
+	function dataDelete(menuIdx) {
+		
+		if(confirm("메뉴를 삭제하시겠습니까?")){
+			
+			if (!menuIdx) {
+				toast('잘못된 접근입니다.');
+				return false;
+			}
+			$.ajax({
+				url  : gblAdminPath + '/cms/menu/delete',
+				type : 'get',
+				data : {
+					'menuIdx' : menuIdx
+				},
+				dataType : 'json',
+			}).done(function(data) {
+				if(data.code == 0) {
+					getTreeJson();
+					$("#0_anchor").trigger("click");
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function() {
+				toast('시스템 오류로 처리할 수 없습니다.');
+			});
+		}
+	}
+</script>
+</html>

@@ -1,0 +1,165 @@
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+    <div class="sub-container">
+
+        <script src="/assets/libs/jquery-ui/jquery-ui.js"></script>
+
+        <script src="/assets/js/jquery.form.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="/assets/libs/jquery-ui/jquery-ui.min.css"/>
+
+        <form id="poll_search_form" action="/lms/edu/pollSave" method="post">
+            <input type="hidden" name="detailIdx" th:value="${req?.detailIdx}"/>
+            <input type="hidden" name="poIdx" th:value="${req?.poIdx}"/>
+            <input type="hidden" name="memberIdx" th:value="${memberIdx}"/>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="poll_bg_w">
+                <div class="scon-tit" th:text="|${vo.poSubject}(${vo2.trainTitle})|">
+                    <span class="tit-red">* 필수항목</span>
+                </div>
+
+                <div class="poll_bg" th:each="list : ${list}">
+
+                    <h5 class="poll_title">
+                        <span class="necessary_color" th:if="${list.poqNecessary == 'Y'}">*</span>
+                        [[${list.poqSubject}]]
+                        <span th:if="${list.poqType == 'D'}">(최대 [[${list.poqMaxTxt}]] 글자)</span>
+                    </h5>
+
+                    <ul class="select_poll" th:if="${list.poqType == 'A'}">
+                        <li th:each="selectdetail : ${selectdetail}" th:if="${selectdetail.poqIdx} == ${list.poqIdx}">
+                            <label th:for="|view_poqd_idx_${selectdetail.poqdIdx}|" class="active">
+                                <input type="radio" th:if="${list.poqNecessary == 'Y'}"
+                                       th:id="|view_poqd_idx_${selectdetail.poqdIdx}|"
+                                       th:name="|poqrText${list.poqIdx}|" class="filled-in"
+                                       th:value="${selectdetail.poqdOrder}" required>
+                                <input type="radio" th:unless="${list.poqNecessary == 'Y'}"
+                                       th:id="|view_poqd_idx_${selectdetail.poqdIdx}|"
+                                       th:name="|poqrText${list.poqIdx}|" class="filled-in"
+                                       th:value="${selectdetail.poqdIdx}">
+                                <span>[[${selectdetail.poqdText}]]</span>
+                            </label>
+                        </li>
+                    </ul>
+
+                    <div th:if="${list.poqNecessary == 'Y'}">
+                        <textarea th:id="|poqr_input${list.poqIdx}|" th:name="|poqrText${list.poqIdx}|"
+                                  class="input-type2 w-full" th:if="${list.poqType == 'D'}"
+                                  th:maxlength="${list.poqMaxTxt}" required></textarea>
+                    </div>
+
+                    <div th:unless="${list.poqNecessary == 'Y'}">
+                        <textarea th:id="|poqr_input${list.poqIdx}|" th:name="|poqrText${list.poqIdx}|"
+                                  class="input-type2 w-full" th:if="${list.poqType == 'D'}"
+                                  th:maxlength="${list.poqMaxTxt}"></textarea>
+                    </div>
+                </div>
+
+
+                <div class="bottom_btn_list">
+                    <ul>
+                        <li><a href="/lms/edu/myList/?site=kepco&mn=0405"><span>목록</span></a></li>
+                        <li><input type="submit" value="제출하기" class="btn_o"></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+        <script>
+            /*
+        $('').ajaxForm({
+            dataType: 'json',
+            success: function(response) {
+                alert('저장되었습니다.');
+                location.href='/lms/edu/myList/?site=kepco&mn=0405';
+            },
+            error: function(result, status, error) {
+                alert(result.responseJSON.message);
+            },
+        });
+        */
+            $(function () {
+                function validateForm() {
+                    // 현재 폼에 대한 참조
+                    var form = document.forms[0];
+
+                    // 모든 필수 입력 필드에 대해 반복
+                    var requiredFields = form.querySelectorAll('[required]');
+                    for (var i = 0; i < requiredFields.length; i++) {
+                        var field = requiredFields[i];
+
+                        if (field.value.trim() === '') {
+                            // 필수 입력 필드가 비어 있으면 경고를 표시하고 제출을 중지합니다.
+                            alert('Please fill in all required fields.');
+                            return false;
+                        }
+                    }
+
+                    // 모든 검증을 통과하면 true를 반환하여 폼을 제출합니다.
+                    return true;
+                }
+
+                $("#poll_search_form").submit(function (e) {
+
+                    validateForm();
+                    e.preventDefault();
+                    var $frm = $(this);
+                    var form = document.getElementById("poll_search_form");
+                    if (form.getAttribute("data-submitted") === "true") {
+                        return false; // 이미 제출된 경우 더 이상 제출을 허용하지 않음 더블클릭 방지
+                    }
+                    form.setAttribute("data-submitted", "true");
+
+                    $.ajax({
+                        type: "post",
+                        url: $frm.attr("action"),
+                        data: $frm.serialize(),
+                        contentType: "application/x-www-form-urlencoded",
+                        dataType: "json",
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+                        },
+                    }).done(function (data) {
+                        if (data.code == 0) {
+                            alert('저장되었습니다.');
+                            location.href = '/lms/edu/myList/?site=kepco&mn=0405';
+                        } else {
+                            alert(data.message);
+                        }
+                    }).fail(function (xhr) {
+                        if (typeof xhr.responseJSON.message != "undefined") {
+                            alert(xhr.responseJSON.message);
+                        }
+                    });
+                });
+            });
+        </script>
+
+
+        <!--
+        <div class="poll_bg_w2">
+            <div class="name"><b>홍길동</b>님 설문 내용확인<i class="fa-brands fa-readme"></i></div>
+            <div class="txt">
+                <dl>
+                    <dt>제출일자</dt>
+                    <dd>2023-06-26</dd>
+                </dl>
+                <dl>
+                    <dt>과정명</dt>
+                    <dd>설비진단처 기자재 고장분석</dd>
+                </dl>
+                <dl>
+                    <dt>만족도 점수</dt>
+                    <dd class="score">5</dd>
+                </dl>
+            </div>
+        </div>
+          -->
+
+</th:block>
+
+

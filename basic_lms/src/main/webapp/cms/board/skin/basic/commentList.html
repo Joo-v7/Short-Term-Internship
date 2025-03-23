@@ -1,0 +1,72 @@
+<ul class="comment_box">
+	<li class="comment_list" th:each="commentVo : ${list}"  th:id="|comment_li_${commentVo.commentIdx}|" >
+		<p class="cmt_name">
+		[[${commentVo?.commentName}]]<span class="cmt_date"><th:block class="t_date" th:text="${#dates.format(commentVo.insertDate, 'yyyy-MM-dd HH:ss')}"></th:block></span>
+	
+		</p>
+		
+		<p class="cmt_cnt" th:utext="${#strings.replace(#strings.escapeXml(commentVo?.commentContent),'&#10;','&lt;br&gt;')}" ></p>
+		<div class="cmt_btn" th:if="${#strings.equals(commentVo.insertIdx, memberDetailVo.memberIdx) || boardPermission.isBoardAdmin}">
+			<a th:onclick="commentForm([[${commentVo.postIdx}]], [[${commentVo.commentIdx}]]);"  class="button_type5 no_link comment_modify" data-type="form">수정</a>
+			<a th:onclick="commentDelete([[${commentVo.postIdx}]], [[${commentVo.commentIdx}]]);" class="button_type5 no_link comment_delete" data-type="delete">삭제</a>
+		</div>
+	</li>
+</ul>
+
+<script>
+
+function commentForm(postIdx, commentIdx){
+	$.ajax({
+		url: '/cms/board/post/comment/form',
+		type: 'GET',
+		data : {
+			'commentIdx' : commentIdx,
+			'postIdx' : postIdx
+		},
+		dataType: 'html',
+	}).done(function (data) {
+		 $('#comment_li_'+commentIdx).html(data);
+	}).fail(function () {
+		alert('네트워크 또는 시스템 장애입니다.', 4000);
+	});
+ }
+ 
+//삭제
+ function commentDelete(postIdx, commentIdx) {
+ 	if (!commentIdx) {
+ 		toast('잘못된 접근입니다.');
+ 		return false;
+ 	}
+ 			
+ 	$.confirm({
+ 		theme : 'supervan',
+ 		title : '댓글 삭제',
+ 		content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+ 		buttons : {
+ 			확인 : function() {
+ 				$.ajax({
+ 					url  : '/cms/board/post/comment/delete',
+ 					type : 'get',
+ 					data : {
+ 						'commentIdx' : commentIdx,
+ 						'postIdx' : postIdx
+ 					},
+ 					dataType : 'json',
+ 				}).done(function(data) {
+ 					if(data.code == 0) {
+ 						alert("삭제되었습니다.");
+ 						commentList();
+ 					}
+ 					else {
+ 						alert(data.message);
+ 					}
+ 				}).fail(function() {
+ 					alert('시스템 오류로 처리할 수 없습니다.');
+ 				});
+ 			},
+ 			취소 : function() {
+ 			}
+ 		}
+ 	});
+ }
+ </script>

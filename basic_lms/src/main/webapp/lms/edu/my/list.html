@@ -1,0 +1,224 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+<style>
+.regist_tabs { display: inline-block;  margin: 0 auto; margin-bottom: 30px;  width: 100%; }
+.regist_tabs ul {max-width: 1500px;text-align: center;/* border-top: 2px solid #e3e3e3; */position: relative;margin: 0 auto;}
+.regist_tabs ul a {color: #838383;cursor: pointer;width: calc(100% / 2);float: left;border: 1px solid #2a2a2a;height: 64px;text-align: center;line-height: 61px;transition: .25s ease-in-out;border-right: 0;font-weight: 600;}
+.regist_tabs ul a:last-child{border-right: 1px solid #2a2a2a;}
+.regist_tabs ul a.current {border-top: 3px solid #2b64f9;color: #fff; border-bottom: #000;}
+   
+.traning_current_situation_list_wrap .edu_detail dl dd a.cancel_btn{
+	padding: 4px 10px 4px 8px;
+    margin-left: 8px;
+    text-align: center;
+    border-radius: 3px;
+    background: #dd2d2d;
+}
+.traning_current_situation_list_wrap .list_info_box.result_box .result_point p.app-state{font-size: 36px;}
+.my_edu_btn {
+    display: inline-flex;
+    width: auto;
+    height: 24px;
+    border-radius: 4px;
+    background-color: #323232;
+    justify-content: center;
+    align-items: center;
+    margin-left: 20px;
+    color: #fff;
+    padding: 0 20px;
+    border: 0;
+    font-size: 15px;
+}
+</style>
+<link rel="stylesheet" href="/assets/css/board.css">
+
+<script>
+	function page(i){
+		if(i == null){ i = 1;}
+		$("#pageNum").val(i);
+		$("#search_form").submit();
+	}
+</script>
+
+<!-- 탭 = 별도 페이지로 만들것 1  컨트롤 + F = 탭 = 별도 페이지로 만들것 2 검색 할 것(제발! 반드시!) -->
+
+
+<div class="edu_detail_content" style="display: none;"><!-- 탭 컨텐츠 -->
+	<div class="sub-container">
+		<div class="flexbox">
+			
+			<div class="edu-state">
+				<p>수강신청(승인대기)</p>
+				<h6>4</h6>
+			</div>
+			<div class="edu-state">
+				<p>수강승인(훈련대기)</p>
+				<h6>2</h6>
+			</div>
+			<div class="edu-state">
+				<p>수강수료(훈련결과)</p>
+				<h6>2</h6>
+			</div>
+			<div class="edu-state">
+				<p>훈련시간</p>
+				<ul>
+					<li>전체 : 2시간 2분</li>
+					<li>평균 : 23분</li>
+				</ul>
+			</div>
+			<div class="edu-state">
+				<p>훈련성적</p>
+				<ul>
+					<li>평균(안전성) : 21</li>
+					<li>평균(위험성) : 82</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="scon-tit">
+			교육훈련현황
+			<span>참여하신 최근 교육 훈련에 대한 요약정보 입니다.</span>
+		</div>
+
+
+		
+	</div>
+</div>
+
+
+<!-- 탭 = 별도 페이지로 만들 것 2-->
+<div class="edu_detail_content"><!-- 탭 컨텐츠 -->
+	<div class="sub-container">
+		<div class="scon-tit">
+			교육훈련현황
+			<span>참여하신 최근 교육 훈련에 대한 요약정보 입니다.</span>
+		</div>
+
+		<div class="regist_tabs">
+			<ul>
+				<!-- 페이지 분할해서 주소 넣기 -->
+				<li class="tab-link " data-tab="tab-1"><a class="current" href="/lms/edu/myList/?site=kepco&mn=0405">실감훈련</a></li>
+				<li class="tab-link " data-tab="tab-2"><a href="/lms/vod/myList/?site=kepco&mn=0425">영상교육</a></li>
+			</ul>
+		</div>
+		
+		<form id="search_form" action="/lms/edu/myList" method="get">
+			<input type="hidden" name="site" th:value="${req?.site}"/>
+			<input type="hidden" name="mn" th:value="${req?.mn}"/> 
+			<input type="hidden" id="pageNum" name="pageNum" th:value="${#strings.isEmpty(pageInfo?.pageNum) ? '1' : pageInfo?.pageNum}"/> 
+			<input type="hidden" name="pageSize" th:value="5"/>
+		</form>
+		
+		<div id="list_total_count">
+			전체 : <strong th:text="${pageInfo?.total}"></strong>,
+			페이지 : <strong id="page_num" th:text="${pageInfo?.pageNum}"></strong>/<span data-th-text="${pageInfo?.pages}"></span>
+		</div>
+
+
+		<div class="traning_apply_status_wrap">
+			<table>
+				<colgroup>
+					<col width="365px">
+					<col width="auto">
+					<col width="500px">
+				</colgroup>
+				<thead>
+					<tr>
+						<th colspan="2">교육과정</th>
+						<th>결과 및 평가</th>
+					</tr>
+				</thead>
+				<tr th:if="${#lists.isEmpty(list)}">
+					<td colspan="5" class="t_center">
+						데이터가 존재하지 않습니다.
+					</td>
+				</tr>
+				<tr th:each="list : ${list}">
+					<td>
+						<div class="img_box">
+							<img th:src="|/lms/edu/file?detailIdx=${list?.detailIdx}&file=eduImage1|" onerror="this.src='/pages/kepco/img/sub/edu_none.jpg'"/>
+						</div>
+					</td>
+					<td>
+						<div class="list_info_cont_box">
+							<ul class="edu_cate_list">
+								<li class="ca1">[[${list.eduCateNm}]]</li>
+							</ul>
+							<h6 class="edu_tit_box">
+								<a th:href="@{/lms/edu/view/?site=kepco&&mn=0101&(detailIdx = ${list.detailIdx})}" th:text="${list.trainTitle}"></a>
+							</h6>
+
+							<dl class="edu_info_box">
+								<dt>교육기간</dt>
+								<dd>[[${list.eduTrainBgnDate}]] ~ [[${list.eduTrainEndDate}]]</dd>
+							</dl>
+							<dl class="edu_info_box">
+								<dt>교육시간</dt><dd>[[${list.moduleTimeSum}]]분</dd>
+							</dl>
+							<dl class="edu_info_box">
+								<dt>교육과정</dt><dd>[[${list.eduPackCount}]]건</dd>
+							</dl>
+						</div>
+					</td>
+					<td>
+						<div class="t_result_wrap">
+							<span class="result_score">-</span>
+							<div class="btn_wrap">
+								<a th:href="@{/lms/edu/stat/list?site=kepco&mn=0401(playIdx = ${list.playIdx})}" class="btn result_check_btn" title="훈련결과 상세 페이지 이동">
+									훈련결과상세
+								</a>
+								<a th:if="${list.evIdx}" th:href="@{/lms/edu/myEvaluationView/?site=kepco&mn=0405&(evIdx = ${list.evIdx}, playIdx = ${list.playIdx})}" class="btn post_evalution_btn" title="사후평가 페이지 이동">
+									사후평가
+								</a>
+								<a th:if="${list.poIdx}" th:href="@{/lms/edu/myPollForm/?site=kepco&mn=0405&(poIdx = ${list.poIdx}, playIdx = ${list.playIdx})}" class="btn likey_btn" title="만족도 조사 페이지 이동">
+									만족도 조사
+								</a>
+								<button type="button" class="btn download_btn" th:onclick="openChild([[${list.playIdx}]], [[${list.evPlayIdx}]], [[${list.poPlayIdx}]])" title="수료증 다운로드">
+<!-- 									<i class="fa-solid fa-download"></i> -->
+									수료증 출력
+								</button>
+							</div>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div> 
+	<div id="paginate_complex" class="mt20 clear" th:if="${!#lists.isEmpty(list)}">
+		<p class="btn_page">
+			<a class="first_back" th:onclick="${pageInfo?.isFirstPage} ? 'return false;' : ''" th:href="|javascript:page(1);|">
+				<span class="hidden">처음페이지</span>
+			</a>
+			<a class="prev_back" th:onclick="${pageInfo?.hasPreviousPage} ? '' : 'return false;'" th:href="|javascript:page(${pageInfo?.pageNum-1});|">
+				<span class="hidden">이전페이지</span>
+			</a>
+			<a th:each="n : ${pageInfo.navigatepageNums}" th:class="${pageInfo.pageNum} == ${n} ? 'on' : ''" th:href="|javascript:page(${n});|" th:text="${n}" ></a>
+			<a class="next_back" th:onclick="${pageInfo?.hasNextPage} ? '' : 'return false;'" th:href="|javascript:page(${pageInfo.pageNum+1});|">
+				<span class="hidden">다음페이지</span>
+			</a>
+			<a class="last_back" th:onclick="${pageInfo?.isLastPage} ? 'return false;' : ''" th:href="|javascript:page(${pageInfo?.pages});|">
+				<span class="hidden">마지막페이지</span>
+			</a>
+		</p>
+	</div>
+</div>
+
+
+
+<script>
+
+function openChild(playIdx,evPlayIdx,poPlayIdx)
+{
+	if(evPlayIdx == null || evPlayIdx == 0){ alert('사후평가를 먼저 완료해주십시오.'); return false;}
+	else if(poPlayIdx == null || evPlayIdx == 0){ alert('만족도 조사를 먼저 완료해주십시오.'); return false;}
+    // window.name = "부모창 이름";
+    else {window.open('/lms/edu/myPrint/?site=kepco&mn=0405&playIdx='+playIdx,'childForm',"width=800, height=925, resizable = no, scrollbars = yes");}
+
+}
+
+</script>
+</th:block>

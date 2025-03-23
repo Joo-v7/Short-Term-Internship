@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.content.ContentMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(contentIdx)">
+				AND a.content_idx = #{contentIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					a.content_title LIKE CONCAT ('%',#{scWord},'%') 
+					OR a.content_desc LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey1)">
+				AND a.vod_category_idx = #{scKey1}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scKey2)">
+				AND a.use_yn = #{scKey2}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.vod.content.ContentVo">
+		SELECT
+			a.*, b.category_nm,
+			(SELECT member_nm FROM cms_member m WHERE m.member_idx = a.insert_idx) AS insert_nm,
+			(SELECT member_nm FROM cms_member m WHERE m.member_idx = a.update_idx) AS update_nm
+		FROM lms_vod_content a
+		LEFT JOIN lms_vod_category b ON a.vod_category_idx = b.vod_category_idx
+		<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				content_idx ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.vod.content.ContentVo">
+		SELECT a.*, b.category_nm,
+			(SELECT member_nm FROM cms_member m WHERE m.member_idx = a.insert_idx) AS insert_nm,
+			(SELECT member_nm FROM cms_member m WHERE m.member_idx = a.update_idx) AS update_nm
+		FROM lms_vod_content a
+		LEFT JOIN lms_vod_category b ON a.vod_category_idx = b.vod_category_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.vod.content.ContentVo" useGeneratedKeys="true" keyProperty="contentIdx" keyColumn="contentIdx">
+		INSERT INTO lms_vod_content (
+			vod_idx, vod_category_idx, content_title,content_desc,content_time,study_time,use_yn,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{vodIdx}, #{vodCategoryIdx}, #{contentTitle},#{contentDesc},#{contentTime},#{studyTime},use_yn,
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.vod.content.ContentVo">
+		UPDATE lms_vod_content
+		<set>
+			vod_category_idx = #{vodCategoryIdx},
+			content_title = #{contentTitle},
+			content_desc = #{contentDesc},
+			content_time = #{contentTime},
+			study_time = #{studyTime},
+			use_yn = #{useYn},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n' 
+			AND content_idx = #{contentIdx}
+	</update>
+	
+	<update id="fileUpdate" parameterType="kepco.lms.vod.content.ContentVo">
+		UPDATE lms_vod_content
+		<set>
+			content_file_name = #{contentFileName},
+			content_file_origin = #{contentFileOrigin},
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND content_idx = #{contentIdx}
+	</update>
+	
+	<delete id="delete" parameterType="map">
+		UPDATE lms_vod_content
+		<set>
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n' 
+			AND content_idx = #{contentIdx}
+	</delete>
+	
+</mapper>

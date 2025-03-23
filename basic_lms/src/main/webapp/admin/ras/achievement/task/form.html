@@ -1,0 +1,119 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<form id="frmForm" method="post" th:action="@{/{adminPath}/ras/achievement/task/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+	<div class="top">
+		<div class="row">
+			<div class="col s12 right-align">
+				<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button" th:if="${!#strings.isEmpty(vo?.processIdx)}" th:onclick="dataDelete();">삭제<i class="material-icons left">delete</i></button>				
+				<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit" value="저장">저장 <i class="material-icons left">check</i></button>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col s12">
+			<div class="row">
+				<div class="input-field col s11">
+					<input type="text" name="taskId" id="taskId"  th:value="${vo?.taskId}">
+					<label for="taskId" class="req">작업 ID</label>
+				</div>
+				<input name="processIdx" id="processIdx" type="hidden"  th:value="${vo?.processIdx}">
+			</div>
+			
+			<div class="row">
+				<div class="input-field col s5">
+				    <select id="workRole" name="workRole" style="display:block">
+				         <option value="주작업자" th:selected="${vo?.workRole == '주작업자'}">주작업자</option>
+				         <option value="보조작업자" th:selected="${vo?.workRole == '보조작업자'}">보조작업자</option>
+				         <option value="지상작업자" th:selected="${vo?.workRole == '지상작업자'}">지상작업자</option>
+				         <option value="작업책임자" th:selected="${vo?.workRole == '작업책임자'}">작업책임자</option>
+				    </select>
+				    <label for="workRole" class="req">작업자 역할 선택</label>
+			    </div>
+			    <div class="input-field col s5">
+					<input type="text" name="taskTool" id="taskTool"  th:value="${vo?.taskTool}">
+					<label for="taskTool">공구</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12">
+					<input type="text" name="processContents" id="processContents"  th:value="${vo?.processContents}">
+					<label for="processContents">작업 내용</label>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</form>
+<script>
+	$(function() {
+		
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='taskId']", $frm).val() == "") {
+				toast("작업 ID는 필수입력 입니다.");
+				$("input[name='taskId']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	});
+	
+	function dataDelete() {
+		var processIdx = $("[name='processIdx']", '#frmForm').val();
+		
+		var $frm = $(this);
+		
+		$.ajax({
+			type: "get",
+			url : gblAdminPath + '/ras/achievement/task/delete',
+			data: "processIdx="+processIdx,
+			dataType: "json",
+			beforeSend: function(xhr) {
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				dataForm();
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			}
+		});
+		
+	}
+	
+</script>

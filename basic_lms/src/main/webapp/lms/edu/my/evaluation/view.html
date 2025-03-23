@@ -1,0 +1,77 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<script th:inline="javascript">
+
+	// 뒤로가기 함수 정의
+    function goBack() {
+    	window.location.href = "/lms/edu/myList/?site=kepco&mn=0405";
+    }
+</script>
+<div class="sub-container">
+
+<div class="con-infobox">	
+	<div class="edu_list">
+		<ul class="edu_list_ul">
+			<li class="edu_list_li">
+				<div class="edu_img">
+					<img th:src="|/lms/edu/file?detailIdx=${vo?.detailIdx}&file=eduImage1|" onerror="this.src='/pages/kepco/img/sub/edu_none.jpg'"/>
+					<div class="edu_title">
+						<p class="logo"></p>
+						<h4 th:text="|${vo?.trainTitle} ${vo?.eduNumeral}|"></h4>
+						<p class="txt" th:text="${vo?.eduDesc}"></p>
+						<a th:href="@{/lms/edu/view/(site = ${req?.site}, mn = ${req?.mn}, detailIdx=${vo?.detailIdx})}"><span>자세히보기</span></a>
+					</div>
+				</div>
+				<div class="edu_content">
+					<div class="edu_content_di">
+						<ul class="edu-list">
+							<li th:each="eduKeyword,idx : ${#strings.setSplit(vo?.eduKeyword,',')}" th:class="|ca${idx.count}|" th:text="${eduKeyword}" />
+						</ul>
+						<h6 th:text="|${vo?.trainTitle} ${vo?.eduNumeral} 사후평가|" class="edu-list-tit"></h6>
+						<table class="table_type2" summary="사후평가">
+							<caption>사후평가 안내</caption>
+							<colgroup>
+								<col width="25%">
+								<col width="%">
+							</colgroup>
+							<tbody>
+								<tr>
+									<th>사후평가 문항수</th>
+									<td>[[${ev?.evqCnt}]] 문항</td>
+								</tr>
+								<tr>
+									<th>수행 여부</th>
+									<td th:if="${!#strings.isEmpty(epv?.evPlayIdx)}">Y</td>
+									<td th:if="${#strings.isEmpty(epv?.evPlayIdx)}">N</td>
+								</tr>
+								<tr>
+									<th>내 점수</th>
+									<td th:if="${!#strings.isEmpty(epv?.evPlayIdx)}">[[${epv?.score}]]</td>
+									<td th:if="${#strings.isEmpty(epv?.evPlayIdx)}">-</td>
+								</tr>
+							</tbody>
+						</table>
+
+						<ul class="edu_detail_right_btn">
+							<li th:if="${#strings.isEmpty(epv?.evPlayIdx)}"><a th:href="@{/lms/edu/myEvaluationForm/?site=kepco&mn=0405&(evIdx = ${vo.evIdx}, playIdx = ${playVo.playIdx})}">사후평가 실시</a></li>
+							<li th:if="${!#strings.isEmpty(epv?.evPlayIdx)}"><a th:href="@{/lms/edu/myEvaluationForm/?site=kepco&mn=0405&(evIdx = ${vo.evIdx}, playIdx = ${playVo.playIdx})}">사후평가 재실시</a></li>
+							<li>	
+								<a href="javascript:void(0);" onclick="goBack()">이전화면</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</li>
+		</ul>
+		
+	</div>
+</div>
+
+</div>
+
+</th:block>

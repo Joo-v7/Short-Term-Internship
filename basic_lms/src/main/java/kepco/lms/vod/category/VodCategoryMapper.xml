@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.category.VodCategoryMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(vodCategoryIdx)">
+				AND vod_category_idx = #{vodCategoryIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(categoryNm)">
+				AND category_nm = #{categoryNm}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(useYn)">
+				AND use_yn = #{useYn}
+			</if>
+				AND delete_yn = 'n'
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.lms.vod.category.VodCategoryVo">
+		SELECT *
+		FROM lms_vod_category
+			<include refid="selectWhere"/>
+		ORDER BY
+		category_order ASC
+
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.lms.vod.category.VodCategoryVo">
+		SELECT *
+		FROM lms_vod_category
+		WHERE vod_category_idx = #{vodCategoryIdx}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.lms.vod.category.VodCategoryVo" useGeneratedKeys="true" keyProperty="vodCategoryIdx" keyColumn="vodCategoryIdx">
+		INSERT INTO lms_vod_category (
+			vod_category_idx, category_nm, category_order, use_yn,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{vodCategoryIdx}, #{categoryNm},#{categoryOrder}, #{useYn},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.lms.vod.category.VodCategoryVo">
+		UPDATE lms_vod_category
+		<set>
+			<if test="!@kepco.util.StrUtil@isBlank(categoryNm)">
+			category_nm = #{categoryNm},
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(categoryOrder)">
+			category_order = #{categoryOrder},
+			</if>
+			use_yn = #{useYn},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND vod_category_idx = #{vodCategoryIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.lms.vod.category.VodCategoryVo">
+		UPDATE lms_vod_category
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND vod_category_idx = #{vodCategoryIdx}
+	</update>
+	
+</mapper>

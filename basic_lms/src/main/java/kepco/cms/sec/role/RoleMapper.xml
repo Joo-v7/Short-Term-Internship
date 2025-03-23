@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.sec.role.RoleMapper">
+	
+	<!-- RoleHierarchy 목록 -->
+	<select id="selectRoleCdList" resultType="kepco.cms.sec.role.RoleVo">
+		SELECT
+			role_cd, parent_role_cd
+		FROM cms_sec_role
+		WHERE use_yn = 'y' and nullif(parent_role_cd, '') is not null 
+	</select>
+	
+	<!-- 하위 roleCd 목록 -->
+	<select id="selectRoleCdChildrenList" parameterType="string" resultType="string">
+		WITH RECURSIVE my_cte AS (
+			SELECT * 
+			FROM cms_sec_role 
+			WHERE use_yn = 'y' and parent_role_cd = #{item}
+			UNION ALL 
+			SELECT csr.* 
+			FROM cms_sec_role csr 
+			JOIN my_cte
+			ON csr.parent_role_cd = my_cte.role_cd and csr.use_yn = 'y'
+		) SELECT distinct role_cd FROM my_cte;
+	</select>
+	
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+			AND role_cd LIKE CONCAT ('%',#{scWord},'%')
+			</if>
+			AND delete_yn = 'n'
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.sec.role.RoleVo">
+		SELECT
+			*
+		FROM cms_sec_role
+			<include refid="selectWhere"/>
+		ORDER BY role_cd
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.sec.role.RoleVo">
+		SELECT
+			*
+		FROM cms_sec_role
+		WHERE 1 = 1
+			<if test="!@kepco.util.StrUtil@isBlank(roleIdx)">
+				AND role_idx = #{roleIdx}
+			</if>
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="kepco.cms.sec.role.RoleVo" useGeneratedKeys="true" keyProperty="roleIdx" keyColumn="role_idx">
+		INSERT INTO cms_sec_role
+		(
+		role_idx, role_cd, role_nm, parent_role_cd, 
+		insert_idx, insert_ip, insert_date,
+		use_yn, delete_yn
+		)
+		VALUES
+		(
+		#{roleIdx}, #{roleCd}, #{roleNm}, #{parentRoleCd}, 
+		#{insertIdx}, #{insertIp}, CURRENT_TIMESTAMP(),
+		#{useYn}, 'n'
+		)
+	</insert>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="kepco.cms.sec.role.RoleVo">
+		UPDATE cms_sec_role
+		<set>
+			role_cd = #{roleCd}, 
+			role_nm = #{roleNm}, 
+			parent_role_cd = #{parentRoleCd}, 
+			update_idx = #{updateIdx}, 
+			update_ip = #{updateIp}, 
+			update_date = CURRENT_TIMESTAMP(), 
+			use_yn = #{useYn}
+		</set>
+		WHERE
+			role_idx = #{roleIdx}
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="delete" parameterType="map">
+		UPDATE cms_sec_role
+		<set>
+			delete_idx = #{deleteIdx}, 
+			delete_ip = #{deleteIp}, 
+			delete_date = CURRENT_TIMESTAMP(), 
+			delete_yn = 'y',
+			use_yn = 'n'
+		</set>
+		WHERE
+			role_idx = #{roleIdx}
+	</delete>
+	
+	
+	
+</mapper>

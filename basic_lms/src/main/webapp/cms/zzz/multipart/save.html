@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<link href="//cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+	<link href="/css/default.css" rel="stylesheet"/>
+	<script src="//code.jquery.com/jquery-3.6.1.min.js"></script>
+</head>
+<body>
+<div class="container">
+
+<table class="table table-bordered table-striped table-hover">
+	<thead>
+	<tr>
+		<th class="text-center">origFileName</th>
+		<th class="text-center">saveFileName</th>
+		<th class="text-center">contentType</th>
+		<th class="text-center">size</th>
+		<th class="text-center">LINK</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr th:if="${#lists.isEmpty(fileInfoList)}">
+		<td colspan="5" class="text-center">파일이 없습니다.</td>
+	</tr>
+	<tr th:each="v : ${fileInfoList}">
+		<td th:text="${v.origFileName}"></td>
+		<td th:text="${v.saveFileName}"></td>
+		<td th:text="${v.contentType}"></td>
+		<td th:text="${v.size}" class="text-end"></td>
+		<td><a class="btn btn-primary" th:href="@{download(saveFileName=${v.saveFileName},origFileName=${v.origFileName})}">다운로드</a></td>
+	</tr>
+	</tbody>
+</table>
+</div>
+<!-- // .container -->
+
+</body>
+</html>

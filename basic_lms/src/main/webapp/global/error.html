@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="/pages/admin/css/error_style.css">
+	<title>초실감훈련센터 - ERROR [[${status}]]</title>
+</head>
+<body th:with="gblAdminPath=${@environment.getProperty('global.admin-path')}">
+	<div class="error_wrap">
+		<div class="error_imb_box">
+			<img src="/pages/admin/img/icon_error.png" alt="에러">
+		</div>
+		<div class="error_text_box" th:switch="${status}">
+			<th:block th:case="401">
+				<h2>401 Unauthorized</h2> 
+				<span>로그인이 필요합니다.</span>
+				<p>해당 페이지는 로그인이 필요합니다. 로그인 후 다시 이용해주시기 바랍니다.</p>
+			</th:block>
+			
+			<th:block th:case="403">
+				<h2>403 Forbidden</h2> 
+				<span>접근 권한이 없습니다.</span>
+				<p>해당 페이지에 접근권한이 없습니다. 관리자에게 문의해주시기 바랍니다.</p>
+			</th:block>
+			
+			<th:block th:case="404">
+				<h2>404 Not Found</h2> 
+				<span>페이지를 찾을 수 없습니다.</span>
+				<p>입력하신 주소가 올바른지 확인 후, 다시 이용해주시기 바랍니다.</p>
+			</th:block>
+			
+			<th:block th:case="500">
+				<h2>500 Server Error</h2> 
+				<span>서버 오류가 발생했습니다.</span>
+				<p>서버에서 예기치 못한 오류가 발생했습니다. 관리자에게 문의해주시기 바랍니다.</p>
+			</th:block>
+			
+			<th:block th:case="*">
+				<h2>[[${status}]] Unknown Error</h2> 
+				<span>[[${error}]]</span>
+				<p>[[${message}]]</p>
+			</th:block>
+			
+		</div>
+		<div class="ctrl_btn_box">
+			<th:block th:if="${status == 401}">
+				<a th:href="@{|/${gblAdminPath}/cms/member/auth|}">로그인</a>
+			</th:block>
+			<th:block th:if="${status != 401}">
+				<a th:href="@{|/${gblAdminPath}/cms/dashboard|}">메인으로</a>
+				<a href="javascript:history.back();">이전 페이지</a>
+			</th:block>
+		</div>
+	</div>
+
+</body>
+</html>
+
+<!--
+		<table class="table table-striped table-bordered">
+			<tr>
+				<th>timestamp</th>
+				<td>[[${#dates.format(timestamp, 'yyyy-MM-dd HH:mm:ss.SSS')}]]</td>
+			</tr>
+			<tr>
+				<th>status</th>
+				<td>[[${status}]]</td>
+			</tr>
+			<tr>
+				<th>error</th>
+				<td>[[${error}]]</td>
+			</tr>
+			<tr>
+				<th>path</th>
+				<td>[[${path}]]</td>
+			</tr>
+			<tr>
+				<th>message</th>
+				<td>[[${message}]]</td>
+			</tr>
+			<tr>
+				<th>exception</th>
+				<td>[[${exception}]]</td>
+			</tr>
+			<tr>
+				<th>trace</th>
+				<td>[[${trace}]]</td>
+			</tr>
+		</table>
+-->

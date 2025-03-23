@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+	<link href="//cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="/css/default.css" rel="stylesheet"/>
+    <script src="//code.jquery.com/jquery-3.6.1.min.js"></script>
+</head>
+<body>
+	<div class="container">
+	
+	<div style="display:inline-flex;" >
+		<p th:text="${pageInfo?.total}"></p>
+		<form action="/cms/member/list">
+			<select name="scType" id="scType">
+				<option value="" >선택</option>
+			</select>
+			<input type="text" name="scKeyword" id="scKeyword" th:value="${param?.scKeyword}"/>
+			<input type="submit" value="검색" />
+		</form>
+		<a th:href="@{/cms/member/form}">등록</a>
+	</div>
+	
+	<table id="ta" class="table table-bordered table-striped table-hover">
+		<thead>
+		<tr>
+			<th class="text-center">rownum</th>
+			<th class="text-center">memberId</th>
+			<th class="text-center">memberNm</th>
+			<th class="text-center">memberEmail</th>
+			<th class="text-center">memberAge</th>
+			<th class="text-center">memberGender</th>
+			<th class="text-center">insertDate</th>
+			<th class="text-center">기능</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:if="${#lists.isEmpty(list)}">
+			<td colspan="8">값이 없습니다.</td>
+		</tr>
+		<tr th:each="vo : ${list}">
+			<td th:text="${vo?.rn}"></td>
+			<td th:text="${vo?.memberId}"></td>
+			<td th:text="${vo?.memberNm}"></td>
+			<td th:text="${vo?.memberEmail}"></td>
+			<td th:text="${vo?.memberAge}"></td>
+			<td th:text="${vo?.memberGender eq 'm' ? '남' : '여'}"></td>
+			<td th:text="${vo?.insertDate}"></td>
+			<td th:classappend="${vo?.memberId}">
+				<a th:href="@{/cms/member/form(memberIdx=${vo?.memberIdx},scType=${param?.scType},scKeyword=${param?.scKeyword},pageNum=${param?.pageNum})}" >수정</a>
+				<a th:href="@{/cms/member/delete(memberIdx=${vo?.memberIdx})}" >삭제</a>
+			</td>
+		</tr>
+		</tbody>
+	</table>
+	
+	<nav th:if="${!#lists.isEmpty(pageInfo)}">
+		<ul class="pagination justify-content-center">
+			<li class="page-item" th:classappend="${!pageInfo?.hasPreviousPage} ? 'disabled'">
+				<span th:if="${!pageInfo?.hasPreviousPage}" class="page-link">이전</span>
+				<a th:if="${pageInfo?.hasPreviousPage}" class="page-link" th:href="@{'?pageNum='+${pageInfo?.prePage}(scType=${param?.scType},scKeyword=${param?.scKeyword})}">이전</a>
+			</li>
+				<li class="page-item" th:each="n : ${pageInfo?.navigatepageNums}" th:classappend="${n == pageInfo?.pageNum} ? 'active'">
+				<a class="page-link" th:href="@{'?pageNum='+${n}(scType=${param?.scType},scKeyword=${param?.scKeyword})}" th:text="${n}"></a>
+			</li>
+			<li class="page-item" th:classappend="${!pageInfo?.hasNextPage} ? 'disabled'">
+				<span th:if="${!pageInfo?.hasNextPage}" class="page-link">다음</span>
+				<a th:if="${pageInfo?.hasNextPage}" class="page-link" th:href="@{'?pageNum='+${pageInfo?.nextPage}(scType=${param?.scType},scKeyword=${param.scKeyword})}">다음</a>
+			</li>
+		</ul>
+	</nav>
+	</div>
+
+</body>
+</html>

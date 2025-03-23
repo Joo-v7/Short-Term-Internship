@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.member.privacy.log.PrivacyLogMapper">
+	
+	<sql id="selectWhere">
+		<where>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					b.member_id LIKE CONCAT ('%',#{scWord},'%')
+					OR b.member_nm LIKE CONCAT ('%',#{scWord},'%')
+					OR c.member_id LIKE CONCAT ('%',#{scWord},'%')
+					OR c.member_nm LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 목록 -->
+	<select id="selectList" parameterType="map" resultType="kepco.cms.member.privacy.log.PrivacyLogVo">
+		SELECT
+			a.*,b.member_id as member_id, b.member_nm as member_nm, c.member_id as request_id,c.member_nm as request_nm
+		FROM cms_member_privacy_log a
+        LEFT JOIN cms_member b
+        ON a.member_idx = b.member_idx
+        LEFT JOIN cms_member c
+        ON a.request_idx = c.member_idx
+			<include refid="selectWhere"/>
+	</select>
+	
+	<!-- 조회 -->
+	<select id="select" parameterType="map" resultType="kepco.cms.member.privacy.log.PrivacyLogVo">
+		SELECT
+			*
+		FROM cms_member_privacy_log
+		WHERE
+			<if test="!@kepco.util.StrUtil@isBlank(logIdx)">
+				AND log_idx = #{logIdx}
+			</if>
+	</select>
+	
+	<!-- 추가 -->
+	<insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="logIdx" keyColumn="log_idx" >
+		<bind name="requestIdx" value="@kepco.util.StrUtil@getSessionIdx()"/>
+		<bind name="requestIp" value="@kepco.util.StrUtil@getClientIP()"/>
+		INSERT INTO cms_member_privacy_log
+		(
+		request_type, member_idx, request_idx, request_ip, request_date, request_desc
+		)
+		VALUES
+		(
+		#{requestType}, #{memberIdx}, #{requestIdx}, #{requestIp}, CURRENT_TIMESTAMP(), #{requestDesc}
+		)
+	</insert>
+	
+	
+</mapper>

@@ -1,0 +1,175 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+<div class="sub-container">
+
+
+
+<div class="poll_bg_w">
+	<div class="scon-tit">만족도조사/사후평가<span class="tit-red">* 필수항목</span></div>
+	<div class="poll_bg">
+		<h5 class="poll_title">1. 근로시간이 적절하다 생각 하시나요? <span class="necessary_color">*</span></h5>
+		<ul class="select_poll">
+			<li>
+				<label for="view_poqd_idx_12090" class="active">
+				<input type="radio" id="view_poqd_idx_12090" name="poqd_idx[3222]" class="filled-in" value="12090">
+				<span>예</span>
+				</label>
+			</li>
+			<li>
+				<label for="view_poqd_idx_12091" class="active">
+				<input type="radio" id="view_poqd_idx_12091" name="poqd_idx[3222]" class="filled-in" value="12091">
+				<span>아니요</span>
+				</label>
+			</li>
+		</ul>
+	</div>
+
+	<div class="poll_bg">
+		<h5 class="poll_title">2. 만약 아니라면 몇시간이 적당하나요? <span class="necessary_color">*</span></h5>
+		<ul class="select_poll">
+			<li><input type="checkbox" name="chk_info" value="">4~6</li>
+			<li><input type="checkbox" name="chk_info" value="">6~8</li>
+			<li><input type="checkbox" name="chk_info" value="">8~10</li>
+			<li><input type="checkbox" name="chk_info" value="">기타<br /><input type="text" class="input-type1 w130">
+			</li>
+		</ul>
+	</div>
+
+	<div class="poll_bg">
+		<h5 class="poll_title">3. 근로 시간의 단기화가 정말 일의 효율을 가져와 줄수 있다 샹각 하시나요? 그렇다면 그 이유를 써주세요 <span class="necessary_color">*</span></h5>
+		<input type="text" title="" class="input-type1 w-full">
+	</div>
+
+	<div class="poll_bg">
+		<h5 class="poll_title">4. 근로의 시간이 길어야 힌다면 그 이유를 써 주시길 비랍니다 <span class="necessary_color">*</span></h5>
+		<textarea name="" class="input-type2 w-full"></textarea>
+	</div>
+
+
+	<div class="poll_bg">
+		<table class="table_type4" summary="테이블">
+			<caption>테이블</caption>
+			<colgroup>
+				<col width="10%">
+				<col width="30%">
+				<col width="30%">
+				<col width="30%">
+			</colgroup>
+			<thead>
+				<tr>
+					<th>번호</th>
+					<th>성명</th>
+					<th>답변</th>
+					<th>등록일</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>1</td>
+					<td>내용내용내용내용</td>
+					<td>내용내용내용내용</td>
+					<td>내용내용내용내용</td>
+				</tr>
+				<tr>
+					<td>1</td>
+					<td>내용내용내용내용</td>
+					<td>내용내용내용내용</td>
+					<td>내용내용내용내용</td>
+				</tr>
+				<tr>
+					<td>1</td>
+					<td>내용내용내용내용</td>
+					<td>내용내용내용내용</td>
+					<td>내용내용내용내용</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="bottom_btn_list">
+		<ul>
+			<li><a href="#"><span>목록</span></a></li>
+			<li><input type="submit" value="제출하기" class="btn_o"></li>
+		</ul>
+	</div>
+</div>
+
+<br /><br /><br />
+
+
+
+<div class="poll_bg_w2">
+	<div class="name"><b>홍길동</b>님 설문 내용확인<i class="fa-brands fa-readme"></i></div>
+	<div class="txt">
+		<dl>
+			<dt>제출일자</dt>
+			<dd>2023-06-26</dd>
+		</dl>
+		<dl>
+			<dt>과정명</dt>
+			<dd>설비진단처 기자재 고장분석</dd>
+		</dl>
+		<dl>
+			<dt>만족도 점수</dt>
+			<dd class="score">5</dd>
+		</dl>
+	</div>
+</div>
+
+<div class="poll_bg_w">
+	<div class="scon-tit">설문 내용확인</div>
+	<div class="poll_bg">
+		<h5 class="poll_title">1. 근로시간이 적절하다 생각 하시나요? <span class="necessary_color">*</span></h5>
+		<ul class="select_poll">
+			<li>
+				<label for="view_poqd_idx_12090" class="active">
+				<input type="radio" id="view_poqd_idx_12090" name="poqd_idx[3222]" class="filled-in" value="12090">
+				<span>예</span>
+				</label>
+			</li>
+			<li>
+				<label for="view_poqd_idx_12091" class="active">
+				<input type="radio" id="view_poqd_idx_12091" name="poqd_idx[3222]" class="filled-in" value="12091">
+				<span>아니요</span>
+				</label>
+			</li>
+		</ul>
+	</div>
+
+	<div class="poll_bg">
+		<h5 class="poll_title">2. 만약 아니라면 몇시간이 적당하나요? <span class="necessary_color">*</span></h5>
+		<ul class="select_poll">
+			<li><input type="checkbox" name="chk_info" value="">4~6</li>
+			<li><input type="checkbox" name="chk_info" value="">6~8</li>
+			<li><input type="checkbox" name="chk_info" value="">8~10</li>
+			<li><input type="checkbox" name="chk_info" value="">기타<br /><input type="text" class="input-type1 w130">
+			</li>
+		</ul>
+	</div>
+
+	<div class="poll_bg">
+		<h5 class="poll_title">3. 근로 시간의 단기화가 정말 일의 효율을 가져와 줄수 있다 샹각 하시나요? 그렇다면 그 이유를 써주세요 <span class="necessary_color">*</span></h5>
+		<input type="text" title="" class="input-type1 w-full">
+	</div>
+
+	<div class="poll_bg">
+		<h5 class="poll_title">4. 근로의 시간이 길어야 힌다면 그 이유를 써 주시길 비랍니다 <span class="necessary_color">*</span></h5>
+		<textarea name="" class="input-type2 w-full"></textarea>
+	</div>
+
+
+
+	<div class="bottom_btn_list">
+		<a href="#" class="close-btn"><span>창닫기</span></a>
+	</div>
+</div>
+
+</div>
+</th:block>
+
+

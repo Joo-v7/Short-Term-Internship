@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.sysinfoLog.SysinfoLogMapper">
+
+	<sql id="selectListWhere">
+		WHERE 1 = 1
+		<if test="!@kepco.util.StrUtil@isBlank(sysinfoKey)">
+		AND sysinfo_key = #{sysinfoKey}
+		</if>
+		<if test="!@kepco.util.StrUtil@isBlank(insertDate)">
+		AND insert_date = #{insertDate}
+		</if>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.sysinfoLog.SysinfoLogVo">
+       SELECT a.*
+		FROM cms_sysinfo_log a
+		<include refid="selectListWhere"></include>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="egovmap">
+		SELECT a.*
+		FROM cms_sysinfo_log a
+		WHERE sysinfo_key = #{sysinfoKey} AND insert_date = #{insertDate},'%'
+	</select>
+	<!--
+	<select id="avgByPeriod" parameterType="map" resultType="map">
+        SELECT
+	        AVG(CASE WHEN sysinfo_key = 'process.uptime' THEN CAST(sysinfo_val AS DECIMAL(10, 2)) END) AS avgProcessUptime,
+	        AVG(CASE WHEN sysinfo_key = 'jvm.memory.used-heap' THEN CAST(sysinfo_val AS DECIMAL(10, 2)) END) AS avgJvmMemoryUsedHeap,
+	        AVG(CASE WHEN sysinfo_key = 'jvm.memory,used-nonheap' THEN CAST(sysinfo_val AS DECIMAL(10, 2)) END) AS avgJvmmemoryUsedNonheap, 
+	        AVG(CASE WHEN sysinfo_key = 'system.cpu.usage' THEN CAST(sysinfo_val AS DECIMAL(10, 2)) END) AS avgSystemCpuUsage,
+	        AVG(CASE WHEN sysinfo_key = 'process.cpu.usage' THEN CAST(sysinfo_val AS DECIMAL(10, 2)) END) AS avgProcessCpuUsage,
+	        AVG(CASE WHEN sysinfo_key = 'tomcat.connections.current' THEN CAST(sysinfo_val AS DECIMAL(10, 2)) END) AS avgTomcatSessionsActiveCurrent,
+	        AVG(CASE WHEN sysinfo_key = 'hikaricp.connections.active' THEN CAST(sysinfo_val AS DECIMAL(10, 2)) END) AS avgHikaricpConnectionsActive
+       			
+		FROM cms_sysinfo_log 
+		
+		WHERE
+        insert_date >= NOW() - INTERVAL #{period} DAY;
+	</select>
+	-->
+	<select id="chartList" parameterType="map" resultType="kepco.cms.sysinfoLog.SysinfoLogVo">
+	    WITH ranked_data AS (
+		    SELECT
+		        sysinfo_log_idx,
+		        sysinfo_key,
+		        sysinfo_val,
+		        insert_date
+		    FROM cms_sysinfo_log
+		    WHERE sysinfo_key IN ('jvm.memory.used-heap', 'jvm.memory.used-nonheap', 'jvm.memory.used', 'tomcat.connections.current', 'hikaricp.connections.active')
+		)
+		SELECT
+		    insert_date,
+		    COALESCE(MAX(CASE WHEN sysinfo_key = 'jvm.memory.used-heap' THEN sysinfo_val END), 0) AS jmuhVal,
+		    COALESCE(MAX(CASE WHEN sysinfo_key = 'jvm.memory.used-nonheap' THEN sysinfo_val END), 0) AS jmunhVal,
+		    COALESCE(MAX(CASE WHEN sysinfo_key = 'jvm.memory.used' THEN sysinfo_val END), 0) AS jmuVal,
+		    COALESCE(MAX(CASE WHEN sysinfo_key = 'tomcat.connections.current' THEN sysinfo_val END), 0) AS tccVal,
+		    COALESCE(MAX(CASE WHEN sysinfo_key = 'hikaricp.connections.active' THEN sysinfo_val END), 0) AS hcaVal
+		FROM ranked_data
+		GROUP BY insert_date
+		ORDER BY insert_date DESC
+		LIMIT 60;
+</select>
+
+	
+	<insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="sysinfoLogIdx" keyColumn="sysinfoLogIdx">
+		INSERT INTO cms_sysinfo_log(
+    		sysinfo_key,
+			sysinfo_val,
+			insert_date
+		)
+		VALUES (
+			#{sysinfoKey},
+			#{sysinfoVal},
+			#{insertDate}
+		)
+	</insert>
+	
+	<delete id="deleteOldData" parameterType="map">
+		DELETE
+		FROM cms_sysinfo_log
+		WHERE insert_date &lt; DATE_SUB(NOW(), INTERVAL 1 MONTH)
+	</delete>
+</mapper>

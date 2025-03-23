@@ -1,0 +1,12 @@
+spring.config.activate.on-profile: server
+
+# 서버(개발, 운영) 전용 설정. 오버라이드 하지 않고 분리하여 정의
+
+server:
+  servlet:
+    session:
+      timeout: 30m
+      
+global:
+  scheduling.enable: true
+  file.base-path: /home/kepco_lms/spring/datas

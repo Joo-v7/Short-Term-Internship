@@ -1,0 +1,42 @@
+<form th:id="|comment_form_${vo.commentIdx}|" class="comment_form2"  method="post" action="/cms/board/post/comment/save">
+	<input type="text" name="commentName" id="commentName" placeholder="작성자" th:value="${vo.commentName}"/>
+	
+	<div class="comment_wrap" style="margin-top: 12px;">
+		<div class="comment-l">
+			<input type="hidden" name="postIdx" th:value="${vo.postIdx}">
+			<input type="hidden" name="boardIdx" th:value="${vo.boardIdx}">
+			<input type="hidden" name="commentIdx" th:value="${vo.commentIdx}">
+			<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+			<textarea name="commentContent" id="comment_content" rows="10" class="cm-comm" placeholder="댓글내용">[[${vo.commentContent}]]</textarea>
+		</div>
+		
+		<div class="comment_write_wrap">
+			<button type="submit">등록</button>
+		</div>
+	</div>
+</form>
+
+<script th:inline="javascript">
+$(function(){ 
+	var commentIdx = /*[[${vo.commentIdx}]]*/ 0;
+	
+	$('#comment_form_'+commentIdx).ajaxForm({
+		dataType: 'json',
+		success: function(response) {
+			alert('저장되었습니다.');
+			$('#comment_content').val('');
+			commentList();
+		},
+		error: function(result, status, error) {
+			if(result.responseJSON.data.message !== undefined) {
+				alert(result.responseJSON.data.message);
+			}
+			else {
+				alert(`요청을 처리할 수 없습니다.`);
+				console.log(result);
+			}
+		},
+	});
+});
+
+</script>

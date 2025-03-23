@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="/pages/admin/layout/common_layout">
+
+<th:block layout:fragment="content">
+
+
+	<!-- AM 차트 4 -->
+	<script src="/assets/libs/amchart4/core.js"></script>
+	<script src="/assets/libs/amchart4/charts.js"></script>
+	<script src="/assets/libs/amchart4/themes/animated.js"></script>
+	<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+	<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+
+
+<script>
+
+$(function () {
+	// 목록
+	$('#frmList').submit(function(e) {
+		e.preventDefault();
+		
+		dataList();
+		useStat();
+	});
+	
+	// 검색
+	$('#frmList').submit();
+	//dataList();
+});
+
+// 목록
+function dataList() {
+
+	$.ajax({
+        url: gblAdminPath + '/cms/systemLog/logList?'+$('#frmList').serialize(),
+        type: 'GET',
+        dataType: 'html',
+    }).done(function (data) {
+		console.log(data);
+		$('#logList').empty();
+        $('#logList').html(data);
+    }).fail(function () {
+        toast('네트워크 또는 시스템 장애입니다.', 4000);
+    });
+    
+
+}
+
+function page(i){
+	if(i == null){ i = 1;}
+	$("#pageNum").val(i);
+	dataList();
+}
+
+function useStat() { // 분류별 특정기간 방문자 수
+	 $.ajax({
+     url: gblAdminPath + "/cms/systemLog/useStat?systemType=LMS",
+     type: 'GET',
+     dataType: 'json',
+ }).done(function (data) {
+	  am4core.ready(function () {
+
+			// Themes begin
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+			am4core.options.commercialLicense = true;
+			var chart = am4core.create('chart_1', am4charts.XYChart)
+			chart.colors.step = 2;
+
+			chart.legend = new am4charts.Legend()
+			chart.legend.position = 'top'
+			chart.legend.paddingBottom = 20
+			chart.legend.labels.template.maxWidth = 95
+
+			var xAxis = chart.xAxes.push(new am4charts.CategoryAxis())
+			xAxis.dataFields.category = 'date'
+			xAxis.renderer.cellStartLocation = 0.1
+			xAxis.renderer.cellEndLocation = 0.9
+			xAxis.renderer.grid.template.location = 0;
+
+			var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			yAxis.min = 0;
+
+			function createSeries(value, name) {
+				var series = chart.series.push(new am4charts.ColumnSeries())
+				series.dataFields.valueY = value
+				series.dataFields.categoryX = 'date'
+				series.name = name
+
+				series.events.on("hidden", arrangeColumns);
+				series.events.on("shown", arrangeColumns);
+
+//				var bullet = series.bullets.push(new am4charts.LabelBullet())
+//				bullet.interactionsEnabled = false
+//				bullet.dy = 30;
+//				bullet.label.text = '{valueY}'
+//				bullet.label.fill = am4core.color('#ffffff')
+				
+				var bullet = series.bullets.push(new am4charts.LabelBullet());
+				bullet.interactionsEnabled = false;
+				bullet.label.text = '{valueY}';
+				bullet.label.fill = series.fill; // 기둥의 색상과 동일한 색상으로 라벨 색상 설정
+				bullet.label.dy = -5; // 기둥의 위로 이동
+				bullet.label.truncate = false; // 라벨이 잘리지 않도록 설정
+				bullet.label.hideOversized = false; // 기둥의 위에 라벨을 숨기지 않도록 설정
+				bullet.label.horizontalCenter = 'middle'; // 라벨을 수평으로 가운데 정렬
+				bullet.label.verticalCenter = 'bottom'; // 라벨을 수직으로 아래쪽에 정렬
+
+				return series;
+			}
+			
+			chart.data = [];
+			// Add data
+			 for (var i = 0; i < data.data.list.length; i++) {
+	            // Assuming data.data.list is an array with objects having properties like "teom", "caution", "danger", "accident", "carelessness"
+	            var chartDataItem = {
+	            	"date": data.data.list[i].logDate,
+	        		"save": data.data.list[i].saveCnt,
+	        		"list": data.data.list[i].listCnt,
+	        		"delete": data.data.list[i].deleteCnt
+	            };
+	
+	            chart.data.push(chartDataItem);
+	        }
+
+			createSeries('save', '등록/수정');
+			createSeries('list', '조회');
+			createSeries('delete', '삭제');
+
+			function arrangeColumns() {
+
+				var series = chart.series.getIndex(0);
+
+				var w = 1 - xAxis.renderer.cellStartLocation - (1 - xAxis.renderer.cellEndLocation);
+				if (series.dataItems.length > 1) {
+					var x0 = xAxis.getX(series.dataItems.getIndex(0), "categoryX");
+					var x1 = xAxis.getX(series.dataItems.getIndex(1), "categoryX");
+					var delta = ((x1 - x0) / chart.series.length) * w;
+					if (am4core.isNumber(delta)) {
+						var middle = chart.series.length / 2;
+
+						var newIndex = 0;
+						chart.series.each(function (series) {
+							if (!series.isHidden && !series.isHiding) {
+								series.dummyData = newIndex;
+								newIndex++;
+							}
+							else {
+								series.dummyData = chart.series.indexOf(series);
+							}
+						})
+						var visibleCount = newIndex;
+						var newMiddle = visibleCount / 2;
+
+						chart.series.each(function (series) {
+							var trueIndex = chart.series.indexOf(series);
+							var newIndex = series.dummyData;
+
+							var dx = (newIndex - trueIndex + middle - newMiddle) * delta
+
+							series.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+							series.bulletsContainer.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+						})
+					}
+				}
+			}
+			chart.responsive.enabled = true;
+			chart.responsive.rules.push({
+				relevant: function (target) {
+					if (target.pixelWidth <= 800) {
+						return true;
+					}
+					return false;
+				},
+				state: function (target, stateId) {
+					if (target instanceof am4charts.Chart) {
+						let state = target.states.create(stateId);
+						state.properties.paddingTop = 5;
+						state.properties.paddingRight = 15;
+						state.properties.paddingBottom = 5;
+						state.properties.paddingLeft = 15;
+						return state;
+					}
+					return null;
+				}
+			});
+		}); // end am4core.ready()
+ }).fail(function () {
+		console.log("최근 일주일 이용정보 통계현황을 불러오지 못했습니다");
+ });
+}
+</script>
+
+
+	<div class="row m0 h100">
+		<div class="col s12 m12 l12 xl12 layout_box1 pd_box">
+
+			<div class="basic">
+				<div class="basic_top_searchbox left">
+					<form id="frmList" method="get">
+						<div class="row">
+<!--							<input type="hidden" name="sessionMemberIdx" th:value="${session.memberIdx}" />-->
+<!--							<input type="hidden" name="sessionMemberRole" th:value="${session.memberRole}" />-->
+							<input type="hidden" name="systemType" value="admin/lms" />
+							<input type="hidden" id="pageNum" name="pageNum" th:value="${#strings.isEmpty(pageInfo?.pageNum) ? '1' : pageInfo?.pageNum}"/> 
+							<div class="input-field col s12 m4 l2 xl1 select_m0">
+								<label for="scKey2" class="">메뉴별</label>
+								<select name="scKey2">
+									<option value="">전체</option>
+									<option value="edu" th:selected="${param?.scKey2} == 'edu'">실감훈련 관리</option>
+									<option value="vod" th:selected="${param?.scKey2} == 'vod'">영상교육 관리</option>
+								</select>
+							</div>
+
+							<div class="input-field col s12 m4 l2 xl1 select_m0">
+								<label for="insertDateStart">시작일자</label>
+								<input id="insertDateStart" name="insertDateStart" type="date" value="0000-00-00" />
+							</div>
+							<div class="input-field col s12 m4 l2 xl1 select_m0">
+								<label for="insertDateEnd">종료일자</label>
+								<input id="insertDateEnd" name="insertDateEnd" type="date" value="0000-00-00" />
+							</div>
+							<!-- 검색창 -->
+							<div class="col s12 m12 l6 xl6 search_bar">
+								<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="URL, ID, 성명"/>
+
+								<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+									<i class="material-icons md-18 left">search</i> 검색
+								</button>
+								<div class="title left">
+									전체 : <b id="logCnt">0</b>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+
+				<div class="row">
+					<h2 class="page_title">최근 일주일 이용정보 통계 현황</h2>
+					<div id="chart_1" style="width: 100%; height: 300px;"></div>
+				</div>
+				<div id="logList">
+				</div>
+				
+			</div>
+		</div>
+	</div>
+
+
+
+	</body>
+
+</html>

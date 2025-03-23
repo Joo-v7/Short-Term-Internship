@@ -1,0 +1,4 @@
+list<br/>
+<div th:each="v : ${list}">
+    <a th:href="@{'/cms/zzz/crud/form?crudIdx='+${v.crudIdx}}">FORM</a> / [[${v}]] / [[${#dates.format(v.insertDate, 'yyyy-MM-dd')}]]
+</div>

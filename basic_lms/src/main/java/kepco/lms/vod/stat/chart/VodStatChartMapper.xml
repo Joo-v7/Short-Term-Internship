@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.lms.vod.stat.chart.VodStatChartMapper">
+
+	<sql id="selectWhere">
+		<where>
+			<choose>
+				<when test="_parameter.containsKey(scDeleteYn)">AND delete_yn = #{scDeleteYn}</when>
+				<otherwise>AND a.delete_yn = 'n'</otherwise>
+			</choose>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					b.vod_title LIKE CONCAT ('%',#{scWord},'%') 
+				)
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(applyIdx)">
+				AND a.apply_idx = #{applyIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(vodIdx)">
+				AND a.vod_idx = #{vodIdx}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(startDate)">
+				AND b.vod_edu_bgn_date >= #{startDate}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(endDate)">
+				AND	#{endDate} >= b.vod_edu_end_date
+			</if>
+		</where>
+	</sql>
+	
+	<select id="shareByCategory" parameterType="map" resultType="egovMap">
+		SELECT 
+		    d.category_nm AS category_nm, 
+		    COUNT(d.category_nm) AS category_cnt
+		FROM lms_vod_apply a
+		LEFT JOIN lms_vod b ON a.vod_idx = b.vod_idx
+		LEFT JOIN lms_vod_bundle bn ON b.vod_idx = bn.vod_idx
+		LEFT JOIN lms_vod_content c ON bn.content_idx = c.content_idx 
+		LEFT JOIN lms_vod_category d ON c.vod_category_idx = d.vod_category_idx 
+		<include refid="selectWhere"/>
+	    AND c.delete_yn = 'n'
+	    AND d.delete_yn = 'n'
+	    AND IFNULL(c.vod_category_idx, '') != ''
+		    
+		GROUP BY 
+		d.category_nm
+	</select>
+	
+	<select id="vodKeyword" parameterType="map" resultType="egovMap">
+		WITH RECURSIVE keyword_split AS (
+		    SELECT
+		        b.vod_idx AS vod_idx,
+		        TRIM(SUBSTRING_INDEX(vod_keyword, ',', 1)) AS keyword,
+		        CASE
+		            WHEN INSTR(vod_keyword, ',') > 0 THEN
+		                TRIM(SUBSTRING(vod_keyword, INSTR(vod_keyword, ',') + 1))
+		            ELSE
+		                ''
+		        END AS remaining_keywords
+		    FROM lms_vod_apply a
+		    LEFT JOIN lms_vod b ON a.vod_idx = b.vod_idx
+		    
+		    <include refid="selectWhere"/>
+		    AND IFNULL(vod_keyword, '') != ''
+			AND b.delete_yn = 'n'
+			AND a.apply_state = '2'
+		    UNION ALL
+		
+		    SELECT
+		        vod_idx,
+		        TRIM(SUBSTRING_INDEX(remaining_keywords, ',', 1)) AS keyword,
+		        CASE
+		            WHEN INSTR(remaining_keywords, ',') > 0 THEN
+		                TRIM(SUBSTRING(remaining_keywords, INSTR(remaining_keywords, ',') + 1))
+		            ELSE
+		                ''
+		        END
+		    FROM keyword_split
+		    WHERE IFNULL(remaining_keywords, '') != ''
+		)
+		
+		SELECT
+		    keyword,
+		    COUNT(*) AS keyword_cnt
+		FROM keyword_split
+		WHERE IFNULL(keyword, '') != ''
+		GROUP BY keyword
+		ORDER BY keyword_cnt DESC
+	</select>
+	
+	<select id="graduateRate" parameterType="map" resultType="egovMap">
+		SELECT 
+		    IFNULL(SUM(CASE WHEN a.apply_state = '2' THEN 1 ELSE 0 END), 0) AS vod_students_cnt,
+		    IFNULL(SUM(CASE WHEN a.apply_state = '2' AND a.learn_state = '2' THEN 1 ELSE 0 END), 0) AS vod_complete_cnt,
+		    CASE 
+		        WHEN IFNULL(SUM(CASE WHEN a.apply_state = '2' THEN 1 ELSE 0 END), 0) = 0 THEN 0
+		        ELSE (IFNULL(SUM(CASE WHEN a.apply_state = '2' AND a.learn_state = '2' THEN 1 ELSE 0 END), 0) / IFNULL(SUM(CASE WHEN a.apply_state = '2' THEN 1 ELSE 0 END), 0) * 100)
+		    END AS graduate_rate
+		FROM lms_vod_apply a
+		    <include refid="selectWhere"/>
+	</select>
+	
+</mapper>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.systemLog.SystemLogMapper">
+
+	<sql id="selectWhere">
+		<where>
+			log_access LIKE CONCAT ('%',#{systemType},'%')
+			<if test="!@kepco.util.StrUtil@isBlank(scKey2)">
+				AND (
+					log_access LIKE CONCAT ('%',#{scKey2},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					log_access LIKE CONCAT ('%',#{scWord},'%')
+				 OR b.member_id LIKE CONCAT ('%',#{scWord},'%')
+				OR b.member_nm LIKE CONCAT ('%',#{scWord},'%')
+				)
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(insertDateStart)">
+				AND log_date >= #{insertDateStart}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(insertDateEnd)">
+				AND #{insertDateEnd} >= log_date
+			</if>
+		</where>
+	</sql>
+	
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.systemLog.SystemLogVo">
+        SELECT a.*, b.member_id, b.member_nm,
+        SUBSTRING_INDEX(SUBSTRING_INDEX(a.log_access, '/', 4), '/', -1) AS useLocation
+		FROM cms_access_log a
+		LEFT JOIN cms_member b
+		ON a.log_member_idx = b.member_idx
+		<include refid="selectWhere"/>
+		ORDER BY log_date DESC
+		
+	</select>
+	
+	<select id="select" parameterType="map" resultType="egovmap">
+		SELECT a.*, b.member_id, b.member_nm
+		FROM cms_access_log a
+		LEFT JOIN cms_member b
+		ON a.log_member_idx = b.member_idx
+		<include refid="selectWhere"/>
+	</select>
+	
+	<insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="systemLogIdx" keyColumn="systemLogIdx">
+		INSERT INTO cms_system_log(
+    		system_type,
+    		log_content,
+    		insert_idx,
+			insert_ip,
+			insert_date
+		)
+		VALUES (
+			#{systemType},
+			#{logContent},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<select id="useStat" parameterType="map" resultType="kepco.cms.systemLog.SystemLogVo">
+		SELECT date_format(log_date, '%Y-%m-%d') log_date,
+			   sum(if(log_access LIKE CONCAT ('%','save','%'), '1', 0)) save_cnt, 
+			   sum(if(log_access LIKE CONCAT ('%','list','%'), '1', 0)) list_cnt,
+			   sum(if(log_access LIKE CONCAT ('%','delete','%'), '1', 0)) delete_cnt
+		FROM `cms_access_log`
+		WHERE `log_date` > date_add(now(),interval -8 day) and date_format(now(), '%Y-%m-%d') != date_format(log_date, '%Y-%m-%d')
+		AND log_access LIKE CONCAT ('%',#{systemType},'%')
+		GROUP BY date_format(log_date, '%Y-%m-%d')
+	</select>
+</mapper>

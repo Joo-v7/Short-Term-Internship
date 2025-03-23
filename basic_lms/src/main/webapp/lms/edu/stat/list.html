@@ -1,0 +1,875 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+    <!-- <link rel="stylesheet" href="/assets/css/board.css">게시판css -->
+    <link rel="stylesheet" href="/assets/css/traning.css"><!-- 훈련css -->
+	
+    <script>
+
+        let viewer_risk_info;
+        let viewer_risk_level;
+        let viewer_val_1;
+        let viewer_val_2;
+        let viewer_posture;
+        let viewer_bucket;
+        let viewer_stick;
+        let viewer_point;
+        let viewer_muscle = [];
+        let viewer_point_pose = [];
+
+        $(function () {
+
+            firstDataList(); // 모듈코드, 회차, 모듈IDX
+
+            // 상황목록
+            $('.setting_event_list_btn').click(function () {
+                $(this).toggleClass('on');
+                $(this).next().slideToggle();
+            });
+
+            // 모듈 탭
+            $('.result_tab_split_btn_wrap .tab_btn').click(function () {
+                $('.result_tab_split_btn_wrap .tab_btn').removeClass('current');
+                $(this).addClass('current');
+
+                $('.result_module_wrap').removeClass('current');
+                let module_tab_id = $(this).data("m-tab");
+                $('#re_module_tab_wrap' + module_tab_id).addClass('current');
+
+            });
+
+        });
+
+        function firstDataList(moduleCd, attempt) {
+            var firstModuleCd;
+            var firstAttempt;
+            if (moduleCd == null) {
+                firstModuleCd = `[[${firstModuleCd}]]`;
+            } else {
+                firstModuleCd = moduleCd;
+            }
+
+            if (attempt == null) {
+                firstAttempt = 1;
+            } else {
+                firstAttempts = attempt;
+            }
+
+            var divCd = "play_info_" + firstModuleCd;
+            var divElement = document.getElementById(divCd);
+            var modulePlayIdx = divElement.getAttribute('data-value');
+
+
+            dataList(firstModuleCd, firstAttempt, modulePlayIdx); // 모듈코드, 회차, 모듈IDX
+        }
+
+        function dataList(moduleCd, attempt, modulePlayIdx) {
+            var playIdx = `[[${playVo.playIdx}]]`;
+            var divId = "#play_info_" + moduleCd;
+            var divCd = "play_info_" + moduleCd;
+            var divElement = document.getElementById(divCd);
+            var divModulePlayIdx = divElement.getAttribute('data-value');
+
+            // div의 data-module-play-idx 값이 빈 문자열이거나 modulePlayIdx 값과 다른 경우에만 AJAX 요청
+            if (divModulePlayIdx == "nothing" || divModulePlayIdx != modulePlayIdx) {
+                $.ajax({
+                    url: '/lms/edu/stat/playInfo?playIdx=' + playIdx + '&moduleCd=' + moduleCd + '&attempt=' +
+                        attempt,
+                    type: 'GET',
+                    dataType: 'html',
+                }).done(function (data) {
+                    $(divId).empty();
+                    $(divId).html(data);
+
+                    // 수행결과 목록 - 세부 수행 내역 표출
+                    if ($('.training_result_box')) {
+                        $('.training_result_box .list > dl').click(function () {
+                            $('.training_result_box .list > dl').removeClass('on');
+                            $(this).addClass('on');
+                        });
+                    }
+                    ;
+
+                }).fail(function () {
+                    alert('네트워크 또는 시스템 장애입니다.', 4000);
+                });
+            }
+        }
+
+
+        // 뷰
+        const view_box = document.querySelector('.view_wrap .view_box img');
+
+        // 3D 뷰어 로드 완료 콜백 용
+        if (typeof start_viewer_switch == 'undefined') {
+            start_viewer_switch = false;
+            // 초기값
+            viewer_posture = '00';
+            viewer_cam = 'front';
+            viewer_bucket = false;
+            viewer_stick = false;
+            viewer_point = false;
+            viewer_point_pose = [];
+            viewer_muscle = [];
+        }
+
+
+        // 뷰어 초기화
+        function viewer_init() {
+            viewer_posture = '00';
+            viewer_cam = 'front';
+            viewer_bucket = false;
+            viewer_stick = false;
+            viewer_point = false;
+            viewer_point_pose = [];
+            viewer_muscle = [];
+
+            if (typeof switch_load_on !== 'undefined') {
+                // 뷰 갱신
+                // view_controlling();
+                view_controlling_2();
+            }
+
+        }
+
+        function is_viewer() {
+            return start_viewer_switch;
+        }
+
+
+        // 모든 근육 비활성화 및 근육 표시값 초기화
+        function muscle_all_kill() {
+            const muscle_name_list = [
+                /* 어깨 */
+                "shoulder_front_left",   	// : 왼쪽 앞 어깨
+                "shoulder_back_left",    	// : 왼쪽 뒤 어깨
+                "shoulder_front_right",  	// : 오른쪽 앞 어깨
+                "shoulder_back_right",   	// : 오른쪽 앞 어깨
+
+                /* 팔 */
+                "in_upper_arm_left",		// : 왼쪽 안쪽 상완
+                "out_upper_arm_left",    	// : 왼쪽 바깥쪽 상완
+                "in_upper_arm_right",    	// : 오른쪽 안쪽 상완
+                "out_upper_arm_right",   	// : 오른쪽 바깥쪽 상완
+
+                "in_fore_arm_left",     	// : 왼쪽 안쪽 전완
+                "out_fore_arm_left",    	// : 왼쪽 바깥쪽 전완
+                "in_fore_arm_right",    	// : 오른쪽 안쪽 전완
+                "out_fore_arm_right",   	// : 오른쪽 바깥쪽 전완
+
+                /* 목 등 허리 관련 */
+                "trapezius",         		// : 등 세모근
+                "lateral_left",      		// : 왼쪽 옆구리
+                "lateral_right",     		// : 오른쪽 옆구리
+                "sternoclavicular_joint_left",   	// : 왼쪽 복장빗장 관절 (쇄골뼈?)
+                "sternoclavicular_joint_right",  	// : 오른쪽 복장빗장 관절 (쇄골뼈?)
+                "lumbar_spine",      		// : 요추
+                "lumbar_left",       		// : 왼쪽 허리
+                "lumbar_right",      		// : 오른쪽 허리
+                "hip_joint_left",    		// : 왼쪽 고관절
+                "hip_joint_right",   		// : 오른쪽 고관절
+
+                /* 허벅지 관련 */
+                "in_thigh_left",     		// : 왼쪽 안쪽 허벅지
+                "out_thigh_left",    		// : 왼쪽 바깥쪽 허벅지
+                "in_thigh_right",    		// : 오른쪽 안쪽 허벅지
+                "out_thigh_right",   		// : 오른쪽 바깥쪽 허벅지
+
+                /* 종아리 관련 */
+                "in_calf_left",      		// : 왼쪽 안쪽 종아리
+                "out_calf_left",     		// : 왼쪽 바깥쪽 종아리
+                "in_calf_right",     		// : 오른쪽 안쪽 종아리
+                "out_calf_right",    		// : 오른쪽 바깥쪽 종아리
+            ];
+            const muscle_name_list2 = [
+                // 근육 이름
+                "EOA", 			// 내복사근
+                "Multifidus", 	// 다열근
+                "ECRB",			// 단요측수근신근
+                "Deltoid", 		// 삼각근
+                "Trapezius", 	// 승모근
+                "QL", 			// 요방형근
+                "ES", 			// 척추세움근
+                "Supinator", 	// 회외근
+                "요추관절_joint", 	// L5 - Sacrum 관절
+                "SC_joint", 	// 흉쇄관절
+                "AC_joint" 	// 견쇄관절
+            ];
+
+            // 모든 근육 비활성화
+            muscle_name_list.forEach(muscle_name => {
+                enabled_muscle(muscle_name, false);
+            });
+            muscle_name_list2.forEach(muscle_name => {
+                enabled_muscle_texture(muscle_name, false);
+            });
+            // 초기화
+            // viewer_muscle = {};
+        }
+
+
+        // 3D 뷰어 화면 중앙으로 이동(포커스)
+        function goToElement(el) {
+            if (el) {
+                const elementTop = el.offset().top;
+                const elementLeft = el.offset().left;
+
+                const elementWidth = el.outerWidth();
+                const elementHeight = el.outerHeight();
+
+                const screenWidth = $(window).width();
+                const screenHeight = $(window).height();
+
+                const scrollX = elementLeft - (screenWidth / 2) + (elementWidth / 2);
+                const scrollY = elementTop - (screenHeight / 2) + (elementHeight / 2);
+
+                $('html, body').animate({
+                    scrollTop: scrollY,
+                    scrollLeft: scrollX
+                }, 'slow');
+            }
+        }
+
+        function openChild(playIdx, bool1, bool2) {
+            if (bool1 == true) {
+                alert('사후평가를 먼저 완료해주십시오.');
+                return false;
+            } else if (bool2 == true) {
+                alert('만족도 조사를 먼저 완료해주십시오.');
+                return false;
+            }
+            // window.name = "부모창 이름";
+            else {
+                window.open('/lms/edu/myPrint/?site=kepco&mn=0405&playIdx=' + playIdx, 'childForm', "width=800, height=925, resizable = no, scrollbars = yes");
+            }
+
+        }
+    </script>
+
+    <div class="sub-container">
+        <div class="table_type3">
+            <!-- //그룹 -->
+            <table summary="교육훈련현황표">
+                <caption>교육훈련현황표</caption>
+                <tbody>
+                <tr>
+                    <td>
+                        <ul class="edu-list">
+                            <li class="ca1">변압기</li>
+                            <li class="ca2">공법</li>
+                            <li class="ca3">특고압</li>
+                            <li class="ca4">방호</li>
+                            <li class="ca5">감전</li>
+                            <li class="ca6">추락</li>
+                        </ul>
+                        <h6 class="edu_tit_box">[[${detailVo.trainTitle}]]
+
+                            <div class="tit_btn ttype3-btn">
+                                <a href="" th:onclick="openChild([[${playVo.playIdx}]]);" title="수료증 다운로드">수료증
+                                    출력</a>
+                            </div>
+                        </h6>
+                        <div class="result_edu_info_box">
+                            <dl>
+                            	<dt>기수</dt>
+                            	<dd>[[${detailVo.eduNumeral}]]</dd>
+                            </dl>
+                            <dl>
+                                <dt>교육기간</dt>
+                                <dd>[[${detailVo.eduTrainBgnDate}]] ~ [[${detailVo.eduTrainEndDate}]]</dd>
+                            </dl>
+                            <dl>
+                                <dt>훈련구분</dt>
+                                <dd th:if="${eduVo.eduType == '1'}">개인</dd>
+                                <dd th:if="${eduVo.eduType == '2'}">협동</dd>
+                            </dl>
+                            <dl>
+                                <dt>취약 위험요인</dt>
+                                <dd th:if="${playVo.mostRisk == '1'}">감전</dd>
+                                <dd th:if="${playVo.mostRisk == '2'}">추락</dd>
+                                <dd th:if="${playVo.mostRisk == '3'}">부주의</dd>
+                                <dd th:if="${playVo.mostRisk == '4'}">작업부하</dd>
+                                <dd th:if="${#strings.isEmpty(playVo.mostRisk)}">-</dd>
+                            </dl>
+                            <dl>
+                                <dt>훈련일자</dt>
+                                <dd th:if="${!#strings.isEmpty(playVo.endTime)}" th:text="${#dates.format(playVo.endTime, 'yyyy-MM-dd')}"></dd>
+                                <dd th:if="${#strings.isEmpty(playVo.endTime)}">-</dd>
+                            </dl>
+                            <dl th:with="totalSeconds=${playVo.playedTime},
+				                  hours=${T(java.lang.Math).floorDiv(totalSeconds, 3600)},
+				                  minutes=${T(java.lang.Math).floorDiv(totalSeconds % 3600, 60)},
+				                  seconds=${totalSeconds % 60}">
+                            	<dt>훈련시간(분)</dt>
+                            	<dd><span th:if="${hours > 0}" th:text="${hours} + '시간 '"></span>
+						            <span th:if="${minutes > 0}" th:text="${minutes} + '분 '"></span>
+						            <span th:text="${seconds} + '초'"></span>
+					            </dd>
+                            </dl>
+                            <dl>
+                            	<dt>훈련간 사고 횟수</dt>
+                            	<dd th:text="${playVo.accidentCnt}"></dd>
+                            </dl>
+                            <dl>
+                            	<dt>감전 위험 횟수</dt>
+                            	<dd th:text="${playVo.esCnt}"></dd>
+                            </dl>
+                            <dl>
+                            	<dt>추락 위험 횟수</dt>
+                            	<dd th:text="${playVo.fallCnt}"></dd>
+                            </dl>
+                            <dl>
+                            	<dt>부주의 횟수</dt>
+                            	<dd th:text="${playVo.careCnt}"></dd>
+                            </dl>
+                            <dl>
+                            	<dt>작업부하 발생 횟수</dt>
+                            	<dd th:text="${playVo.loadCnt}"></dd>
+                            </dl>
+                            
+                        </div>
+                    </td>
+
+                </tr>
+
+                </tbody>
+            </table>
+
+
+        </div>
+        <div class="traning_result_wrap">
+            <div class="result_list_wrap">
+                <div class="scon-tit mt_70">
+                    세부 수행 내역
+                    <span>세부적인 분석을 위한 수행 상세 목록</span>
+                </div>
+                <div class="result_tab_wrap">
+                    <div class="result_tab_split_btn_wrap">
+                        <ul>
+                            <th:block th:each="module_tab, index : ${modulePlayMap}">
+                                <li>
+                                    <button th:class="'tab_btn ' + (${index.index} == 0 ? 'current' : '')"
+                                            th:attr="data-m-tab=${index.index}" type="button"
+                                            th:onclick="firstDataList([[${module_tab.key.moduleCd}]]);">
+                                        <span th:text="${module_tab.key.moduleTitle}"></span>
+                                    </button>
+                                </li>
+                            </th:block>
+                        </ul>
+                    </div>
+                    <div class="result_tab_split_wrap">
+                        <th:block th:each="moduleCds, index : ${modulePlayMap}">
+                            <div th:id="'re_module_tab_wrap' + ${index.index}"
+                                 th:class="'result_module_wrap ' + ${index.index == 0 ? 'current' : ''}">
+                                <!-- <span class="module_title">모듈명 : [[${moduleCds.key.moduleTitle}]]</span> -->
+
+                                <div class="result_wrap">
+                                    <div class="training_result_box">
+                                        <div class="list">
+                                            <th:block th:each="attempts : ${moduleCds.value}">
+<!--                                                 <th:block th:each="modulePlay : ${attempts.value}"> -->
+                                                    <dl th:class="${attempts.attempt == 1 ? 'on ' : ''} + ${attempts.moduleFailCnt > 0 ? 'fail' : 'success'}"
+                                                        th:id="${attempts.attempt == 1 ? attempts.moduleCd+'_first' : ''}"
+                                                        th:data-value="${attempts.modulePlayIdx}"
+                                                        th:attr="data-info=${attempts.attempt}"
+                                                        th:onclick="dataList([[${attempts.moduleCd}]],[[${attempts.attempt}]],[[${attempts.modulePlayIdx}]]);">
+                                                        <dt class="ellipsis-2"
+                                                            th:if="${#strings.isEmpty(attempts.accidentBehavior) and attempts.moduleFailCnt < 1}"
+                                                            th:attr="data-info=${attempts.attempt}"
+                                                            th:onclick="dataList([[${attempts.moduleCd}]],[[${attempts.attempt}]],[[${attempts.modulePlayIdx}]]);">
+                                                            작업 성공
+                                                        </dt>
+                                                        <dt class="ellipsis-2"
+                                                            th:if="${#strings.isEmpty(attempts.accidentBehavior) and attempts.moduleFailCnt > 0}"
+                                                            th:attr="data-info=${attempts.attempt}"
+                                                            th:onclick="dataList([[${attempts.moduleCd}]],[[${attempts.attempt}]],[[${attempts.modulePlayIdx}]]);">
+                                                            작업 실패
+                                                        </dt>
+                                                        <dt class="ellipsis-2" 
+                                                        	th:if="${!#strings.isEmpty(attempts.accidentBehavior) and #strings.equals(attempts.playIdx, playVo.playIdx)}">
+                                                                <!-- 나의 사고 -->
+                                                                [[${attempts.accidentBehavior}]]
+                                                        </dt>
+                                                        <dt class="ellipsis-2" 
+                                                        	th:if="${!#strings.isEmpty(attempts.accidentBehavior) and !#strings.equals(attempts.playIdx, playVo.playIdx)}">
+                                                        	<!-- 팀의 사고 -->
+                                                                [[${attempts.accidentBehavior}]](팀)
+                                                        </dt>
+                                                        <dd class="number">[[${attempts.attempt}]]</dd>
+                                                    </dl>
+<!--                                                 </th:block> -->
+                                            </th:block>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="trainging_result_info_wrap" data-value="nothing"
+                                         th:id="'play_info_' + ${moduleCds.key.moduleCd}">
+                                    </div>
+                                </div>
+                            </div>
+                        </th:block>
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div class="result_3d_view_wrap">
+            <div class="view_title">
+                수행교정
+                <span>교정을 목적으로 수행 간의 발생한 위험요인에 대한 분석</span>
+                <button class="re_3d_view_close_btn" type="button" title="위험요인상세 닫기"></button>
+            </div>
+            <div class="scon-wrap">
+                <div class="view_wrap">
+                    <span class="view_focus_area"></span>
+                    <div id="test_viewbox" class="view_box">
+                        <script src="/assets/playcanvas/playcanvas-stable.min.js" defer></script>
+                        <script src="/assets/playcanvas/__settings__.js" defer></script>
+                        <script src="/assets/playcanvas/__modules__.js" defer></script>
+                        <script src="/assets/playcanvas/__start__.js" defer></script>
+                        <script src="/assets/playcanvas/__loading__.js" defer></script>
+                        <ul class="view_controller">
+                            <li>
+                                <button data-view="front" class="act" type="button">정면</button>
+                            </li>
+                            <li>
+                                <button data-view="back" type="button">후면</button>
+                            </li>
+                            <li>
+                                <button data-view="side" type="button">측면</button>
+                            </li>
+                            <li>
+                                <button data-view="top" type="button">평면</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="view_info_wrap">
+                        <!-- 뷰어 정보 페이지 -->
+                        <div class="view_info_box act" data-info-box="0">
+                            <h6 class="result_info_tit_box">
+                                <strong>위험요인</strong> 상세 내용
+                                <span></span>
+                            </h6>
+                            <div class="result_info_cont_wrap">
+                                <p class="result_info_main_cont_box">
+                                    위험요인 평가 기준으로 <strong>'위험도'</strong>단계를 표출합니다.
+                                    <br>
+                                    세부 수행 내역에서 <strong>'위험요인상세'</strong> 버튼을 클릭하여 상세 정보를 확인할 수 있습니다.
+                                </p>
+
+                            </div>
+                        </div>
+
+                        <!-- 감전 -->
+                        <div class="view_info_box" data-info-box="111" data-risk-factor-box="1">
+                            <h6 class="result_info_tit_box"><strong>감전</strong> 위험요인 <span>충전부 접근한계 거리 내 접근 및
+									접촉에 따른 위험도</span></h6>
+                            <div class="result_info_cont_wrap">
+
+                                <p class="result_info_main_cont_box">
+                                    충전부와 작업자 간 접근/접촉 거리 구분에 따라 <strong id="view_risk_el_1_1">[저압 인입선(200V)]</strong>
+                                    <!-- </strong>에<strong id="view_risk_el_1_2">45cm -->
+                                    접근하여 <strong>위험</strong>합니다.<br>
+                                    충전부 간 접근한계거리를 숙지하시어 감전사고가 발생하지 않도록 유의해주십시오.
+                                </p>
+                                <!-- <p class="result_info_main_cont_box">충전부에 대한 접근한계 거리 내 접근 및 접촉으로 인해 감전사고가 발생했습니다.</p> -->
+
+                                <div class="result_info_table_wrap">
+                                    <table>
+                                        <caption>충전부 접근거리에 따른 감전위험요인 평가 기준</caption>
+                                        <thead>
+                                        <tr>
+                                            <th>구분</th>
+                                            <th colspan="3">접근거리에 따른 위험 점수</th>
+                                        </tr>
+                                        <tr>
+                                            <th>충전부 종류</th>
+                                            <th>안전</th>
+                                            <th>경고</th>
+                                            <th>감전</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <th>특고압선(22.9kV)</th>
+                                            <td class="t_center">183cm 초과</td>
+                                            <td class="t_center">90~183cm 초과</td>
+                                            <td class="t_center">90cm 미만</td>
+                                        </tr>
+                                        <tr>
+                                            <th>COS/1차 측위/애자류 등</th>
+                                            <td class="t_center">183cm 초과</td>
+                                            <td class="t_center">90~183cm 초과</td>
+                                            <td class="t_center">90cm 미만</td>
+                                        </tr>
+                                        <tr>
+                                            <th>3상 인입선/인하선(380V)</th>
+                                            <td class="t_center">107cm 초과</td>
+                                            <td class="t_center">30~107cm 초과</td>
+                                            <td class="t_center">30cm 미만</td>
+                                        </tr>
+                                        <tr>
+                                            <th>저압인입선(220B)</th>
+                                            <td class="t_center">107cm 초과</td>
+                                            <td class="t_center">0~107cm 초과</td>
+                                            <td class="t_center">0(접촉 시)</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- 추락 -->
+                        <div class="view_info_box" data-info-box="111" data-risk-factor-box="2">
+                            <h6 class="result_info_tit_box">
+                                <strong>추락</strong> 위험요인
+                                <span>신체 무게 중심에 의한 버켓 위치/높이 위험도</span>
+                            </h6>
+                            <div class="result_info_cont_wrap">
+                                <p class="result_info_main_cont_box">
+                                    위험요인 평가 기준으로 <strong id="view_risk_el_2_1" class="">위험</strong>단계(<strong
+                                            id="view_risk_el_2_2">버켓 위치3점</strong>, <strong id="view_risk_el_2_3">높이
+                                        2점</strong>)입니다.<br>
+                                    <br>
+                                    추락사고는 작업자의 버켓 작업 위치를 고려한 신체 무게 중심점을 기준으로 판단되며, 사고 발생 위험행동에 따라 버켓 차량의 외부 충돌,
+                                    흔들림 등의 외부요인과 접목되어 사고로 이어지게 됩니다.
+                                </p>
+
+                                <!-- <div class="result_info_img_box">
+                                <img class="auto" src="/pages/kepco/img/result_view_img_1.png" alt="">
+                            </div> -->
+                                <p>
+                                    신체 무게 중심 좌표는 작업자의 모션 센서로부터 획득한 15개의 신체 좌표에 상대 질량을 곱하여 산출하며, 15개 모션 센서 부위에 상대
+                                    질량 가중치가 적용된 좌표들은 '무게 중심 산출식'을 통하여 무게 중심이 산출됩니다.
+                                </p>
+
+                                <div class="result_info_table_wrap">
+                                    <table>
+                                        <caption>무게 중심 산출 표(상체)</caption>
+                                        <colgroup>
+                                            <col width="100px">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                        </colgroup>
+                                        <tr>
+                                            <th class="thead">신체부위</th>
+                                            <td>Hips</td>
+                                            <td>Spine1</td>
+                                            <td>Head</td>
+                                            <td>LeftArm</td>
+                                            <td>LeftForeArm</td>
+                                            <td>LeftHand</td>
+                                            <td>RightArm</td>
+                                            <td>RightForeArm</td>
+                                            <td>RightHand</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="thead">상대질량</th>
+                                            <td>13.7291</td>
+                                            <td>36.538</td>
+                                            <td>5.8347</td>
+                                            <td>2.2784</td>
+                                            <td>1.362</td>
+                                            <td>0.5128</td>
+                                            <td>2.2784</td>
+                                            <td>1.362</td>
+                                            <td>0.5128</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="result_info_table_wrap">
+                                    <table>
+                                        <caption>무게 중심 산출 표(하체)</caption>
+                                        <colgroup>
+                                            <col width="100px">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                            <col width="auto">
+                                        </colgroup>
+                                        <tr>
+                                            <th class="thead">신체부위</th>
+                                            <td>LeftUpLeg</td>
+                                            <td>LeftLeg</td>
+                                            <td>LeftFoot</td>
+                                            <td>RightUpLeg</td>
+                                            <td>RightLeg</td>
+                                            <td>RightFoot</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="thead">상대질량</th>
+                                            <td>11.9047</td>
+                                            <td>3.6404</td>
+                                            <td>1.1518</td>
+                                            <td>11.9047</td>
+                                            <td>3.6404</td>
+                                            <td>1.1518</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="result_info_img_box">
+                                    <img class="auto" src="/pages/kepco/img/result_view_img_2.png" alt="">
+                                </div>
+                                <div class="result_info_img_box">
+                                    <img src="/pages/kepco/img/result_view_img_3.png" alt="">
+                                    <p>
+                                        신체 무게중심점에 따른 버켓 내/외부 위치 점수는 탑뷰(Top View)에서 바라보는 버켓에서의 위치를 3단계 수준으로 나누어
+                                        결정됩니다.
+                                    </p>
+                                </div>
+
+                                <div class="result_info_img_box">
+                                    <img src="/pages/kepco/img/result_view_img_4.png" alt="">
+                                    <p>
+                                        신체 무게 중심점에 따른 버켓 바닥으로부터의 높이 점수는 사이드뷰(Side View)에서 바라볼 때 버켓 바닥면으로부터의 무게
+                                        중심점 높이 정도에 따라 3단계 수준으로 나누어 결정됩니다.
+                                    </p>
+                                </div>
+
+                                <div class="result_info_table_wrap">
+                                    <table>
+                                        <caption>높이 및 위치에 따른 추락 점수 표</caption>
+                                        <thead>
+                                        <tr>
+                                            <th>구분</th>
+                                            <th colspan="3">높이점수</th>
+                                        </tr>
+                                        <tr>
+                                            <th>위치점수</th>
+                                            <th>1</th>
+                                            <th>2</th>
+                                            <th>3</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <th>1</th>
+                                            <td class="t_safety">0(안전)</td>
+                                            <td class="t_safety">0(안전)</td>
+                                            <td class="t_safety">0(안전)</td>
+                                        </tr>
+                                        <tr>
+                                            <th>2</th>
+                                            <td class="t_safety">0(안전)</td>
+                                            <td class="t_caution">1(주의)</td>
+                                            <td class="t_caution">1(주의)</td>
+                                        </tr>
+                                        <tr>
+                                            <th>3</th>
+                                            <td class="t_danger">2(위험)</td>
+                                            <td class="t_danger">2(위험)</td>
+                                            <td class="t_danger">2(위험)</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p>
+                                    신체 무게 중심에 따른 버켓 위치/높이 점수 기준에 따라 <strong id="view_risk_el_2_4">위험</strong>단계로
+                                    <strong id="view_risk_el_2_5">추락되었습니다.</strong><br>
+                                    <br>
+                                    추락 사고를 예방하기 위해서는 신체 무게 중심을 낮추거나 버켓 중심에서 작업을 진행해주세요.
+                                </p>
+                            </div>
+                        </div>
+                        <!-- 부주의 -->
+                        <div class="view_info_box" data-info-box="111" data-risk-factor-box="3">
+                            <h6 class="result_info_tit_box">
+                                <strong>부주의</strong> 위험요인
+                                <span>작업 방향과 시선 방향 불일치에 의한 위험도</span>
+                            </h6>
+                            <div class="result_info_cont_wrap">
+                                <p class="result_info_main_cont_box">
+                                    작업 및 이동 중, <strong id="view_risk_el_3_1">부주의 위험요인이 3회 발생</strong>했습니다.<br>
+                                    작업공구, 스마트스틱 또는 손을 이용한 각종 수작업 시, 작업 방향과 시선 방향의 불일치는 작업 시 끼임, 낙하(공구류 등) 등의 사고로
+                                    이어질 수 있습니다.<br>
+                                    또한, 이동 시엔 장애물이나 위험 요소를 인지하지 못하여 넘어짐 등의 사고의 원인이 되어 각별한 주의가 필요합니다.
+                                </p>
+
+                                <div class="result_info_img_box">
+                                    <img src="/pages/kepco/img/result_view_img_1.jpg" alt="">
+                                    <p>
+                                        작업 중 부주의 횟수는 몸의 무게 중심, 양손의 위치를 통한
+                                        작업 방향과 시선 방향의 각도를 통해 카운트 되며, 이동 중
+                                        부주의 횟수는 이동 방향<br>
+                                        벡터와 시선 방향의 각도에 의해 카운트 됩니다.<br>
+                                        또한 부주의 횟수는 30도 이상 각도가 3초 이상 유지 시
+                                        발생됩니다.
+                                    </p>
+                                </div>
+
+                                <div class="result_info_table_wrap">
+                                    <table>
+                                        <caption>부주의 평가기준표</caption>
+                                        <thead>
+                                        <tr>
+                                            <th>구분</th>
+                                            <th>부주의 평가기준</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>작업 부주의</td>
+                                            <td>작업 및 시선의 Orientation 각도 30도 이상 3초간 유지 시</td>
+                                        </tr>
+                                        <tr>
+                                            <td>이동 부주의</td>
+                                            <td>이동 및 시선 상뱡 Orientation 각도 30도 이상 3초간 유지 시</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p>
+                                    작업 시 시선은 <strong>항상 작업 방향으로 유지</strong>하여 부주의에 의한 사고가 발생하지 않도록 유의해주십시오.
+                                </p>
+                            </div>
+                        </div>
+                        <!-- 작업부하 -->
+                        <div class="view_info_box" data-info-box="111" data-risk-factor-box="4">
+                            <h6 class="result_info_tit_box">
+                                <strong>작업부하</strong> 위험요인
+                                <span>작업자의 불안정한 자세에 대한 근골격계 위험도</span>
+                            </h6>
+                            <div class="result_info_cont_wrap">
+                                <p class="result_info_main_cont_box">
+                                    작업부하자세 평가 결과 <strong id="view_risk_el_4_1" class="score_1">양호(0점)</strong>이며,
+                                    <br>
+                                    <span id="view_risk_el_4_2"></span>
+                                    <br>
+                                    작업부하자세 평가 근골격계 점수 평가로부터 총괄부하점수까지 다양한 평가 점수의 합산을 통해 평가되며, 주요 근육과 관절의 근골결계 기준
+                                    평가표에 따라 점수가 산출됩니다.
+                                </p>
+
+
+                                <div class="result_info_table_wrap">
+                                    <table>
+                                        <caption>근골격계 활성 표</caption>
+                                        <colgroup>
+                                            <col width="16.6%">
+                                            <col width="16.6%">
+                                            <col width="16.6%">
+                                            <col width="16.6%">
+                                            <col width="16.6%">
+                                            <col width="16.6%">
+                                        </colgroup>
+                                        <thead>
+                                        <tr>
+                                            <th colspan="2" class="t_center">상체</th>
+                                            <th colspan="4" class="t_center">팔</th>
+                                        </tr>
+                                        </thead>
+                                        <tr>
+                                            <td class="t_center">앞굽힘</td>
+                                            <td class="t_center">뒷굽힘</td>
+                                            <td colspan="2" class="t_center">상완</td>
+                                            <td colspan="2" class="t_center">전완</td>
+                                        </tr>
+                                        <tr>
+                                            <td id="view_muscle_1" colspan="2" class="t_center muscle_score_1">요추관절</td>
+                                            <td id="view_muscle_2" colspan="2" class="t_center muscle_score_1">흉쇄관절</td>
+                                            <td id="view_muscle_3" colspan="2" class="t_center muscle_score_2">견쇄관절</td>
+                                        </tr>
+                                        <tr>
+                                            <td id="view_muscle_4" class="t_center muscle_score_1">요방형근</td>
+                                            <td id="view_muscle_5" class="t_center muscle_score_1">내복사근</td>
+                                            <!-- <td id="view_muscle_6" class="t_center">척추세움근</td>
+                                            <td id="view_muscle_7" class="t_center">다열근</td> -->
+                                            <td id="view_muscle_6" class="t_center muscle_score_1">삼각근</td>
+                                            <td id="view_muscle_7" class="t_center muscle_score_1">승모근</td>
+                                            <td id="view_muscle_8" class="t_center muscle_score_1">단요측수근신근</td>
+                                            <td id="view_muscle_9" class="t_center muscle_score_1">회외근</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="8" class="t_right" style="background-color: transparent">
+                                                <dl class="muscle_score_help">
+                                                    <dt>1점</dt>
+                                                    <dd class="muscle_score_1"></dd>
+                                                </dl>
+                                                <dl class="muscle_score_help">
+                                                    <dt>2점</dt>
+                                                    <dd class="muscle_score_2"></dd>
+                                                </dl>
+                                                <dl class="muscle_score_help">
+                                                    <dt>3점</dt>
+                                                    <dd class="muscle_score_3"></dd>
+                                                </dl>
+                                                <dl class="muscle_score_help">
+                                                    <dt>4점</dt>
+                                                    <dd class="muscle_score_4"></dd>
+                                                </dl>
+                                                <dl class="muscle_score_help">
+                                                    <dt>5점</dt>
+                                                    <dd class="muscle_score_5"></dd>
+                                                </dl>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="result_info_table_wrap">
+                                    <table>
+                                        <caption>최종 점수에 따른 작업부하 평가 기준 표</caption>
+                                        <thead>
+                                        <tr>
+                                            <th>작업부하 평가 기준</th>
+                                            <th>최종 점수</th>
+                                            <th>조치 단계</th>
+                                        </tr>
+                                        </thead>
+                                        <tr>
+                                            <td>양호</td>
+                                            <td>0점</td>
+                                            <td>필요없음</td>
+                                        </tr>
+                                        <tr>
+                                            <td>주의</td>
+                                            <td>1점</td>
+                                            <td>조치권고</td>
+                                        </tr>
+                                        <tr>
+                                            <td>높음</td>
+                                            <td>2~3점</td>
+                                            <td>조치필요</td>
+                                        </tr>
+                                        <tr>
+                                            <td>위험</td>
+                                            <td>4~5점</td>
+                                            <td>즉각조치</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+
+                                <p class="result_info_main_cont_box">
+                                    작업부하 평가 기준 결과, <strong id="view_risk_el_4_3" class="">양호(0점)</strong>이며, 조치는 <strong
+                                            id="view_risk_el_4_4" class="">'조치권고'</strong> 입니다.
+                                </p>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>

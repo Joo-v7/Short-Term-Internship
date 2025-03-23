@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="utf-8">
+<title>[[${siteVo.homeTitle}]] &gt; 통합검색</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1">
+<link rel="stylesheet" href="/pages/kepco/css/basic.css">
+<link rel="stylesheet" href="/pages/kepco/css/layout.css">
+
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css">
+
+<script src="/assets/libs/fontawesome/fontawesome.js" crossorigin="anonymous"></script>
+
+<!--
+<link href="/assets/libs/aos/aos.css" rel="stylesheet">
+<script src="/assets/libs/aos/aos.js"></script>
+-->
+
+<script src="/assets/js/jquery-3.5.1.min.js"></script>
+
+<script src="/pages/kepco/js/fullpage.js"></script>
+<link rel="stylesheet" href="/pages/kepco/css/fullpage.min.css">
+
+<script src="/assets/libs/swiperjs/swiper-bundle.min.js" ></script>
+<link rel="stylesheet" href="/assets/libs/swiperjs/swiper-bundle.min.css">
+
+<script src="/assets/libs/gsap/gsap.min.js" ></script>
+
+<script src="/pages/kepco/js/common.js"></script>
+<script src="/pages/kepco/js/script.js" ></script>
+<script src="/pages/kepco/js/mouse_interaction.js" ></script>
+
+</head>
+<body>
+
+<!-- 통합검색 폼 -->
+<!--
+<div id="main_search">
+	<form id="frmSearch" method="GET" action="/search">
+		<div class="search_wrap">
+			<span class="search_title">통합검색</span>
+			<input type="hidden" value="1004" name="mn">
+			<input class="search_input" type="text" name="scWord" placeholder="검색어를 입력해주세요">
+			<input type="hidden" value="all" name="scType">
+			<button class="search_btn" type="submit" title="검색">
+				<i class="fa-solid fa-magnifying-glass"></i>
+			</button>
+			<button class="search_form_act_btn" type="button" title="통합검색 인터페이스 활성화">
+				<i class="fa-solid fa-magnifying-glass"></i>
+			</button>
+		</div>
+	</form>
+</div>
+-->
+
+<!--/* fullpage.js 를 위한 푸터 영역까지 묶기 */-->
+<!-- div.fullpage.custom -->
+<div class="fullpage custom">
+	<th:block layout:fragment="content"></th:block>
+
+	<th:block th:replace="pages/kepco/sub/footer"></th:block>
+</div>
+<!-- //div.fullpage.custom -->
+
+</body>
+</html>

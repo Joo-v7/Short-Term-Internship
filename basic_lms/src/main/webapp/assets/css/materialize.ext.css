@@ -1,0 +1,5 @@
+/* 체크,라디오박스 그룹 */
+.input-field p.input-group {
+    margin-top: 8.5px; /* input-text의 height(40px)과 동일하게 */
+    margin-right: 6px; /* 체크박스 간의 간격 */
+}

@@ -1,0 +1,329 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{|${siteLayoutPath}|}">
+<th:block layout:fragment="content">
+
+
+	
+	<!-- 1페이지 -->
+	<div class="section section1">
+		<div class="vsbox">
+			<!-- 이미지컷 -->
+			<!-- <div id="vsimg" class="vsimg_wrap"></div> -->
+
+			<!-- 3D뷰어 -->
+			<div id="vsimg" class="vsimg"></div>
+
+			<div class="vs-btn">
+				<div class="vs-btn-box">
+					<div class="vs-btn-num">
+						<b id="playcnavas_count">01</b>/03
+					</div>
+					<div class="vs-btn-bar">
+						<span id="gagge" style="width:0%;"></span>
+					</div>
+					<div class="vs-btn-arrow">
+						<button onclick="playcnavas_Interactive_Rotation(true)"></button>
+						<button onclick="playcnavas_Interactive_Rotation(false)"></button>
+					</div>	
+				</div>
+			</div>
+
+
+
+			<div class="vstxt">
+				<div class="vstxt2">			
+					<!-- <h6>XR 초실감 안전훈련시스템</h6> -->
+					<h5><span>i</span>KEMPUS</h5>
+					<p>XR(확장현실)기술을 활용하여 현실처럼 가상으로 구현된 훈련 상황에서<br>위험요인과 가이드에 따라 안전교육을 실습하는 초실감 안전교육훈련</p>
+				</div>
+				<div class="vsbtn">
+					<a href="/lms/edu/list/?site=kepco&mn=0101" class="vsbtn1">이동형 팀 훈련 바로가기</a>
+					<a href="/lms/vod/list/?site=kepco&mn=0102" class="vsbtn2">좌식형 개인 훈련 바로가기</a>				
+				</div>
+			</div>
+			<!--
+			<span class="scroll-btn">
+				<a href="#">
+					<span class="mouse">
+						<span>
+						</span>
+					</span>
+				</a>
+				<p>scroll down</p>
+			</span>
+			-->
+		</div>
+	</div>
+	<!-- // 1페이지 -->
+
+	<!-- 2페이지 -->
+	<div class="section section2">
+		<div class="mcbox hg1">	
+			<div class="mctit3">
+				<p class="info">TRAINING COURSE</p>
+				<h6>분야별 교육과정</h6>
+				<!--<p class="txt">모션 캡쳐 및 VR 시스템을 활용한 분야별 초실감 안전훈련과정을 소개합니다</p>-->
+			</div>
+			
+			<ul class="con-tabs3">
+				<li class="tab-link current3" data-tab="tab-1">이동형 팀 훈련</li>
+				<li class="tab-link" data-tab="tab-2">좌식형 개인 훈련</li>
+			</ul>
+			
+			<!-- 프로그램 -->
+			<div id="mddw" class="mddw" th:include="lms/edu/main/mainList"></div>
+
+			<div id="mvw" class="mvw" th:include="lms/vod/main/mainList"></div>
+
+			<!-- 탭 컨텐츠2 -->
+			<!--
+ 			<div id="tab-2" class="tab-content3 ">
+ 				<div class="more-btn">
+ 					<a class="link" href="/lms/vod/list/?site=kepco&mn=0102">
+ 						<div class="pink"></div>
+ 						<span>view more</span>
+ 						<i class="fa-solid fa-arrow-right"></i>
+ 					</a>
+ 				</div>
+ 				<div class="edu-w">
+ 					<div class="edu-box">
+ 						<div class="edu-video">
+ 							<a href="" class="eva">
+ 								<img src="/pages/kepco/img/sub/v-th1.jpg" alt="">
+ 							</a>
+ 						</div>
+ 						<span class="bd_line01"></span>
+ 						<span class="bd_line02"></span>
+ 						<span class="bd_line03"></span>
+ 						<span class="bd_line04"></span>
+ 					</div>
+ 					<div class="edu-box">
+ 						<div class="edu-video">
+ 							<a href="" class="eva">
+ 								<img src="/pages/kepco/img/sub/v-th1.jpg" alt="">
+ 							</a>
+ 						</div>
+ 						<span class="bd_line01"></span>
+ 						<span class="bd_line02"></span>
+ 						<span class="bd_line03"></span>
+ 						<span class="bd_line04"></span>
+ 					</div>
+ 				</div>		
+ 			</div>
+			-->
+			<!-- // 탭 컨텐츠2 -->
+		</div>
+	</div>
+	<!-- // 2페이지 -->
+
+
+	<!-- 3페이지 -->
+	<div class="section section3">
+		<div class="mcbox">
+			<div class="mctit3">
+				<p class="info purple bd-purple">RESERVATION</p>
+				<h6>이동형 팀 훈련 일정안내</h6>
+				<!--
+				<a class="link" href="/lms/edu/list/?site=kepco&mn=0101">
+					<div class="pink bg-purple"></div>
+					<span>view more</span>
+					<i class="fa-solid fa-arrow-right"></i>
+				</a>
+				-->
+			</div>
+		<!-- 프로그램 -->
+		<div id="mcdw" class="mcdw" th:include="lms/edu/main/mainCalList"></div>
+		</div>
+	</div>
+	<!-- // 3페이지 -->
+
+	<!-- 4페이지 -->
+	<div class="section section4">
+		<div class="mcbox flexbox">
+			<div class="notice-l">
+				<div class="mctit">
+					<p class="info">NOTICE</p>
+					<h6>공지사항</h6>
+					<p class="txt">새로운 소식들을<br />지금 바로 확인해 보세요</p>
+					<div class="mnt-btn">
+						<a class="link" href="/cms/board/post/list/?site=kepco&mn=0301&boardId=notice">
+							<div class="pink bg-blue"></div>
+							<span>view more</span>
+							<i class="fa-solid fa-arrow-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<!-- 공지사항 -->
+			<div id="notice" class="notice-w" th:include="cms/board/main/list"></div>
+		</div> 
+	</div>
+	<!-- // 4페이지 -->
+
+<link rel="manifest" href="/playcanvas/manifest.json">
+<script src="/playcanvas/playcanvas-stable.min.js"></script>
+<script src="/playcanvas/__settings__.js"></script>
+<script src="/playcanvas/__modules__.js"></script>
+<script src="/playcanvas/__start__.js"></script>
+<script src="/playcanvas/__loading__.js"></script>
+
+<script>
+ $( document ).ready( function() {
+	// 메인 3D 캔버스의 진행바
+	 $( '#gagge' ).animate( {
+		width: '100%'
+	}, 5500);
+
+	// 메인 3D 캔버스의 회전
+	setInterval(function() { 
+		playcnavas_Interactive_Rotation(false);
+	}, 6000);
+
+	// 분야별 교육과정 - 이동형 팀 훈련, 좌식형 개인 훈련 탭 토글
+	$('ul.con-tabs3 li').click(function(){
+		var tab_id = $(this).attr('data-tab');
+
+		$('ul.con-tabs3 li').removeClass('current3');
+		$('.tab-content3').removeClass('current3');
+
+		$(this).addClass('current3');
+		$("#"+tab_id).addClass('current3');
+	});
+});
+</script>
+
+<script th:inline="javascript"> 
+	 $(function() {
+		$.ajax({
+				url: '/lms/edu/mainList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#mddw').html(data);
+			}).fail(function () {
+		});
+
+		$.ajax({
+				url: '/lms/vod/mainList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#mvw').html(data);
+			}).fail(function () {
+		});
+		
+		$.ajax({
+				url: '/lms/edu/mainCalList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#mcdw').html(data);
+			}).fail(function () {
+		});
+
+		$.ajax({
+				url: '/cms/board/mainList',
+				type: 'get',
+				dataType: 'html',
+			}).done(function (data) {
+				$('#notice').html(data);
+			}).fail(function () {
+		});
+	 });
+</script>
+
+<script>
+$(document).ready(function() {
+
+	$(".fullpage").fullpage({ //id로 불러오든 class로 불러도은 상관없다
+    navigation : true, // 섹션 네비게이션
+    navigationPosition: 'right', //섹션 네비게이션 위치 설정 (right, left)
+    
+    navigationTooltips :[ //섹션 네비게이션에 마우스를 올리면 설명 나옴
+      "섹션 1",
+      "섹션 2",
+      "섹션 3",
+      "섹션 4",
+      "섹션 5",
+    ],
+    controlArrows : false,
+    slidesNavigation : true,
+    slidesNavPosition : 'top', //top or bottom
+		onLeave: function(origin, destination, direction){
+			if(destination.index == 0){
+				$('#gnb .gnbw .logo a').css('background-color','#DF002A');
+				$('#gnb .gnbw .logo a').css('background-image','url(/pages/kepco/img/logo.svg)');
+				$('#gnb .gnbw .logo a').css('width','165px');
+				$('#gnb .gnbw .logo a').css('height','200px');
+			}else{
+				$('#gnb .gnbw .logo a').css('background-color','transparent');
+				$('#gnb .gnbw .logo a').css('background-image','url(/pages/kepco/img/logo-on.svg)');
+				$('#gnb .gnbw .logo a').css('width','85px');
+				$('#gnb .gnbw .logo a').css('height','150px');
+			}
+		},
+		responsiveWidth: 1000,
+	});
+});	
+
+
+
+</script>
+<script>
+	// 통합검색 활성화 버튼
+	if (document.querySelector('#main_search .search_form_act_btn')){
+
+		document.querySelector('#main_search .search_form_act_btn').addEventListener('click', function(){
+			// 내부 함수를 위한 요소 상수 선언
+			const this_el = this;
+	
+			// 활성화 토글
+			this_el.classList.toggle('on');
+			document.querySelector('#main_search').classList.toggle('on');
+	
+			// 아이콘 변경
+			if (this_el.classList.contains('on')){
+				return change_icon(true);
+			}
+			return change_icon(false);
+	
+			// 활성화에 따른 아이콘 변경
+			function change_icon(change_state = true){
+				// fontawesome 요소 삭제(교체 전)
+				this_el.querySelector('i').remove();
+				let change_icon = document.createElement('i')
+				// 활성화 토글에 따른 아이콘 적용
+				if(change_state){
+					change_icon.classList.add('fa-solid', 'fa-xmark');
+				}else {
+					change_icon.classList.add('fa-solid', 'fa-magnifying-glass');
+				}
+				// fontawesome 요소 생성(교체)
+				return this_el.appendChild(change_icon);
+			}
+		});
+	}
+	
+	// 검색 전처리
+	const search_form = document.getElementById('mainSearch');
+	if (search_form){
+		search_form.addEventListener('submit', function (){
+			// 입력값 = 검색어
+			let input_data = search_form.elements['scWord'].value;
+			// 일일 쿠키 갱신
+			setCookie('kepco_search_'+input_data, input_data, 1);
+			// 중복 방지
+			// event.preventDefault();
+		})
+
+	}
+
+	
+	
+	
+	
+</script>
+</th:block>

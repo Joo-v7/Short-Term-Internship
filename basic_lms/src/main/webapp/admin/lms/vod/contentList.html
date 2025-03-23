@@ -1,0 +1,178 @@
+	<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<th:block layout:fragment="content">
+<script>
+	$(function () {
+		get_content_list();
+		// 검색
+		$("#frmContentList").submit(function () {
+		  setTimeout(function () {
+			var formData = $("#frmContentList").serialize();
+			get_content_list(formData);
+		  }, 40);
+	
+		  return false;
+		});
+	
+	});
+	
+	function content_onSubmit() {
+		var param = $("#frmContentList").serialize();
+		get_content_list(param);
+	  }
+
+	
+// 	function select(idx,name) {
+
+// 		document.getElementById("vodContent").value += idx+",";
+		
+// 		$("#contentIn").append(
+// 			"<div >"+idx + "" + name + "</div>"			
+// 		);
+	
+// 		var staff_modal = $("#pop_modal").modal();
+// 		staff_modal.modal('close');
+// 	}
+
+	
+	// 목록
+	function get_content_list(formData) {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#contentTable').DataTable({
+			ajax: {
+				type : 'get',
+				url : gblAdminPath + '/lms/vod/content/listJson?'+$('#frmContentList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select: {
+				'style': 'multi'
+			},
+			'columnDefs': [
+				{
+				  'width': '40px',
+				  'searchable': false,
+				  'orderable': true,
+				  'targets': 0,
+				  render: function(data, type, row, meta) {
+					return meta.row + meta.settings._iDisplayStart + 1;
+				  },
+				}],
+			order: [0, 'desc'],
+			initComplete: dataTableInit,
+			columns : [
+				{ data : 'rn', className : 'dt-body-center' },
+				{ data : 'contentTitle', className : 'dt-body-left' },
+				{ data : 'contentDesc', className : 'dt-body-left' },
+				{ data : 'contentTime', className : 'dt-body-center' },
+				{ data : 'insertDate', className : 'dt-body-center', render: $.fn.dataTable.render.datetime()},
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `<button onclick="select('${row.contentIdx}');" class="waves-effect waves-light btn cyan"><i class="material-icons left">edit</i>선택</button>`;
+					}
+				},
+			],
+		});
+
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#contentTableTotCnt').text( $('#contentTable').DataTable().data().count());
+		if ($('#contentTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+</script>
+
+	<div class="top pop-title">
+		<div class="row pd_box2">
+			<div class="col s12">
+				<a onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light" name="action"><i class="material-icons">clear</i></a>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<!-- // 그룹 -->
+		<div class="col s12 pd_box">
+			<div class="basic">
+				<div class="basic_top_searchbox left">
+					<div class="row">
+						<form id="frmContentList" method="get">
+							<!-- 검색창 -->
+							<div class="col search_bar">
+								<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+								<input type="hidden" name="vodIdx" id="vodIdx" th:value="${param?.vodIdx}" />
+								
+								<button type="submit" class="waves-effect waves-light btn cyan accent-4 z-depth-0 left">
+ 									<i class="material-icons md-18 left">search</i> 검색
+								</button>
+								<div class="title left">
+									전체 : <b id="contentTableTotCnt">0</b>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="table_type3">
+					<table id="contentTable" class="striped centered highlight">
+						<thead>
+							<tr>
+								<th width="30px">NO</th>
+								<th width="100px">영상 콘텐츠명</th>
+								<th width="200px">설명</th>
+								<th width="50px">훈련시간(분)</th>
+								<th width="80px">등록일시</th>
+								<th width="80px">기능</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+<script>
+	
+	function select(contentIdx) {
+		var vodIdx = '[[${param?.vodIdx}]]';
+		
+		if (!vodIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.ajax({
+			url  : gblAdminPath + '/lms/vod/bundle/save',
+			type : 'get',
+			data : {
+				'vodIdx' : vodIdx,
+				'contentIdx' : contentIdx
+			},
+			dataType : 'json',
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				var staff_modal = $("#pop_modal").modal();
+				staff_modal.modal('close');
+				bundle_ul(vodidx);
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function() {
+			toast('시스템 오류로 처리할 수 없습니다.');
+		});
+	}
+</script>
+	
+</html>

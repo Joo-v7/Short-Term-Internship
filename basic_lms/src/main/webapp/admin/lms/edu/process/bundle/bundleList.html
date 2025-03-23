@@ -1,0 +1,73 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<style>
+.pack_order3 {    display: inline-block;
+    background: #5998d3;
+    color: #fff;
+    padding: 0px 6px;
+    position: relative;
+    left: 26px;
+    top: -5px;}
+.pack_order2 {  display: inline-block;
+    background:red;
+    color: #fff;
+    padding: 9px 6px;
+    position: relative;
+    left: 26px;
+    top: -5px;}
+
+.dd-handle_A:before {background: url(/assets/img/poll_chk_A.png) left center no-repeat; content:'　'; height: 21px; left:4px;}
+.dd-handle_B:before {background: left center no-repeat; content:'　'; height: 21px; left:4px;}
+.dd-handle_C:before {background: url(/assets/img/poll_chk_C.png) left center no-repeat; content:'　'; height: 21px; left:4px;}
+.dd-handle_D:before {background: url(/assets/img/poll_chk_D.png) left center no-repeat; content:'　'; height: 21px; left:4px;}
+.dd-handle_E:before {background: url(/assets/img/poll_chk_E.png) left center no-repeat; content:'　'; height: 27px; top:5px;}
+.dd-handle_F:before {background: url(/assets/img/poll_chk_F.png) left center no-repeat; content:'　'; height: 28px; top:5px;}
+
+.dd-handle_A { width: 60px;}
+.dd-handle_B { width: 60px;}
+.dd-handle_C { width: 60px;}
+.dd-handle_D { width: 60px;}
+.dd-handle_E { width: 60px;}
+.dd-handle_F { width: 60px;}
+
+.nested-list-handle {cursor: auto;}
+.nested-list-content {display: flex; gap: 10px;}
+.select_train_role {display: inline-block; width: 100px; height: auto; padding: 0; margin: 0; font-weight: 500;}
+.select_train_role option {display: flex; width: 100%; height: 40px; }
+.workRole {flex: 1; display: flex; width: auto; height: 100%; padding: 10px; line-height: 1; justify-content: center; align-items: center;}
+.transparent_box {background-color: transparent!important; border: 0;}
+</style>
+<ol class="dd-list" >
+	<th:block  th:each="list, i : ${bundleList}">
+
+
+		<li class="dd-item nested-list-item">
+			<div class='dd-handle none nested-list-handle dd-handle_B' th:unless="${i.index} > 0 AND ${bundleList[i.index - 1].step} == ${list.step}">
+				<span class='count_box'>[[${list.step}]]</span>
+			</div>
+			<div class='dd-handle none nested-list-handle dd-handle_B transparent_box' th:if="${i.index} > 0 AND ${bundleList[i.index - 1].step} == ${list.step}">
+			</div>
+			<div class="nested-list-content">
+				<div class="select_train_role">
+					<span class='workRole m0' id="workRole" th:if="${list?.workRole == '1'}">주작업자</span>
+					<span class='workRole m0' id="workRole" th:if="${list?.workRole == '2'}">보조작업자</span>
+					<span class='workRole m0' id="workRole" th:if="${list?.workRole == '3'}">지상작업자</span>
+					<span class='workRole m0' id="workRole" th:if="${list?.workRole == '4'}">작업책임자</span>
+				</div>	
+				<form style="display: inline-block; width: calc(100% - 160px)" th:id="|frm_module_detail_form_${i.index+1}|" name="frm_search_form" method="post" enctype="multipart/form-data" action="/admin/lms/edu/process/bundle/orderChange">
+					<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+					<div class="left ellipsis" style="width: 100%">[[${list?.processContents}]]</div>
+						
+				</form>
+			</div>	
+		</li>
+	</th:block>
+</ol>
+
+<script th:inline="javascript">
+$(function() {
+});
+</script>

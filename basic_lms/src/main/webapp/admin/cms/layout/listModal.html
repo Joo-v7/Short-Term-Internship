@@ -1,0 +1,113 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<style>
+.modal {width: 50%}
+.pop-title-bar {padding-left:5px; padding-top:5px;}
+</style>
+<script>
+$(function () {
+	
+	// 목록
+	$('#frmListModal').submit(function(e) {
+		e.preventDefault();
+		
+		dataListModal();
+		
+	});
+	
+	// 검색
+	$('#frmListModal').submit();
+	
+});
+
+//목록
+function dataListModal() {
+	
+	$('#dataTableModal').DataTable({
+					
+		ajax : {
+			type : 'get',
+			url : gblAdminPath + '/cms/layout/listJson?'+$('#frmListModal').serialize(),
+			dataType: "json",
+			dataSrc : "data.list",
+		},
+		select : {
+			style : 'multi',
+		},
+		order : [0,'desc'],
+		
+		initComplete : dataTableInit,
+		columns : [
+			{ data : 'layoutCd', className : 'dt-body-left' },
+			{ data : 'layoutNm', className : 'dt-body-left' },
+			{ data : 'insertDate', className : 'dt-body-center' },
+			{ data : 'updateDate', className : 'dt-body-center' },
+		],
+	});
+	
+	$('#dataTableModal tbody').on('click', 'td', function() {
+		var data = $('#dataTableModal').DataTable().row(this).data();
+		layout_modal_callback(data);
+		modal_close('#pop_modal');
+	});
+
+}
+
+// 데이터테이블 initComplete
+function dataTableInit(settings, json) {
+	$('#dataTableModalTotCnt').text( $('#dataTableModal').DataTable().data().count());
+	if ($('#dataTableModal').DataTable().data().count() == 10000) {
+		toast('데이터 조회를 10,000건으로 제한합니다.');
+	}
+}
+</script>
+<div class="top pop-title">
+	<div class="row">
+		<div class="pop-title-bar">
+			<a href="#" onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light">
+				<i class="material-icons">clear</i>
+			</a>
+			<h4>레이아웃</h4>
+		</div>
+	</div>
+</div>
+
+<div class="basic pd_box">
+	<div class="row">
+		<form id="frmListModal" name="frmListModal" method="get" enctype="multipart/form-data">
+		<div class="basic_top_searchbox left">
+			
+			<div class="col s9">
+					<div class="col search_bar">
+						<input id="scWord" name="scWord" type="text" class="browser-default" th:value="${req['scWord']}">
+						<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+								<i class="material-icons md-18 left">search</i> 검색
+						</button>
+					</div>
+					<div class="title left">
+						전체 : <b id="dataTableModalTotCnt">0</b>
+					</div>
+				
+			</div>
+		</div>
+		</form>
+	</div>
+	<div class="row">
+		<div class="col s12 table_type3">
+			<table id="dataTableModal"class="striped centered highlight">
+				<thead>
+					<tr>
+						<th width="20%">레이아웃코드</th>
+						<th width="20%">레이아웃명</th>
+						<th width="15%">등록일시</th>
+						<th width="15%">수정일시</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

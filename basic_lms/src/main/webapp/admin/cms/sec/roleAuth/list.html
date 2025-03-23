@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<body>
+
+<th:block layout:fragment="content">
+
+<script>
+	$(function() {
+	
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+		// 추가,수정 폼
+ 		dataForm('');
+		
+	});
+	
+	// 목록
+	function dataList() {
+		
+		// 기본값 확인해서 전부 글로벌하게 덮어쓰기
+		$('#dataTable').DataTable({
+			
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/cms/sec/roleAuth/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ targets : 1, className : 'dt-body-center',
+        			render: function(data, type, row, meta){
+	                	return meta.row+1;
+	            	},
+	        	},
+				{ data : 'roleCd', className : 'dt-body-center' },
+				{ data : 'authCd', className : 'dt-body-center' },
+				{ data : 'insertDate', className : 'dt-body-center' },
+				{ data : 'updateDate', className : 'dt-body-center' },
+				
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `<button onclick="dataForm('${row.roleCd}','${row.authCd}',this);" class="waves-effect waves-light btn teal accent-4 z-depth-0"><i class="material-icons left">edit</i>수정</button>`;
+					}
+				},
+			],
+		});
+		
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+
+	// 추가,수정 폼
+	function dataForm(roleCd,authCd,ts) {
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+		
+		$("#areaForm").load(gblAdminPath + "/cms/sec/roleAuth/form?roleCd=" + roleCd + "&authCd=" + authCd);
+	}
+	
+	
+</script>
+
+
+<div class="row m0 h100">
+	<!-- // 그룹 -->
+	<div class="col s12 m12 l6 xl8 sideline pd_box">
+		<div class="basic">
+			<div class="basic_top_searchbox left">
+				<form id="frmList" method="get">
+					<div class="row">								
+						<!-- 검색창 -->
+						<div class=" col s12 m8 l8 xl6 search_bar">
+							<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}">
+							
+							<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+								<i class="material-icons md-18 left">search</i> 검색
+							</button>
+							<div class="title left">
+								전체 : <b id="dataTableTotCnt">0</b>
+							</div>
+						</div>
+						<div class=" right">
+							<button type="button" onclick="dataForm('')" class="waves-effect waves-light btn cyan left">
+								<i class="material-icons left">add_box</i>등록
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="table_type3">
+				<table id="dataTable" class="striped centered highlight" style="min-width: 1000px">
+					<colgroup>
+						<col width="80px">
+						<col width="auto">
+						<col width="auto">
+						<col width="140px">
+						<col width="140px">
+						<col width="100px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>NO</th>
+							<th>역할코드</th>
+							<th>권한코드</th>
+							<th>등록일</th>
+							<th>수정일</th>
+							<th>비고</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<div id="areaForm" class="col s12 m12 l6 xl4  scroll_defalt pd_box">
+	
+	</div>
+</div>
+</body>
+</html>

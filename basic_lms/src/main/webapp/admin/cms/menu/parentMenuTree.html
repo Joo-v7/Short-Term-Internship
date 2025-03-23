@@ -1,0 +1,134 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<style>
+.modal {width: 30%; height: 50%;}
+.pop-title-bar {padding-left:5px; padding-top:5px;}
+</style>
+<div class="top pop-title">
+	<div class="row">
+		<div class="pop-title-bar">
+			<a href="#" onclick="modal_close('#pop_modal');" class="btn grey lighten-1 waves-effect waves-light">
+				<i class="material-icons">clear</i>
+			</a>
+			<h4>상위 메뉴</h4>
+		</div>
+	</div>
+</div>
+	
+<div class="basic pd_box">
+	<div class="row m0 h100">
+		<!-- // 그룹 -->
+		<!-- 트리 -->
+		<div id="parent_menu_tree" class="col s12 m12 l12 xl12 sideline pd_box">
+			<div id="parent_tree_menu" style="max-height: 700px; overflow-y: scroll;">
+				<ul>
+					<li>메뉴1
+						<ul>
+							<li>메뉴1-1</li>
+							<li>메뉴1-2</li>
+						</ul>
+					</li>
+					<li>메뉴2</li>
+				</ul>
+			</div>
+		</div>
+		<!-- //트리 -->
+	</div>
+</div>	
+	<script>
+	$(function() {
+		getParentTreeJson();
+		
+	});
+	
+	function getParentTreeJson() {
+		
+		$.ajax(
+			{url : gblAdminPath + '/cms/menu/treeJson?' + $('#site').serialize() }
+		)
+		.done(function (res) {
+			var treeList = [];
+			
+			// 최상위에 메뉴를 추가할 수 있도록 ROOT 노드 추가
+			treeList.push(
+				{
+					"id": ""+0, 
+					"parent": "#", 
+					"text": "ROOT"
+				}
+			);
+			
+			res.data.menuList.forEach(function(v) {
+				var my_class = "";
+				if(v.useYn != 'y') {
+					my_class = "use_yn_n";
+				}
+				var node = {
+					"id": ""+v.menuIdx, 
+					"parent": ""+v.parentMenuIdx, 
+					"text": v.menuNm,
+					"depth": v.menuDepth,
+					"li_attr" : {
+						"class" : my_class
+					}
+				};
+				treeList.push(node);
+			});
+			
+			createParentTree(treeList);
+		});
+	}
+	
+	function createParentTree(treeList) {
+		$('#parent_tree_menu').jstree({
+			"core" : {
+				"animation" : 1,
+				"multiple" : false,
+				"themes" : {
+					"stripes" : true
+				},
+	 			"data" : treeList,
+				"themes" : {
+					"responsive" : false
+				}
+			},
+			"types" : {
+				"#" : {
+					"max_children" : 4,
+					"max_depth" : 6,
+					"valid_children" : [ "root" ]
+				},
+				"root" : {
+					"icon" : "glyphicon glyphicon-folder",
+					"valid_children" : [ "default" ]
+				},
+				"default" : {
+					"valid_children" : [ "default", "file" ]
+				},
+				"file" : {
+					"icon" : "glyphicon glyphicon-file",
+					"valid_children" : [ "file" ]
+				}
+			},
+			"plugins" : [ "contextmenu", "dnd", "search", "state", "types", "html_data" ]
+		});
+		
+		$('#parent_tree_menu').on('activate_node.jstree', function (event, data) {
+			console.log(data)
+			parent_menu_modal_callback(data.node.id, data.node.text, data.node.original.depth);
+			modal_close('#pop_modal');
+		});
+		
+		$('#parent_tree_menu').bind("loaded.jstree", function(event, data) {
+			$(this).jstree("open_node", "#");
+		});
+		
+		$('#parent_tree_menu').jstree(true).settings.core.data = treeList;
+		$('#parent_tree_menu').jstree(true).refresh();
+		
+	}
+	
+	
+	</script>
+</html>

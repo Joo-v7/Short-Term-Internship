@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<style>
+#chartdiv {
+width: 100%;
+height: 500px;
+}
+#chartdiv2 {
+	width: 100%;
+	height: 500px;
+}
+#chartdiv3 {
+	width: 100%;
+	height: 250px;
+}
+#chartdiv4 {
+	width: 100%;
+	height: 250px;
+}
+#chartdiv_timedata_1 {
+	width: 100%;
+	height: 500px;
+}
+#chartdiv_timedata_2 {
+	width: 100%;
+	height: 500px;
+}
+
+
+.first_info_box {display: flex; width: 100%; height: auto; flex-direction: column; gap: 10px;}
+.first_info_box .tit_name {flex: 1; width: 100%; font-size: 16px; font-weight: bold; height: auto; line-height: 1;}
+.first_info_box .info {flex: 1; display: flex; width: 100%; height: auto; justify-content: flex-start; flex-wrap: wrap; gap: 20px; font-size: 16px; font-weight: 500; color: inherit; opacity: 0.8; line-height: 1;}
+.first_info_box .info span {flex: 0 1 auto; display:inline; text-align: left; white-space: nowrap;}
+.first_info_box .info span.full {flex: 1; width: 100%;}
+
+.time_split {display: flex; width: 100%; height: auto; gap: 20px; padding: 20px;}
+.time_split dl {flex: 1 1 calc(100% / 4); display: flex; flex-direction: column; position: relative; margin: 0;}
+.time_split dl dt {display: flex; width: 100%; height: auto; padding: 16px; align-items: center; justify-content: center; background-color: #78909c; border-radius: 10px 10px 0 0; color: #fff; font-size: 18px; font-weight: bold; margin: 0;}
+.time_split dl dd {display: flex; width: 100%; height: auto; padding: 20px; align-items: center; justify-content: center; background-color: #eee; border-radius: 0 0 10px 10px; color: #212121; font-size: 24px; font-weight: bold;}
+.time_split dl dd::after {content: '(분)'; display: inline; width: auto; height: auto; font-size: 0.6em; font-weight: 500; color: inherit; opacity: 0.8; margin-left: 4px;}
+.time_split dl:first-child {margin-right: 20px;}
+.time_split dl:first-child::after {content: ''; display: block; width: 1px; height: 100%; background-color: #ccc; position: absolute; right: -20px; top: 0;}
+
+.count_wrap {display:flex; width: 100%; height: auto; padding: 20px;}
+.count_wrap .count_box {flex: 1 1 calc(100% / 5); display: flex; align-items: center; justify-content: center; gap: 20px; margin: 0;}
+.count_wrap .count_box dt {display: flex; width: 72px; height: 72px; border-radius: 50%; background-color: #3f89eb; color: #fff; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; margin: 0; box-shadow: 0 5px 10px #ccc;}
+.count_wrap .count_box dd {display: flex; width: auto; height: auto; align-items: center; gap: 4px; font-size: 18px; font-weight: bold; margin: 0;}
+.count_wrap .count_box dd > span {display: inline-block; opacity: 0.8; font-size: 0.8em; font-weight: 500;}
+.caution {background-color: #ffc244!important;}
+.danger {background-color: #ee7745!important;}
+.accident {background-color: #ef2c32!important;}
+.carelessness {background-color: #9639ef!important;}
+
+</style>
+<!-- AM 차트 4 -->
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<script src="/assets/libs/amchart4/themes/animated.js"></script>
+<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+<script>
+
+// Parse time in HH:MM format to minutes
+function parseTime(time) {
+	var parts = time.split(":");
+	return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+
+</script>
+<div id="statistics_info_wrap" class="col s12 scroller bg_lightblue h100 pd_box" style="max-height: calc(100vh - 116px); display:block;">
+
+	<div class="row">
+		<input type="hidden" name="detailIdx" th:value="${detailVo?.detailIdx}"/>
+		<h2 class="h2_butt mb10">기본 정보</h2>
+		<div class="first_info_box">
+			<!-- 공통 - 명칭 -->
+			<span class="tit_name">[[${detailVo.trainTitle}]]</span>
+			<div class="info">
+				<!-- 훈련 -->
+				<span>기수 : [[${detailVo.eduNumeral}]]</span>
+				<span>교수자 : [[${detailVo.teacherNm}]]</span>
+				<span>
+				    훈련구분 :
+				    [[${detailVo.eduType == '1' ? '개인' : (detailVo.eduType == '2' ? '협동' : '기타') }]]
+				</span>
+				<span>훈련분야 : [[${detailVo.eduCateNm}]]</span>
+				<span>훈련키워드 : [[${detailVo.eduKeyword}]]</span>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<h2 class="h2_butt">통계 정보</h2>
+		<div class="row">
+			<!-- <div class="helper_text_box">
+				<p>훈련시간은 각 모듈의 훈련 예상 시간이며, 수행시간은 실제 훈련자의 수행 시간입니다.</p>							
+			</div> -->
+			<div class="time_split">
+				<!-- <dl>
+					<dt>총 훈련시간</dt>
+					<dd>23:34</dd>
+				</dl> -->
+				<dl>
+					<dt>평균 수행시간</dt>
+					<dd>[[${detailVo.playTimeAvg}]]</dd>
+				</dl>
+				<dl>
+					<dt>최단 수행시간</dt>
+					<dd>[[${detailVo.playTimeMin}]]</dd>
+				</dl>
+				<dl>
+					<dt>최장 수행시간</dt>
+					<dd>[[${detailVo.playTimeMax}]]</dd>
+				</dl>
+			</div>
+		</div>
+		<div class="row">
+			<h3 class="h3_butt">훈련 수행시간</h3>
+			<div class="pd_box">
+				<div id="chartdiv"></div>
+			</div>					
+		</div>
+		<div class="row">
+			<h3 class="h3_butt">위험요인 및 사고 발생 횟수</h3>
+			<div class="count_wrap">
+				<dl class="count_box">
+					<dt>전체</dt>
+					<dd>
+						[[${detailVo.totalCnt}]]
+						<span>회</span>
+					</dd>
+				</dl>
+				<dl class="count_box">
+					<dt class="caution">감전</dt>
+					<dd>
+						[[${detailVo.esCnt}]]
+						<span>회</span>
+					</dd>
+				</dl>
+				<dl class="count_box">
+					<dt class="danger">추락</dt>
+					<dd>
+						[[${detailVo.fallCnt}]]
+						<span>회</span>
+					</dd>
+				</dl>
+				<dl class="count_box">
+					<dt class="carelessness">부주의</dt>
+					<dd>
+						[[${detailVo.careCnt}]]
+						<span>회</span>
+					</dd>
+				</dl>
+				<dl class="count_box">
+					<dt class="caution">작업부하</dt>
+					<dd>
+						[[${detailVo.loadCnt}]]
+						<span>회</span>
+					</dd>
+				</dl>
+				<dl class="count_box">
+					<dt class="accident">사고</dt>
+					<dd>
+						[[${detailVo.accidentCnt}]]
+						<span>회</span>
+					</dd>
+				</dl>
+			</div>
+		</div>
+		<!-- <div class="row">
+			<h3 class="h3_butt">이벤트 발생 분포도</h3>
+			<div class="pd_box">
+				<div id="chartdiv2"></div>
+			</div>
+		</div> -->
+
+		<div class="row">
+			<h3 class="h3_butt mb20">기간별 위험요인 발생 추이</h3>
+			<div class="col s12">
+				<!-- <div class="input-field col s1">
+					<label for="scStartDate" class="active">시작일자</label>
+					<input type="date" id="scStartDate" name="scStartDate" value="">
+				</div>
+				<div class="input-field col s1">
+					<label for="scEndDate" class="active">종료일자</label>
+					<input type="date" id="scEndDate" name="scEndDate" value="">
+				</div> -->
+				<div class="input-field col term_button_list">
+					<button class="waves-effect waves-light btn" id="timedata_1" th:onclick="riskFactorByPeriod([[${detailVo.detailIdx}]], '1MONTH', 'WEEK')">1개월</button>
+					<button class="waves-effect waves-light btn" id="timedata_2" th:onclick="riskFactorByPeriod([[${detailVo.detailIdx}]], '3MONTH', 'WEEK')">3개월</button>
+					<button class="waves-effect waves-light btn" id="timedata_3" th:onclick="riskFactorByPeriod([[${detailVo.detailIdx}]], '6MONTH', 'MONTH')">6개월</button>
+					<button class="waves-effect waves-light btn" id="timedata_4" th:onclick="riskFactorByPeriod([[${detailVo.detailIdx}]], '1YEAR', 'MONTH')">1년</button>
+					<button class="waves-effect waves-light btn" id="timedata_5" th:onclick="riskFactorByPeriod([[${detailVo.detailIdx}]], '2YEAR', 'MONTH')">2년</button>
+					<button class="waves-effect waves-light btn" id="timedata_6" th:onclick="riskFactorByPeriod([[${detailVo.detailIdx}]], '3YEAR', 'MONTH')">3년</button>
+				</div>
+			</div>
+			<div class="pd_box">
+				<div id="chartdiv_timedata_1"></div>
+			</div>
+		</div>
+
+
+<!-- 		<div class="row"> -->
+<!-- 			<div class="col s12 m12 l12 xl6"> -->
+<!-- 				<h3 class="h3_butt">전체 평균 수행 근육활성도</h3> -->
+<!-- 				<div class="pd_box"> -->
+<!-- 					<div id="chartdiv3"></div> -->
+<!-- 				</div> -->
+<!-- 			</div>					 -->
+<!-- 			<div class="col s12 m12 l12 xl6"> -->
+<!-- 				<h3 class="h3_butt">전체 평균 수행 추락위험도</h3> -->
+<!-- 				<div class="pd_box"> -->
+<!-- 					<div id="chartdiv4"></div> -->
+<!-- 				</div> -->
+<!-- 			</div>					 -->
+<!-- 		</div> -->
+
+
+		
+		<div class="row">
+			<h3 class="h3_butt mb20">연간 사고 원인 TOP5 추이</h3>
+			<div class="pd_box">
+				<div id="chartdiv_timedata_2"></div>
+			</div>
+		</div>
+
+
+	</div>
+	
+</div>
+
+<script>
+	
+
+$(function() {
+	var detailIdx = $("input[name='detailIdx']").val();
+	var once = 0; //상세정보 클릭시 한번만 불러오기 위한 변수 
+	//차트 불러오기
+	riskFactorByPeriod(detailIdx, "1MONTH", "WEEK");
+	playTime(detailIdx);
+	accidentReason(detailIdx);
+	
+});
+
+
+function playTime(detailIdx){ // chartdiv 역할별 평균 수행시간
+	$.ajax({
+        url: gblAdminPath + "/lms/edu/stat/chart/playTime?detailIdx=" + detailIdx,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+		
+		am4core.ready(function() {
+		
+		// Themes begin
+		am4core.useTheme(am4themes_animated);
+		// Themes end
+		
+		// Create chart instance
+		var chart = am4core.create("chartdiv", am4charts.XYChart);
+		chart.logo.disabled = true;
+		// Add data
+		console.log(data.data.vo);
+		chart.data = [
+			{
+				category: '훈련 수행 시간',
+				shortest: data.data.vo.playTimeMin,
+				longest: data.data.vo.playTimeMax,
+				average: data.data.vo.playTimeAvg
+			},
+		];
+		
+		// Create axes
+		var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+		categoryAxis.dataFields.category = "category";
+		categoryAxis.renderer.grid.template.location = 0;
+		categoryAxis.renderer.minGridDistance = 30;
+		// categoryAxis.title.text = "작업자 유형";
+		categoryAxis.renderer.cellStartLocation = 0.1;
+		categoryAxis.renderer.cellEndLocation = 0.9;
+		
+		var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+		// valueAxis.title.text = "시간";
+		
+		function createSeries(field, name, color) {
+			var series = chart.series.push(new am4charts.ColumnSeries());
+			series.dataFields.valueX = field;
+			series.dataFields.categoryY = "category";
+			series.name = name;
+			series.columns.template.tooltipText = "{name}: [bold]{valueX}[/] 초";
+			series.columns.template.fill = am4core.color(color);
+			series.stroke = am4core.color(color);
+		
+			return series;
+		}
+		
+		createSeries("shortest", "최단 수행시간", "#4989f1");
+		createSeries("longest", "최장 수행시간", "#00caa7");
+		createSeries("average", "평균 수행시간", "#00bee6");
+		// Add legend
+		chart.legend = new am4charts.Legend();
+		
+		
+		}); // end am4core.ready()
+		
+    }).fail(function () {
+		console.log("역할별 평균 수행시간을 불러오지 못했습니다.");
+    });
+}
+
+function riskFactorByPeriod(detailIdx, period, unit){ // chartdiv_timedata_1 기간별 위험요인 발생추이
+	var units = "";
+	if(unit == "WEEK"){
+		units = "주차"
+	}else if(unit == "MONTH"){
+		units = "개월차"
+	}
+	$.ajax({
+        url: gblAdminPath + "/lms/edu/stat/chart/riskFactorByPeriod?detailIdx=" + detailIdx +"&period="+ period + "&unit=" + unit,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+		am4core.ready(function() {
+		
+			// Themes begin
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+			
+			// Create chart instance
+			var chart = am4core.create("chartdiv_timedata_1", am4charts.XYChart);
+			chart.logo.disabled = true;
+			
+			// Add data dynamically based on the month value
+	        chart.data = [];
+	        for (var i = 0; i < data.data.list.length; i++) {
+	            // Assuming data.data.list is an array with objects having properties like "teom", "caution", "danger", "accident", "carelessness"
+	            
+	            var chartDataItem = {
+	                "teom": data.data.list[i].teom + units,
+	                "total": data.data.list[i].totalCnt,
+	                "es": data.data.list[i].esCnt,
+	                "fall": data.data.list[i].fallCnt,
+	                "care": data.data.list[i].careCnt,
+	                "load": data.data.list[i].loadCnt,
+	                "accident": data.data.list[i].accidentCnt
+	            };
+	
+	            chart.data.push(chartDataItem);
+	        }
+			
+			// Create axes
+			var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+			categoryAxis.dataFields.category = "teom";
+			categoryAxis.renderer.minGridDistance = 30;
+			
+			
+			var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			// valueAxis.renderer.inside = true;
+			// valueAxis.renderer.labels.template.disabled = true;
+			valueAxis.min = 0;
+			
+			
+			// Create series
+			function createSeries(field, name, color) {
+			 // Set up series
+			 var series = chart.series.push(new am4charts.LineSeries());
+			  series.name = name;
+			  series.dataFields.valueY = field;
+			  series.dataFields.categoryX = "teom";
+			  series.sequencedInterpolation = true;
+			  series.tooltipText = "[bold]{name}[/]\n{valueY}";
+			  series.stroke = am4core.color(color);
+			  series.minBulletDistance = 15;
+			
+			  // Drop-shaped tooltips
+			  series.tooltip.getFillFromObject = false;
+			//   series.tooltip.background.fill = am4core.color("#000");
+			  series.tooltip.background.fill = am4core.color(color);
+			  series.tooltip.background.strokeOpacity = 0;
+			  series.tooltip.pointerOrientation = "vertical";
+			  series.tooltip.label.minWidth = 40;
+			  series.tooltip.label.minHeight = 40;
+			  series.tooltip.label.textAlign = "middle";
+			  series.tooltip.label.textValign = "middle";
+			
+			  // Make bullets grow on hover
+			  var bullet = series.bullets.push(new am4charts.CircleBullet());
+			  bullet.circle.strokeWidth = 2;
+			  bullet.circle.radius = 4;
+			  bullet.circle.fill = am4core.color("#fff");
+			  var bullethover = bullet.states.create("hover");
+			  bullethover.properties.scale = 1.3;
+			
+			  return series;
+			}
+			
+			createSeries("total", "전체", '#3f89eb');
+			createSeries("es", "감전", '#ffc244');
+			createSeries("fall", "추락", '#ee7745');
+			createSeries("care", "부주의", '#9639ef');
+			createSeries("load", "작업부하", 'ffc244 ');
+			createSeries("accident", "사고", '#ef2c32');
+			
+			
+			
+			// Make a panning cursor
+			chart.cursor = new am4charts.XYCursor();
+			chart.cursor.behavior = "panXY";
+			
+			
+			
+			// Legend
+			chart.legend = new am4charts.Legend();
+
+		}); // end am4core.ready()
+
+		
+    }).fail(function () {
+		console.log("기간별 위험요인 발생추이를 불러오지 못했습니다.");
+    });
+}
+function accidentReason(detailIdx){ // chartdiv_timdata_2 //연간사고원인top5
+	$.ajax({
+        url: gblAdminPath + "/lms/edu/stat/chart/accidentReason?detailIdx=" + detailIdx,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+		
+		am4core.ready(function() {
+		// Themes begin
+		am4core.useTheme(am4themes_animated);
+		// Themes end
+		
+		// Create chart instance
+		var chart = am4core.create("chartdiv_timedata_2", am4charts.XYChart);
+		chart.logo.disabled = true;
+		
+		// Add data
+		chart.data = [];
+		for (var i = 0; i < data.data.list.length; i++) {
+		    var monthData = {
+		        "teom": data.data.list[i].teom + "월",
+		        "object_factor_1": data.data.list[i].accidentReasonRankCnt1,
+		        "object_factor_2": data.data.list[i].accidentReasonRankCnt2,
+		        "object_factor_3": data.data.list[i].accidentReasonRankCnt3,
+		        "object_factor_4": data.data.list[i].accidentReasonRankCnt4,
+		        "object_factor_5": data.data.list[i].accidentReasonRankCnt5
+		    };
+		    chart.data.push(monthData);
+		}
+
+		// Create axes
+		var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+		categoryAxis.dataFields.category = "teom";
+		categoryAxis.renderer.grid.template.location = 0;
+		
+		
+		var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+		valueAxis.renderer.inside = true;
+		valueAxis.renderer.labels.template.disabled = true;
+		valueAxis.min = 0;
+		
+		// Create series
+		function createSeries(field, name, color) {
+		  
+		  // Set up series
+		  var series = chart.series.push(new am4charts.ColumnSeries());
+		  series.name = name;
+		  series.dataFields.valueY = field;
+		  series.dataFields.categoryX = "teom";
+		  series.sequencedInterpolation = true;
+		  series.fill = am4core.color(color);
+		  series.stroke = am4core.color(color);
+		  
+		  // Make it stacked
+		  series.stacked = true;
+		  
+		  // Configure columns
+		  series.columns.template.width = am4core.percent(60);
+		  series.columns.template.tooltipText = "[bold]{name}[/]\n{valueY}";
+		  series.columns.template.tooltipText.color = am4core.color('#fff');
+			series.tooltip.getFillFromObject = false;
+		//   series.tooltip.background.fill = am4core.color("#000");
+		  series.tooltip.background.fill = am4core.color(color);
+		  series.tooltip.background.strokeOpacity = 0;
+		  series.tooltip.pointerOrientation = "vertical";
+		  series.tooltip.label.minWidth = 40;
+		  series.tooltip.label.minHeight = 40;
+		  series.tooltip.label.textAlign = "middle";
+		  series.tooltip.label.textValign = "middle";
+		
+		
+		
+		  // Add label
+		  var labelBullet = series.bullets.push(new am4charts.LabelBullet());
+		  labelBullet.label.text = "{valueY}";
+		  labelBullet.locationY = 0.5;
+		  labelBullet.label.hideOversized = true;
+		  
+		  return series;
+		}
+		
+		createSeries("object_factor_5", data.data.vo.accidentReasonRank5, '#ff8040');
+		createSeries("object_factor_4", data.data.vo.accidentReasonRank4, '#38758b');
+		createSeries("object_factor_3", data.data.vo.accidentReasonRank3, '#f7b509');
+		createSeries("object_factor_2", data.data.vo.accidentReasonRank2, '#4db380');
+		createSeries("object_factor_1", data.data.vo.accidentReasonRank1, '#0080ff');
+		
+		// Make a panning cursor
+		chart.cursor = new am4charts.XYCursor();
+		chart.cursor.behavior = "panXY";
+		
+		
+		
+		// Legend
+		chart.legend = new am4charts.Legend();
+		
+		
+		}); // end am4core.ready()
+
+		
+    }).fail(function () {
+		console.log("연간 사고원인을 불러오지 못했습니다.");
+    });
+}
+
+</script>	
+	

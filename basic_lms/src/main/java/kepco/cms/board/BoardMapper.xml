@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kepco.cms.board.BoardMapper">
+
+	<sql id="selectWhere">
+		<where>
+			delete_yn = 'n'
+			<if test="!@kepco.util.StrUtil@isBlank(scWord)">
+				AND (
+					a.board_name LIKE CONCAT ('%',#{scWord},'%') 
+					OR a.board_id LIKE CONCAT ('%',#{scWord},'%')
+				) 
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(boardId)">
+				AND a.board_id = #{boardId}
+			</if>
+			<if test="!@kepco.util.StrUtil@isBlank(boardIdx)">
+				AND a.board_idx = #{boardIdx}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectList" parameterType="map" resultType="kepco.cms.board.BoardVo">
+		SELECT
+			@RNUM := @RNUM + 1 AS rn, a.*, post_cnt, file_cnt
+		FROM cms_board a
+		left join (select board_idx, count(1) post_cnt from cms_board_post where delete_yn = 'n' group by board_idx) b
+		on a.board_idx = b.board_idx
+		left join (select board_idx, count(1) file_cnt from cms_board_post_file where delete_yn = 'n' group by board_idx) c
+		on a.board_idx = c.board_idx, (select @RNUM := 0) tmp
+			<include refid="selectWhere"/>
+		ORDER BY
+		<choose>
+			<otherwise>
+				rn DESC,
+				a.board_idx DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="select" parameterType="map" resultType="kepco.cms.board.BoardVo">
+		SELECT *
+		FROM cms_board a
+		WHERE 1 = 1
+		<if test="!@kepco.util.StrUtil@isBlank(boardId)">
+			AND a.board_id = #{boardId}
+		</if>
+		<if test="!@kepco.util.StrUtil@isBlank(boardIdx)">
+			AND a.board_idx = #{boardIdx}
+		</if>
+	</select>
+	
+	<select id="selectUser" parameterType="map" resultType="kepco.cms.board.BoardVo">
+		SELECT *
+		FROM cms_board where board_id = #{boardId}
+	</select>
+	
+	<insert id="insert" parameterType="kepco.cms.board.BoardVo" useGeneratedKeys="true" keyProperty="boardIdx" keyColumn="boardIdx">
+		INSERT INTO cms_board (
+			board_idx,site_idx,board_id,board_name,board_order,board_search,board_skin,board_upload_size,board_thumb_width,board_thumb_height,
+			board_use_comment,board_use_reply,board_use_secret,board_use_cate,board_use_rss,board_use_editor,board_history,
+			board_auth_list_user,board_auth_read_user,board_auth_write_user,board_auth_upload_user,board_auth_download_user,board_auth_comment_user,board_auth_reply_user,
+			board_auth_list_admin,board_auth_read_admin,board_auth_write_admin,board_auth_upload_admin,board_auth_download_admin,board_auth_comment_admin,board_auth_reply_admin,
+			board_page_lists,board_page_lines,board_sort_list,board_content_default,board_use_upload,board_use_file_info,board_upload_count,
+			board_use_thumb,board_use_name,board_use_view_count,board_use_insert_date,board_use_email,board_use_like,board_use_link,board_use_nickname,
+			board_use_tel,board_use_address,board_use_captcha,board_use_download,board_use_captcha_radio,board_use_priority,board_category,
+			
+			board_auth_list_non_member,board_auth_read_non_member,board_auth_write_non_member,board_auth_upload_non_member,board_auth_download_non_member,board_auth_comment_non_member,board_auth_reply_non_member,
+			board_auth_list_cms_admin,board_auth_read_cms_admin,board_auth_write_cms_admin,board_auth_upload_cms_admin,board_auth_download_cms_admin,board_auth_comment_cms_admin,board_auth_reply_cms_admin,
+			board_auth_list_lms_admin,board_auth_read_lms_admin,board_auth_write_lms_admin,board_auth_upload_lms_admin,board_auth_download_lms_admin,board_auth_comment_lms_admin,board_auth_reply_lms_admin,
+			board_auth_list_ras_admin,board_auth_read_ras_admin,board_auth_write_ras_admin,board_auth_upload_ras_admin,board_auth_download_ras_admin,board_auth_comment_ras_admin,board_auth_reply_ras_admin,
+			insert_idx,insert_ip,insert_date
+		)
+		VALUES (
+			#{boardIdx},#{siteIdx},#{boardId},#{boardName},#{boardOrder},#{boardSearch},#{boardSkin},#{boardUploadSize},#{boardThumbWidth},#{boardThumbHeight},
+			#{boardUseComment},#{boardUseReply},#{boardUseSecret},#{boardUseCate},#{boardUseRss},#{boardUseEditor},#{boardHistory},
+			#{boardAuthListUser},#{boardAuthReadUser},#{boardAuthWriteUser},#{boardAuthUploadUser},#{boardAuthDownloadUser},#{boardAuthCommentUser},#{boardAuthReplyUser},
+			#{boardAuthListAdmin},#{boardAuthReadAdmin},#{boardAuthWriteAdmin},#{boardAuthUploadAdmin},#{boardAuthDownloadAdmin},#{boardAuthCommentAdmin},#{boardAuthReplyAdmin},
+			#{boardPageLists},#{boardPageLines},#{boardSortList},#{boardContentDefault},#{boardUseUpload},#{boardUseFileInfo},#{boardUploadCount},
+			#{boardUseThumb},#{boardUseName},#{boardUseViewCount},#{boardUseInsertDate},#{boardUseEmail},#{boardUseLike},#{boardUseLink},#{boardUseNickname},
+			#{boardUseTel},#{boardUseAddress},#{boardUseCaptcha},#{boardUseDownload},#{boardUseCaptchaRadio},#{boardUsePriority},#{boardCategory},
+			
+			#{boardAuthListNonMember},#{boardAuthReadNonMember},#{boardAuthWriteNonMember},#{boardAuthUploadNonMember},#{boardAuthDownloadNonMember},#{boardAuthCommentNonMember},#{boardAuthReplyNonMember},
+			#{boardAuthListCmsAdmin},#{boardAuthReadCmsAdmin},#{boardAuthWriteCmsAdmin},#{boardAuthUploadCmsAdmin},#{boardAuthDownloadCmsAdmin},#{boardAuthCommentCmsAdmin},#{boardAuthReplyCmsAdmin},
+			#{boardAuthListLmsAdmin},#{boardAuthReadLmsAdmin},#{boardAuthWriteLmsAdmin},#{boardAuthUploadLmsAdmin},#{boardAuthDownloadLmsAdmin},#{boardAuthCommentLmsAdmin},#{boardAuthReplyLmsAdmin},
+			#{boardAuthListRasAdmin},#{boardAuthReadRasAdmin},#{boardAuthWriteRasAdmin},#{boardAuthUploadRasAdmin},#{boardAuthDownloadRasAdmin},#{boardAuthCommentRasAdmin},#{boardAuthReplyRasAdmin},
+			#{insertIdx},#{insertIp},CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="update" parameterType="kepco.cms.board.BoardVo">
+		UPDATE cms_board
+		<set>
+			site_idx = #{siteIdx},
+			board_id = #{boardId},
+			board_name = #{boardName},
+			board_order = #{boardOrder},
+			board_search = #{boardSearch},
+			board_skin = #{boardSkin},
+			board_upload_size = #{boardUploadSize},
+			board_thumb_width = #{boardThumbWidth},
+			board_thumb_height = #{boardThumbHeight},
+			board_use_comment = #{boardUseComment},
+			board_use_reply = #{boardUseReply},
+			board_use_secret = #{boardUseSecret},
+			board_use_cate = #{boardUseCate},
+			board_use_rss = #{boardUseRss},
+			board_use_editor = #{boardUseEditor},
+			board_history = #{boardHistory},
+			board_auth_list_user = #{boardAuthListUser},
+			board_auth_read_user = #{boardAuthReadUser},
+			board_auth_write_user = #{boardAuthWriteUser},
+			board_auth_upload_user = #{boardAuthUploadUser},
+			board_auth_download_user = #{boardAuthDownloadUser},
+			board_auth_comment_user = #{boardAuthCommentUser},
+			board_auth_reply_user = #{boardAuthReplyUser},
+			board_auth_list_admin = #{boardAuthListAdmin},
+			board_auth_read_admin = #{boardAuthReadAdmin},
+			board_auth_write_admin = #{boardAuthWriteAdmin},
+			board_auth_upload_admin = #{boardAuthUploadAdmin},
+			board_auth_download_admin = #{boardAuthDownloadAdmin},
+			board_auth_comment_admin = #{boardAuthCommentAdmin},
+			board_auth_reply_admin = #{boardAuthReplyAdmin},
+			
+			board_auth_list_non_member = #{boardAuthListNonMember},
+			board_auth_read_non_member = #{boardAuthReadNonMember},
+			board_auth_write_non_member = #{boardAuthWriteNonMember},
+			board_auth_upload_non_member = #{boardAuthUploadNonMember},
+			board_auth_download_non_member = #{boardAuthDownloadNonMember},
+			board_auth_comment_non_member = #{boardAuthCommentNonMember},
+			board_auth_reply_non_member = #{boardAuthReplyNonMember},
+			board_auth_list_cms_admin = #{boardAuthListCmsAdmin},
+			board_auth_read_cms_admin = #{boardAuthReadCmsAdmin},
+			board_auth_write_cms_admin = #{boardAuthWriteCmsAdmin},
+			board_auth_upload_cms_admin = #{boardAuthUploadCmsAdmin},
+			board_auth_download_cms_admin = #{boardAuthDownloadCmsAdmin},
+			board_auth_comment_cms_admin = #{boardAuthCommentCmsAdmin},
+			board_auth_reply_cms_admin = #{boardAuthReplyCmsAdmin},
+			board_auth_list_lms_admin = #{boardAuthListLmsAdmin},
+			board_auth_read_lms_admin = #{boardAuthReadLmsAdmin},
+			board_auth_write_lms_admin = #{boardAuthWriteLmsAdmin},
+			board_auth_upload_lms_admin = #{boardAuthUploadLmsAdmin},
+			board_auth_download_lms_admin = #{boardAuthDownloadLmsAdmin},
+			board_auth_comment_lms_admin = #{boardAuthCommentLmsAdmin},
+			board_auth_reply_lms_admin = #{boardAuthReplyLmsAdmin},
+			board_auth_list_ras_admin = #{boardAuthListRasAdmin},
+			board_auth_read_ras_admin = #{boardAuthReadRasAdmin},
+			board_auth_write_ras_admin = #{boardAuthWriteRasAdmin},
+			board_auth_upload_ras_admin = #{boardAuthUploadRasAdmin},
+			board_auth_download_ras_admin = #{boardAuthDownloadRasAdmin},
+			board_auth_comment_ras_admin = #{boardAuthCommentRasAdmin},
+			board_auth_reply_ras_admin = #{boardAuthReplyRasAdmin},
+
+			board_page_lists = #{boardPageLists},
+			board_page_lines = #{boardPageLines},
+			board_sort_list = #{boardSortList},
+			board_content_default = #{boardContentDefault},
+			board_use_upload = #{boardUseUpload},
+			board_use_file_info = #{boardUseFileInfo},
+			board_upload_count = #{boardUploadCount},
+			board_use_thumb = #{boardUseThumb},
+			board_use_name = #{boardUseName},
+			board_use_view_count = #{boardUseViewCount},
+			board_use_insert_date = #{boardUseInsertDate},
+			board_use_email = #{boardUseEmail},
+			board_use_like = #{boardUseLike},
+			board_use_link = #{boardUseLink},
+			board_use_nickname = #{boardUseNickname},
+			board_use_tel = #{boardUseTel},
+			board_use_address = #{boardUseAddress},
+			board_use_captcha = #{boardUseCaptcha},
+			board_use_download = #{boardUseDownload},
+			board_use_captcha_radio = #{boardUseCaptchaRadio},
+			board_use_priority = #{boardUsePriority},
+			board_category = #{boardCategory},
+			update_idx = #{updateIdx},
+			update_ip = #{updateIp},
+			update_date = CURRENT_TIMESTAMP
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND board_idx = #{boardIdx}
+	</update>
+	
+	<update id="delete" parameterType="kepco.cms.board.BoardVo">
+		UPDATE cms_board
+		<set>
+			delete_idx = #{deleteIdx},
+			delete_ip = #{deleteIp},
+			delete_date = CURRENT_TIMESTAMP,
+			delete_yn = 'y'
+		</set>
+		WHERE
+			delete_yn = 'n'
+			AND board_idx = #{boardIdx}
+	</update>
+	
+	<select id="selectCateUser" parameterType="map" resultType="kepco.cms.board.BoardCateVo">
+		SELECT *
+		FROM cms_board_category where board_idx = #{boardIdx} and category_parent > 0 order by category_order asc
+	</select>
+	
+	
+
+</mapper>

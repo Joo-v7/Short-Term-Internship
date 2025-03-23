@@ -1,0 +1,9 @@
+
+<div class="notice-box" th:each="vo : ${postList}">
+	<a th:href="|/cms/board/post/view/?site=kepco&&mn=0301&boardId=notice&postIdx=${vo?.postIdx}|">
+		<div class="category">공지사항</div>
+		<div class="subject">[[${vo?.postTitle}]]</div>
+		<div class="content">[[${vo?.postContent}]]</div>
+		<div class="date">[[${#strings.substring(vo?.insertDate,0,10)}]]</div>
+	</a>
+</div>

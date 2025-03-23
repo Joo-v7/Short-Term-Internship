@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+
+<th:block layout:fragment="content">
+<script>
+
+	$(function() {
+		
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			
+			dataList();
+			
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+		// 추가,수정 폼
+		dataForm('');
+		
+	});
+	
+	// 목록
+	function dataList() {
+		
+		$('#dataTable').DataTable({
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/ras/risk/level/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			select : {
+				style : 'multi',
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit,
+			columns : [
+				{ data : 'levelIdx', className : 'dt-body-center' },
+				{ data : 'levelNm', className : 'dt-body-left' },
+				{ data : 'levelScore', className : 'dt-body-center' },
+				{ data : 'useYn', className : 'dt-body-center' },
+				{ data : 'levelDesc', className : 'dt-body-left' },
+				{ data : 'insertDate', className : 'dt-body-center' },
+				{ data : 'updateDate', className : 'dt-body-center' },
+				//수정 
+				{
+					data : null, searchable : false, orderable : false, className : 'dt-body-center',
+					render : function(data, type, row, meta) {
+						return `<button onclick="dataForm(${row.levelIdx},this);" class="waves-effect waves-light btn cyan"><i class="material-icons left">edit</i>수정</button>`;
+					}
+				},
+			],
+		});
+		
+		$('#dataTable tbody').on('click', 'td', function() {
+// 			var data = $('#dataTable').DataTable().row(this).data();
+// 			dataForm(data.levelIdx);
+// 			$('#dataTable tbody tr.selected').removeClass('selected');
+// 			$(this).addClass('selected');
+		});
+
+	}
+	
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count());
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+	
+	// 삭제
+	function dataDelete(levelIdx, title) {
+		if (!levelIdx) {
+			toast('잘못된 접근입니다.');
+			return false;
+		}
+		$.confirm({
+			theme : 'supervan',
+			title : title + ' 삭제',
+			content : '한번 삭제한 자료는 복구가 불가능합니다. <br /><br /> 삭제 하시겠습니까?',
+			buttons : {
+				확인 : function() {
+					$.ajax({
+						url : gblAdminPath + '/ras/risk/level/delete',
+						type : 'get',
+						data : {
+							'levelIdx' : levelIdx
+						},
+						dataType : 'json',
+					}).done(function(data) {
+						if(data.code == 0) {
+							toast("정상적으로 처리되었습니다.");
+							$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+							dataForm('');
+						}
+						else {
+							toast(data.message);
+						}
+					}).fail(function() {
+						toast('시스템 오류로 처리할 수 없습니다.');
+					});
+				},
+				취소 : function() {
+				}
+			}
+		});
+	}
+
+	// 추가,수정 폼
+	function dataForm(levelIdx,ts) {
+		$('tr.selected').removeClass('selected');
+		$(ts).parent().parent().addClass('selected');
+		
+		$("#areaForm").load(gblAdminPath + "/ras/risk/level/form?levelIdx=" + levelIdx);
+	}
+</script>
+<div>
+	<div class="row">
+		<!-- // 그룹 -->
+		<div class="col s12 m12 l12 xl6 sideline pd_box bg_lightblue h100">
+			<div class="basic">
+				<div class="basic_top_searchbox left">
+					<div class="row">
+						<form id="frmList" method="get">
+							<!-- 검색창 -->
+							<div class="col s12 m12 l12 xl10 search_bar">
+								<input id="scWord" name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="위험성수준명">
+								<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+ 									<i class="material-icons md-18 left">search</i> 검색
+								</button>
+								<div class="title left">
+									전체 : <b id="dataTableTotCnt">0</b>
+								</div>
+							</div>
+							<div class="right">
+								<button type="button" onclick="dataForm('')" class="waves-effect waves-light btn cyan left">
+									<i class="material-icons left">create</i>등록
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="table_type3">
+					<table id="dataTable" class="striped centered highlight" style="min-width: 800px">
+						<colgroup>
+							<col width="60px">
+							<col width="120px">
+							<col width="80px">
+							<col width="80px">
+							<col width="auto">
+							<col width="140px">
+							<col width="140px">
+							<col width="100px">
+						</colgroup>
+						<thead>
+							<tr>
+								<th>NO</th>
+								<th>위험성수준명</th>
+								<th>값</th>
+								<th>사용여부</th>
+								<th>위험성수준 설명</th>
+								<th>등록일시</th>
+								<th>수정일시</th> 
+								<th>수정</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div id="areaForm" class="col s12 m12 l12 xl6 scroll_default pd_box">
+		</div>
+	</div>
+</div>
+
+</html>

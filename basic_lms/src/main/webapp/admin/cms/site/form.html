@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+<head>
+</head>
+<body>
+
+<form id="frmForm" method="post" th:action="@{/{adminPath}/cms/site/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+	<div class="top">
+		<div class="row">
+			<div class="col s12 right-align">
+				<button class="btn waves-effect z-depth-0 red lighten-1 left" type="button" th:if="${!#strings.isEmpty(vo?.siteIdx)}" th:onclick="dataDelete();">삭제<i class="material-icons left">delete</i></button>				
+				<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit" value="저장">저장 <i class="material-icons left">check</i></button>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col s12">
+			<div class="row">
+				<input name="siteIdx" id="siteIdx" type="hidden"  th:value="${vo?.siteIdx}">
+				<div class="input-field col s12 m10 l8 xl10">
+					<label for="site" class="req">사이트 코드</label>
+					<input name="site" id="site" title="아이디" type="text"  th:value="${vo?.site}" th:onkeyup="$(this).val(input_regexp(this,/[0-9a-z.;\_]/))">
+				</div>
+				<label for="defaultSiteYn">대표 사이트</label>
+				<div class="col s12 m2 l4 xl2 check_list_box">					
+					<label for="defaultSiteYn">
+						<input class="filled-in" id="defaultSiteYn" name="defaultSiteYn" type="checkbox" value="y" th:checked="${vo?.defaultSiteYn eq 'y'}" >
+						<span>대표</span>
+					</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12 m6 l6 xl6">
+					<label for="siteNm" class="req">사이트명</label>
+					<input name="siteNm" id="siteNm" title="사이트명" type="text" th:value="${vo?.siteNm}">
+				</div>
+				
+				<div class="input-field col s12 m6 l6 xl6">
+					<label for="homeTitle" class="req">홈페이지 타이틀</label>
+					<input name="homeTitle" id="homeTitle" title="홈페이지 제목" type="text" th:value="${vo?.homeTitle}">
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12 m6 l6 xl6">
+					<label for="layoutNm">레이아웃</label>
+					<input type="hidden" name="layoutIdx" id="layoutIdx" th:value="${vo?.layoutIdx}">
+					<input type="text" id="layoutNm" th:value="${vo?.layoutNm}">
+					<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="layout_modal();" ><i class="material-icons">search</i></a>
+				</div>
+				
+				<div class="input-field col s12 m6 l6 xl6">
+					<label for="pageNm">페이지</label>
+					<input type="hidden" name="pageIdx" id="pageIdx" th:value="${vo?.pageIdx}">
+					<input type="text" id="pageNm" th:value="${vo?.pageNm}">
+					<a class="btn cyan accent-4 z-depth-0 waves-effect waves-light" onclick="page_modal();" ><i class="material-icons">search</i></a>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12">
+					<input name="domain" id="domain" title="홈페이지 URL" type="text" th:value="${vo?.domain}">
+					<label for="domain" class="">URL</label>
+				</div>
+			</div>
+			<!--
+			<div class="row">
+				<div class="input-field col s7">
+					<select name="gr_admin[]" id="gr_admin" title="관리자 접근권한">
+						<option>관리자 접근권한</option>
+						<option value="9" >테스트</option>
+					</select>
+				</div>
+			</div>
+			-->
+		</div>
+	</div>
+
+</form>
+<script>
+//# sourceURL=/admin/cms/site/form.html
+	$(function() {
+		
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='site']", $frm).val() == "") {
+				toast("사이트는 필수입력 입니다.");
+				$("input[name='site']", $frm).focus();
+				return;
+			}
+			
+			if($("input[name='siteNm']", $frm).val() == "") {
+				toast("사이트명은 필수입력 입니다.");
+				$("input[name='siteNm']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	});
+	
+	function dataDelete() {
+		var siteIdx = $("[name='siteIdx']", '#frmForm').val();
+		
+		var $frm = $(this);
+		
+		$.ajax({
+			type: "get",
+			url: "delete",
+			data: "siteIdx="+siteIdx,
+// 			contentType: "application/x-www-form-urlencoded",
+			dataType: "json",
+			beforeSend: function(xhr) {
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				dataForm();
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			}
+		});
+		
+	}
+	
+	// 페이지 검색 모달
+	function page_modal() {
+		var site = $("[name='site']", "#frmForm").val();
+		var scPageType = "main";
+		$.ajax({
+			url: gblAdminPath + '/cms/page/listModal?callback=page_modal_callback&site='+site+'&scPageType='+scPageType,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+// 			$('#pop_modal').css({'height':'80%'});
+			var myModal = $("#pop_modal").modal();
+			myModal.modal('open');
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+	
+	// 콜백 - 페이지 검색 모달
+	function page_modal_callback(data) {
+		$("[name='pageIdx']", "#frmForm").val(data.pageIdx);
+		$("[id='pageNm']", "#frmForm").val(data.pageNm);
+	}
+	
+	// 레이아웃 검색 모달
+	function layout_modal() {
+		var site = $("[name='site']", "#frmForm").val();
+		$.ajax({
+			url: gblAdminPath + '/cms/layout/listModal?callback=layout_modal_callback&site='+site,
+			type: 'get',
+			dataType: 'html',
+		}).done(function (data) {
+			$('#pop_modal').html(data);
+// 			$('#pop_modal').css({'height':'80%'});
+			var myModal = $("#pop_modal").modal();
+			myModal.modal('open');
+		}).fail(function () {
+			toast('네트워크 또는 시스템 장애입니다.', 4000);
+		});
+	}
+	
+	// 콜백 - 레이아웃 검색 모달
+	function layout_modal_callback(data) {
+		$("[name='layoutIdx']", "#frmForm").val(data.layoutIdx);
+		$("[id='layoutNm']", "#frmForm").val(data.layoutNm);
+	}
+</script>
+</body>
+</html>

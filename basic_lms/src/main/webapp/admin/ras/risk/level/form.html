@@ -1,0 +1,126 @@
+<html lang="ko" 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	>
+
+<form id="frmForm" method="post" th:action="@{/{adminPath}/ras/risk/level/save(adminPath=${@environment.getProperty('global.admin-path')})}">
+	<div class="top">
+		<div class="row">
+			<div class="col s12 right-align">
+ 				<button class="btn waves-efsfect z-depth-0 red lighten-1 left" type="button" th:if="${!#strings.isEmpty(vo?.levelIdx)}" th:onclick="dataDelete();">삭제<i class="material-icons left">delete</i></button>				 
+				<button class="btn waves-effect waves-light  blue-grey darken-4 z-depth-0" type="submit" value="저장">저장 <i class="material-icons left">check</i></button>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col s12">
+			<div class="row">
+ 				<input name="levelIdx" id="levelIdx" type="hidden"  th:value="${vo?.levelIdx}"> 
+				
+				<div class="input-field col s7">
+					<label for="levelNm" class="req">위험성수준명</label>
+					<input type="text" name="levelNm" id="levelNm"  th:value="${vo?.levelNm}">
+				</div>
+				<div class="input-field col s3">
+					<label for="levelScore" class="">위험성수준 값</label>
+					<input name="levelScore" id="levelScore" type="text" th:value="${vo?.levelScore}">
+				</div>
+				<label for="">사용여부</label>
+				<div class="check_list_box col s2">
+					<label for="useYn">
+					<input id="useYn" name="useYn" type="checkbox" class="filled-in" title="사용여부" value="y" th:checked="${vo?.useYn eq 'y'}">
+					<span>사용</span>
+					</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12">
+					<input name="levelDesc" id="levelDesc" type="text" th:value="${vo?.levelDesc}">
+					<label for="levelDesc" class="">위험성수준 설명</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12 m12 l6 xl3">
+					<label for="insertDate">등록일시</label>
+					<input id="insertDate" type="text" th:value="${#dates.format(vo?.insertDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+				</div>
+				<div class="input-field col s12 m12 l6 xl3">
+					<label for="updateDate">수정일시</label>
+					<input id="updateDate" type="text" th:value="${#dates.format(vo?.updateDate, 'yyyy-MM-dd HH:mm:ss')}" readonly>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</form>
+<script>
+//# sourceURL=/admin/ras/risk/level/form.html
+	$(function() {
+		
+		
+		$("#frmForm").submit(function(e) {
+			e.preventDefault();
+			var $frm = $(this);
+			
+			if($("input[name='levelNm']", $frm).val() == "") {
+				toast("위험요인명은 필수입력 입니다.");
+				$("input[name='levelNm']", $frm).focus();
+				return;
+			}
+			
+			$.ajax({
+				type: "post",
+				url: $frm.attr("action"),
+				data: $frm.serialize(),
+				contentType: "application/x-www-form-urlencoded",
+				dataType: "json",
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader("X-CSRF-TOKEN", $("input[name='_csrf']", $frm).val());
+				},
+			}).done(function(data) {
+				if(data.code == 0) {
+					toast("정상적으로 처리되었습니다.");
+					$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+					dataForm();
+				}
+				else {
+					toast(data.message);
+				}
+			}).fail(function(xhr) {
+				if(typeof xhr.responseJSON.message != "undefined") {
+					toast(xhr.responseJSON.message);
+				}
+			});
+		});
+	});
+	
+	function dataDelete() {
+		var levelIdx = $("[name='levelIdx']", '#frmForm').val();
+		
+		var $frm = $(this);
+		
+		$.ajax({
+			type: "get",
+			url: "delete",
+			data: "levelIdx="+levelIdx,
+			dataType: "json",
+			beforeSend: function(xhr) {
+			},
+		}).done(function(data) {
+			if(data.code == 0) {
+				toast("정상적으로 처리되었습니다.");
+				$('#dataTable').DataTable().ajax.reload(dataTableInit, false);
+				dataForm();
+			}
+			else {
+				toast(data.message);
+			}
+		}).fail(function(xhr) {
+			if(typeof xhr.responseJSON.message != "undefined") {
+				toast(xhr.responseJSON.message);
+			}
+		});
+		
+	}
+	
+</script>

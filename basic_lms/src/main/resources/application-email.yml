@@ -1,0 +1,13 @@
+spring.mail:
+  host: localhost
+  port: 25
+  username:
+  password:
+  from-noreply: no-reply@kepco.co.kr
+  properties.mail:
+    debug: true
+#    smtp.auth: false
+#    transport.protocol: smtp
+#    smtps.quitwait: false
+#    smtp.socketFactory.port: 465
+#    smtp.socketFactory.class: javax.net.ssl.SSLSocketFactory

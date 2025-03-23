@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="utf-8">
+<title>[[${siteVo.homeTitle}]] > [[${#strings.listJoin(menuTree.getParentMenuList(currMenuNode).![menuNm], ' > ')}]]</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1">
+<link rel="stylesheet" href="/pages/kepco/css/basic.css">
+<link rel="stylesheet" href="/pages/kepco/css/layout.css">
+<!--/* 서브 전용 CSS */-->
+<link rel="stylesheet" href="/pages/kepco/css/sub.css">
+
+<link rel="stylesheet" href="/assets/libs/animate/animate.min.css">
+
+<script src="/assets/libs/fontawesome/fontawesome.js" crossorigin="anonymous"></script>
+
+<link href="/assets/libs/aos/aos.css" rel="stylesheet">
+<script src="/assets/libs/aos/aos.js"></script>
+
+<script src="/assets/js/jquery-3.5.1.min.js"></script>
+
+<script src="/pages/kepco/js/fullpage.js"></script>
+<link rel="stylesheet" href="/pages/kepco/css/fullpage.min.css">
+
+<script src="/assets/libs/swiperjs/swiper-bundle.min.js" ></script>
+<link rel="stylesheet" href="/assets/libs/swiperjs/swiper-bundle.min.css">
+
+<script src="/assets/libs/gsap/gsap.min.js" ></script>
+
+<script src="/pages/kepco/js/common.js"></script>
+<script src="/pages/kepco/js/script.js" ></script>
+<script src="/pages/kepco/js/mouse_interaction.js" ></script>
+
+<script>
+$(function() {
+
+	// Animation On Scroll. `data-aos` 속성에 따라 적용
+	AOS.init();
+	
+	/*
+	// 메인, 서브 모두 사용치 않는 것 같은데?
+
+	var isDragging = false;
+    var startX;
+    var scrollLeft;
+
+    function scroll_x_wheel(event) {
+      event.preventDefault();
+      var scrollAmount = event.deltaY;
+      var scrollableElement = event.currentTarget;
+
+      scrollableElement.scrollLeft += scrollAmount;
+    }
+
+    function start_drag(event) {
+      var scrollableElement = event.currentTarget;
+      isDragging = true;
+      startX = event.clientX;
+      scrollLeft = scrollableElement.scrollLeft;
+      scrollableElement.style.cursor = 'grabbing';
+    }
+
+    function end_drag() {
+      isDragging = false;
+      document.querySelector('.scrollable-element').style.removeProperty('cursor');
+    }
+
+    function drag(event) {
+      if (!isDragging) return;
+      var scrollableElement = event.currentTarget;
+      var x = event.clientX - startX;
+      scrollableElement.scrollLeft = scrollLeft - x;
+    }
+	*/
+
+	// 콘텐츠 상단 1, 2차메뉴 클릭시 메뉴 슬라이드
+	$("#web_location .location_dept_a").on('click',function(){
+		$(this).next('ul').stop().slideToggle();
+	});
+});
+</script>
+</head>
+<body>
+<!-- 로딩바 -->
+	<div id="overlay"></div>
+	<div id="loader_active">
+		<div class="preloader-wrapper big active">
+			<div class="spinner-layer spinner-yellow-only">
+				<div class="circle-clipper left">
+					<div class="circle"></div>
+				</div>
+				<div class="gap-patch">
+					<div class="circle"></div>
+				</div>
+				<div class="circle-clipper right">
+					<div class="circle"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+<!--//로딩바-->
+<header>
+	<nav>
+		<div id="gnb">
+			<div class="gnbw">
+				<!--/* 로고 이미지. 메인, 서브가 다름 */-->
+				<div class="logo"><a href="/"></a></div>
+
+				<div class="hd_menu_wrap">
+					<ul class="hd_menu_box">
+						<li th:each="treeNode : ${menuTree.root.children}">
+							<a th:if="${treeNode.data.useYn == 'y'}"  th:href="@{${treeNode.data.menuUrl}}" th:classappend="${treeNode.active} ? on">[[${treeNode.data.menuNm}]]</a>
+							<ul class="hd_depth_box" th:if="${treeNode.data.useYn == 'y'}" >
+								<li th:if="${treeNode2.data.useYn == 'y'}"  th:each="treeNode2 : ${treeNode.children}">
+									<a th:href="@{${treeNode2.data.menuUrl}}" th:title="${treeNode2.data.menuNm}" th:classappend="${treeNode2.active} ? on">
+										<span>[[${treeNode2.data.menuNm}]]</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+						<li sec:authorize="isAnonymous()" class="login-ico">
+							<a href="#"><span class="hidden">로그인</span></a>
+							<ul class="hd_depth_box">
+								<li><a href="/cms/page?site=kepco&mn=1001" title="로그인"><span>로그인</span></a></li>
+								<li><a href="/cms/member/join?site=kepco&mn=1002" title="회원가입"><span>회원가입</span></a></li>
+								<!--<li><a href="/cms/member/findIdPw?site=kepco&mn=1003" title="아이디/비번찾기"><span>아이디/비번찾기</span></a></li>-->
+							</ul>
+						</li>
+						<li sec:authorize="isAuthenticated()" class="logout-ico">
+							<a href="#"><span class="hidden">로그아웃</span></a>
+							<ul class="hd_depth_box">
+								<li><a href="/cms/member/auth/logout" title="로그아웃"><span>로그아웃</span></a></li>
+								<li><a href="/cms/member/pwForm/?site=kepco&mn=0406&mod=myPage" title="마이페이지"><span>마이페이지</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+				<div class='toggle modalLink'><a href="#open-modal"><p class="sitemap-icon"></p></a></div>
+				<div id="open-modal" class="modal-window">
+					<div class="modal-wrap">
+						<div class="md-logo"><a href="/"><span class="hidden">kepco 로고</span></a></div>
+						<a href="#" title="Close" class="modal-close"><div class="cancle"></div><span class="hidden">취소</span></a>
+						<div class="md-left">
+							<div class="tit">
+								<p>초실감 안전교육훈련</p>
+								<h6>iKEMPUS</h6>
+							</div>	
+							<dl class="md-info">
+								<dt>Contacts</dt>
+								<dd>01793 서울특별시 노원구 노원로 130 (공릉동, 한국전력인재개발원)</dd>    
+								<dd>TEL. 02-970-3321(평일 9:00 ~ 18:00)</dd>
+								<dd>FAX. 02-970-3349</dd>
+							</dl>
+						</div>
+						<div class="md-right">
+							<th:block th:each="treeNode : ${menuTree.root.children}">
+							<dl th:if="${treeNode.data.useYn == 'y'}">
+								<dt><a th:href="@{${treeNode.data.menuUrl}}">[[${treeNode.data.menuNm}]]</a></dt>
+								<dd class="hd_depth_box" th:if="${treeNode.data.useYn == 'y'}" th:each="treeNode2 : ${treeNode.children}">
+									<a th:href="@{${treeNode2.data.menuUrl}}" th:title="${treeNode2.data.menuNm}">
+										[[${treeNode2.data.menuNm}]]
+									</a>
+								</dd>
+							</dl>
+							</th:block/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</nav>  
+</header>
+
+
+<!-- #web_location -->
+<div class="web_location" id="web_location">
+	<div class="web_location_box">
+		<ul>
+			<li class="home">
+				<a th:href="@{/cms/main(site=${siteVo.site})}" class="home" title="메인으로"><i class="fa-solid fa-house"></i></a>
+			</li>
+			<li class="mn">
+				
+				<th:block th:each="treeNode : ${menuTree.root.children}">
+					<a th:if="${treeNode.active}" href="#" class="location_dept_a">[[${treeNode.data.menuNm}]]<i class="fa-solid fa-sort-down lc-icon"></i></a>
+				</th:block>
+				<ul class="location_dept depth_box1">
+					<th:block th:each="treeNode : ${menuTree.root.children}">
+					<li class="mn">
+						<a th:if="${treeNode.data.useYn == 'y'}" th:href="@{${treeNode.data.menuUrl}}" th:title="${treeNode.data.menuNm}" th:classappend="${treeNode.active} ? on">
+							<span>[[${treeNode.data.menuNm}]]</span>
+						</a>
+					</li>
+					</th:block>
+				</ul>
+			</li>
+
+
+
+			<li class="mn">
+				<a href="#" class="location_dept_a">[[${currMenuNode?.data?.menuNm}]]<i class="fa-solid fa-sort-down lc-icon"></i></a>
+				<ul class="location_dept depth_box1">
+					<th:block th:each="treeNode : ${menuTree.getDepth2NodeList()}">
+					<li class="mn">
+						<a th:if="${treeNode.data.useYn == 'y'}" th:href="@{${treeNode.data.menuUrl}}" th:title="${treeNode.data.menuNm}" th:classappend="${treeNode.active} ? on">
+							<span>[[${treeNode.data.menuNm}]]</span>
+						</a>
+					</li>
+					</th:block>
+				</ul>
+			</li>
+		</ul>
+	</div>
+</div>
+<!-- //#web_location -->
+
+<div class="sub_wrap">
+	<div id="sub_content">
+		<div class="content_box">
+			<!-- contents -->
+			<div id="contents">
+				<!--
+				<div class="contents_top">
+					<div class="contents_top_txt">
+						<h3 class="subtop_title" data-aos="fade-up" data-aos-duration="1500" data-aos-delay="100">[[${currMenuNode?.data?.menuNm}]]</h3>
+						<p class="subtop_title2" data-aos="fade-up" data-aos-duration="1500">korea electric power corporation</p>
+					</div>
+				</div>
+				-->
+
+				<div id="contents_wrap" class="conStyle">
+					<div id="page_content"><!-- 페이지영역 -->
+						<!-- <div class="page-tit">
+							<h3 class="title">[[${currMenuNode?.data?.menuNm}]]</h3>
+							<p class="subtitle">VR 기술을 활용한 가상훈련시스템 초실감 안전 교육 프로그램</p>
+
+						</div> -->
+
+					<div layout:fragment="content"></div>
+
+
+					</div><!--// 페이지영역 -->
+				</div>
+			</div>
+			<!-- contents -->
+		</div>
+	</div>
+</div>
+
+
+
+<div th:replace="pages/kepco/sub/footer"></div>
+
+</body>
+</html>

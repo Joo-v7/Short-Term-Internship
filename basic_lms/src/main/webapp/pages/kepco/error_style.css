@@ -1,0 +1,87 @@
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-Thin.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-Thin.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-Thin.otf") format("opentype");
+    font-weight: 100;
+    font-style: normal; }
+
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-ExtraLight.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-ExtraLight.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-ExtraLight.otf") format("opentype");
+    font-weight: 200;
+    font-style: normal; }
+
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-Light.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-Light.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-Light.otf") format("opentype");
+    font-weight: 300;
+    font-style: normal; }
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-Regular.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-Regular.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal; }
+
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-Medium.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-Medium.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-style: normal; }
+
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-SemiBold.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-SemiBold.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-SemiBold.otf") format("opentype");
+    font-weight: 600;
+    font-style: normal; }
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-Bold.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-Bold.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-Bold.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal; }
+
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-ExtraBold.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-ExtraBold.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-ExtraBold.otf") format("opentype");
+    font-weight: 800;
+    font-style: normal; }
+
+@font-face {
+    font-family: "Pretendard";
+    src: url("/assets/fonts/Pretendard/Pretendard-Black.woff2") format("woff2"), url("/assets/fonts/Pretendard/Pretendard-Black.woff") format("woff"), url("/assets/fonts/Pretendard/Pretendard-Black.otf") format("opentype");
+    font-weight: 900;
+    font-style: normal; }
+
+* {box-sizing: border-box;}
+html {position: relative; width: 100vw; height: 100vh; font-family: 'Pretendard',sans-serif;}
+.error_wrap {display: block; width: 100%; max-width: 1000px; height: auto; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); text-align: center; padding: 20px; }
+.error_wrap .error_imb_box {display: block; width: auto; height: auto; margin: 0 auto; transition: all ease 0.35s;}
+.error_wrap .error_imb_box img {display: block; width: auto; height: auto; object-fit: contain; margin: 0 auto; transition: all ease 0.35s;}
+.error_wrap .error_text_box {display: block; width: 100%; height: auto; text-align: center; margin-bottom: 90px; transition: all ease 0.35s;}
+.error_wrap .error_text_box h2 {display: block; width: 100%; height: auto; font-size: 72px; font-weight: 800; margin-bottom: 38px; transition: all ease 0.35s;}
+.error_wrap .error_text_box span {display: block; width: 100%; height: auto; font-size: 36px; font-weight: 500; margin-bottom: 52px; transition: all ease 0.35s;}
+.error_wrap .error_text_box p {display: block; width: 100%; height: auto; font-size: 18px; font-weight: 400; transition: all ease 0.35s;}
+
+.ctrl_btn_box {display: flex; width: 100%; height: auto; justify-content: center; align-items: center;}
+.ctrl_btn_box a {display: inline-flex; width: 100%; max-width: 235px; height: 58px; padding: 10px; font-size: 17px; font-weight: 800px; text-decoration: none; border: 3px solid #000; align-items: center; justify-content: center; color: inherit; transition: all ease 0.35s;}
+.ctrl_btn_box a:not(:first-child) {margin-left: 44px;}
+
+
+@media screen and (max-width: 1000px){
+    .error_wrap .error_text_box {margin-bottom: 60px;}
+    .error_wrap .error_text_box h2 {font-size: 56px; margin-bottom: 20px;}
+    .error_wrap .error_text_box span {font-size: 28px; margin-bottom: 32px;}
+    .error_wrap .error_text_box p {font-size: 16px;}
+}
+@media screen and (max-width: 800px){
+    .error_wrap {position: static; transform: translate(0,0);}
+    .error_wrap .error_text_box {margin-bottom: 40px;}
+    .error_wrap .error_text_box h2 {font-size: 48px; margin-bottom: 10px;}
+    .error_wrap .error_text_box span {font-size: 24px; margin-bottom: 20px;}
+    .error_wrap .error_text_box p {font-size: 16px;}
+}
+@media screen and (max-width: 500px){
+    .error_wrap .error_imb_box {max-width: calc(100% / 3);}
+    .error_wrap .error_imb_box img {width: 100%; height: auto;}
+    .ctrl_btn_box {flex-direction: column;}
+    .ctrl_btn_box a {max-width: 100%;}
+    .ctrl_btn_box a:not(:first-child) {margin-left: 0; margin-top: 20px;}
+}

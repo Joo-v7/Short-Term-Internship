@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+	
+<th:block layout:fragment="content">
+
+
+
+
+<script>
+
+	$(function() {
+		// 목록
+		$('#frmList').submit(function(e) {
+			e.preventDefault();
+			dataList();
+		});
+		
+		// 검색
+		$('#frmList').submit();
+		
+	});
+	
+	// 목록
+	function dataList() {
+		
+		$('#dataTable').DataTable({
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/ras/achievement/listJson?'+$('#frmList').serialize(),
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			order : [0,'desc'],
+			initComplete : dataTableInit,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'memberId', className : 'dt-body-center' },
+				{ data : 'memberNm', className : 'dt-body-center' },
+				{ data : 'playCount', className : 'dt-body-center' },
+				{ data : 'endTime', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+			],
+			createdRow: function (row, data, dataIndex) {
+				$(row).on("click", function () {
+					$(this).closest('table').DataTable().rows('.selected').nodes().each((row)=> row.classList.remove('selected'));
+					$(this).addClass('selected');
+					playList(data.memberIdx);
+				});
+			},
+		});
+	}
+	
+	/** 학습자별 훈련 목록 */
+	function playList(memberIdx) {
+		if(!memberIdx) {
+			$('#dataTable2').DataTable().clear().draw();
+			return;
+		}
+		
+		$('#dataTable2').DataTable({
+			pageLength: 5,
+			
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/ras/achievement/playList?memberIdx='+memberIdx,
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			order : [0,'desc'],
+			
+			initComplete : dataTableInit2,
+			columns : [
+				{ data : null, className : 'dt-body-center', render : function(data, type, row, meta) {return meta.settings._iDisplayStart + meta.row + 1;} },
+				{ data : 'trainTitle', className : 'dt-body-center' },
+				{ data : 'teacherNm', className : 'dt-body-center' },
+				{ data : 'startTime', className : 'dt-body-center', render: $.fn.dataTable.render.datetime() },
+				{ data : 'team', className : 'dt-body-center'}, 
+				{ data : 'workRole', className : 'dt-body-center', render: $.fn.dataTable.render.workRoleNm() },
+				{ data : 'playMinute', className : 'dt-body-center'},
+				{ data : 'moduleCdCnt', className : 'dt-body-center'},
+				{ data : 'modulePlayCnt', className : 'dt-body-center'}, 
+			],
+			createdRow: function (row, data, dataIndex) {
+				$(row).on("click", function () {
+					$(this).closest('table').DataTable().rows('.selected').nodes().each((row)=> row.classList.remove('selected'));
+					$(this).addClass('selected');
+					achievementList(data.playIdx);
+				});
+			},
+		});
+	}
+	
+	/** 학습자, 훈련별 작업 목록 */
+	function achievementList(playIdx) {
+		
+		if(!playIdx) {
+			$('#dataTable3').DataTable().clear().draw();
+			return;
+		}
+		
+		$('#dataTable3').DataTable({
+			paging : false,
+			scrollCollapse: true,
+			scrollY: '350px',
+			fixedHeader : {
+				header : true,
+				footer : true,
+			},
+			ajax : {
+				type : 'get',
+				url : gblAdminPath + '/ras/achievement/achievementList?playIdx='+playIdx,
+ 				dataType: "json",
+				dataSrc : "data.list",
+			},
+			order : [4,'asc'],
+			initComplete : dataTableInit3,
+			columns : [
+				// { data : 'scenarioNum', className : 'dt-body-center' },
+				{ data : 'moduleCd', className : 'dt-body-center' },
+				{ data : 'step', className : 'dt-body-center' },
+				{ data : 'workRole', className : 'dt-body-center', render: $.fn.dataTable.render.workRoleNm() },
+				{ data : 'processContents', className : 'dt-body-left' },
+				{ data : 'processStartTime', className : 'dt-body-center' },
+				{ data : 'successYn', className : 'dt-body-center' },
+			],
+		});
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit(settings, json) {
+		$('#dataTableTotCnt').text( $('#dataTable').DataTable().data().count()+'건');
+		if ($('#dataTable').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		if ($('#dataTable').DataTable().data().count() > 0) {
+			$('#dataTable').DataTable().row(':first').nodes().to$().trigger('click');
+		}else{
+			playList();
+		}
+	}
+
+	// 데이터테이블 initComplete
+	function dataTableInit2(settings, json) {
+		if ($('#dataTable2').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+		
+		if ($('#dataTable2').DataTable().data().count() > 0) {
+			$('#dataTable2').DataTable().row(':first').nodes().to$().trigger('click');
+		}else{
+			achievementList();
+		}
+	}
+	
+	// 데이터테이블 initComplete
+	function dataTableInit3(settings, json) {
+		if ($('#dataTable3').DataTable().data().count() == 10000) {
+			toast('데이터 조회를 10,000건으로 제한합니다.');
+		}
+	}
+</script>
+
+<div class="row">
+	<div class="col s12 m12 l6 xl4 sideline pd_box">
+		<div class="basic">
+			<div class="basic_top_searchbox left">
+				<div class="row">
+					<form id="frmList" method="get">
+						<!-- 검색창 -->
+						<div class="col s12 search_bar">
+							<input name="scWord" type="text" class="browser-default" th:value="${param?.scWord}" placeholder="아이디, 성명">
+							
+							<button type="submit" class="waves-effect waves-light btn grey darken-2 z-depth-0 left">
+									<i class="material-icons md-18 left">search</i> 검색
+							</button>
+							<div class="title left">
+								전체 : <b id="dataTableTotCnt">0건</b>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<div class="table_type3">
+				<table id="dataTable" class="striped centered highlight">
+					<colgroup>
+						<col width="70px">
+						<col width="100px">
+						<col width="100px">
+						<col width="100px">
+						<col width="140px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>번호</th>
+							<th>아이디</th>
+							<th>성명</th>
+							<th>훈련횟수</th>
+							<th>최종 훈련일시</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div id="playList" class="col s12 m12 l6 xl8 scroll_defalt pd_box pt40">
+		<div class="row">
+			<h2 class="h2_butt mb10">수행 훈련 목록</h2>
+			<div class="table_type3">
+				<table id="dataTable2" class="striped centered highlight" style="min-width:800px">
+					<colgroup>
+						<col width="80px">
+						<col width="auto">
+						<col width="100px">
+						<col width="140px">
+						<col width="80px">
+						<col width="80px">
+						<col width="110px">
+						<col width="110px">
+						<col width="110px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>NO</th>
+							<th>훈련명</th>
+							<th>교수자</th>
+							<th>훈련일시</th>
+							<th>팀</th>
+							<th>역할</th>
+							<th>수행시간(분)</th>
+							<th>수행모듈(갯수)</th>
+							<th>모듈수행(횟수)</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="row">
+			<h2 class="h2_butt mb10">학습 작업 목록</h2>
+			<div class="table_type3">
+				<table id="dataTable3" class="striped centered highlight" style="min-width:800px">
+					<colgroup>
+						<col width="120px">
+						<col width="80px">
+						<col width="100px">
+						<col width="auto">
+						<col width="150px">
+						<col width="100px">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>모듈코드</th>
+							<th>절차</th>
+							<th>역할</th>
+							<th>절차내용</th>
+							<th>작업일시</th>
+							<th>성공여부</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

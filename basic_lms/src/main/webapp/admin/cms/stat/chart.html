@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="/pages/admin/layout/common_layout">
+<!-- AM 차트 4 -->
+<script src="/assets/libs/amchart4/core.js"></script>
+<script src="/assets/libs/amchart4/charts.js"></script>
+<script src="/assets/libs/amchart4/themes/animated.js"></script>
+<script src="/assets/libs/amchart4/plugins/timeline.js"></script>
+<script src="/assets/libs/amchart4/plugins/bullets.js"></script>
+
+<th:block layout:fragment="content">
+<style>
+#chartdiv {
+  width: 100%;
+  height: 500px;
+max-width: 100%
+}
+</style>
+<div class="row mb0">
+	<!-- 그룹 -->
+    <!-- <div class="col s1 layout_box1 pd_box">
+        <div class="row">
+            <div class="col s12 pd0">
+				
+                <ul class="layout_group">
+					<li><a href="all" title="전체">전체</a></li>
+					<li><a href="uok" title="유오케이CMS">유오케이CMS</a></li>
+					<li><a href="test" title="영광군청CMS">영광군청CMS</a></li>
+				</ul>
+            </div>
+        </div>
+    </div> -->
+	<input type="hidden" id="gr_id" value="">
+	<div class="col s11 sideline pd_box">
+		<!-- //그룹 -->
+		<div class="col s6">
+			<div id="curve_chart" style="width:100%; height: 500px"></div>
+		</div>
+		<div class="col s6">
+			<div id="chart_time_div" style="width:100%; height: 500px; "></div> 
+		</div>
+		<div class="col s4">
+			<div id="donutchart" style="width:100%; height: 500px;"></div>	
+		</div>
+		<div class="col s4">
+			<div id="donutchart2" style="width:100%; height: 500px;"></div>	
+		</div>
+		<div class="col s4">
+			<div id="donutchart3" style="width:100%; height: 500px;"></div>	
+		</div>
+	</div>
+</div>
+<script>
+	am4core.ready(function() {
+	
+		//차트 테마 설정
+		am4core.useTheme(am4themes_animated);
+	
+		//차트 타입 설정
+		var chart = am4core.create("chartdiv", am4charts.RadarChart);
+		
+		var fillModifier = new am4core.LinearGradientModifier();
+		fillModifier.opacities = [0, 0.2, 0.3, 0.2, 0];
+		fillModifier.offsets = [0, 0.2, 0.5, 0.8, 1];
+	//		fillModifier.opacities = "#FFFFFF";
+	//		fillModifier.offsets = "#FFFFFF";
+		fillModifier.gradient.rotation = 90;
+		chart.background.fillModifier = fillModifier;
+	
+		//데이터
+		chart.data = [{
+		  "item": "안정성",
+		  "score": 30
+		}, {
+		  "item": "정확성",
+		  "score": 10
+		}, {
+		  "item": "순발력",
+		  "score": 70
+		}, {
+		  "item": "협동력",
+		  "score": 100
+		}, {
+		  "item": "숙련성",
+		  "score": 40
+		}];
+	
+		//카테고리 축 설정
+		var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+		categoryAxis.renderer.grid.template.location = 0;
+		categoryAxis.dataFields.category = "item";
+		categoryAxis.renderer.labels.template.location = 0.5;
+		categoryAxis.renderer.tooltipLocation = 1;
+		
+		//데이터 축 설정
+		var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			//valueAxis.renderer.gridType = "polygons";
+		valueAxis.strictMinMax = true;
+		//valueAxis.renderer.grid.template.strokeOpacity = 0.08;
+	
+		//데이터 표시를 위한 1차 그래프
+		var series = chart.series.push(new am4charts.RadarSeries());
+		series.dataFields.valueY = "score";
+		series.dataFields.categoryX = "item";
+		series.zIndex = 2;
+		series.fill = am4core.color("#0B6DB7");
+		series.fillOpacity = 0.7;
+		series.strokeWidth = 0;
+		//series.strokeOpacity = 0.5;
+		series.dataItems.template.locations.categoryX = 0.5;
+		series.sequencedInterpolation = true; //애니메이션 효과
+		series.sequencedInterpolationDelay = 20; //애니메이션 시간
+		
+		//그래프 선색
+		//series.realStroke._value.r = 55;
+		//series.realStroke._value.g = 55;
+		//series.realStroke._value.b = 55;
+	
+		//툴팁 표시를 위한 2차 그래프
+		var series2 = chart.series.push(new am4charts.RadarColumnSeries());
+		series2.dataFields.valueY = "score";
+		series2.dataFields.categoryX = "item";
+		series2.strokeWidth = 0;
+		series2.columns.template.fill = am4core.color("#ffffff00");
+		series2.columns.template.tooltipText = "{categoryX} : [bold]{valueY}[/]";
+		series2.zIndex = 0;
+		
+		series2.tooltip.getFillFromObject = false;
+		series2.tooltip.background.fill = am4core.color("#0B6DB795");
+		series2.tooltip.autoTextColor = false;
+		series2.tooltip.label.fill = am4core.color("#FFFFFF");
+		
+		//커서 옵션
+		chart.cursor = new am4charts.RadarCursor();
+		chart.cursor.innerRadius = 1;
+		chart.cursor.lineX.strokeOpacity = 0.5;
+		chart.cursor.lineY.strokeOpacity = 0;
+	});
+
+	
+	function drawChart() {
+		am4core.useTheme(am4themes_animated);
+		// Themes end
+
+		// Create chart instance
+		var chart = am4core.create("chartdiv", am4charts.XYChart);
+		
+		chart.dataSource.url= gblAdminPath+'/cms/stat/chartJson?'+ gr_id;
+		chart.dataSource.parser = am4core.JSONParser;
+		
+		// Add data
+		chart.data =[{
+		"dataSource": {
+		"url": gblAdminPath+'/cms/stat/chartJson?'+ gr_id,
+		"parser": "json"
+	  	}}]
+		
+		// Create axes
+		var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+		dateAxis.renderer.minGridDistance = 50;
+
+		var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+
+		// Create series
+		var series = chart.series.push(new am4charts.LineSeries());
+		series.dataFields.valueY = "value";
+		series.dataFields.dateX = "date";
+		series.strokeWidth = 2;
+		series.minBulletDistance = 10;
+		series.tooltipText = "[bold]{date.formatDate()}:[/] {value}";
+		series.tooltip.pointerOrientation = "vertical";
+
+		// Add cursor
+		chart.cursor = new am4charts.Cursor();
+		chart.cursor.xAxis = dateAxis;
+		}
+</script>
